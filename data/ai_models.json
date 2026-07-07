@@ -11,12 +11,12 @@
   },
 
   "openai": {
-    "default": "gpt-5.4-nano",
+    "_note": "Repurposed for DeepSeek (OpenAI-compatible endpoint). 'deepseek-chat' is the non-thinking alias mapped to deepseek-v4-flash; it is deprecated 2026-07-24 — switch default to 'deepseek-v4-flash' afterwards. Parser ignores keys other than default/fallbacks/id_prefixes.",
+    "default": "deepseek-chat",
     "fallbacks": [
-      "gpt-5.4-mini",
-      "gpt-4.1-nano"
+      "deepseek-v4-flash"
     ],
-    "id_prefixes": ["gpt-", "o1-", "o3-", "o4-", "chatgpt-"]
+    "id_prefixes": ["gpt-", "o1-", "o3-", "o4-", "chatgpt-", "deepseek-"]
   },
 
   "ollama": {

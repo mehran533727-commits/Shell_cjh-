@@ -50,7 +50,8 @@ int builtin_copy(const vector<string> &argv, ShellState &) {
         }
     }
     if (!copy_to_clipboard(text)) {
-        write_stderr("copy: failed to write to clipboard\n");
+        write_stderr("copy: failed to write to clipboard "
+                     "(on WSL/headless, install wl-clipboard or xclip)\n");
         return 1;
     }
     return 0;

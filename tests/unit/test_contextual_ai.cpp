@@ -40,6 +40,16 @@ TEST(ContextualAi, DetectsMultiWordQuestion) {
     EXPECT_TRUE(is_ai_question("how to compress files?"));
 }
 
+TEST(ContextualAi, DetectsChineseQuestionNoSpace) {
+    // Chinese sentences are usually written without spaces; ASCII '?' suffix.
+    EXPECT_TRUE(is_ai_question("如何查看隐藏文件?"));
+}
+
+TEST(ContextualAi, DetectsChineseFullwidthQuestion) {
+    // Full-width Chinese question mark '？' (U+FF1F, UTF-8 EF BC 9F).
+    EXPECT_TRUE(is_ai_question("怎么统计文件数量？"));
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Project type detection
 // ═══════════════════════════════════════════════════════════════

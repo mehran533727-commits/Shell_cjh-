@@ -279,10 +279,19 @@ string build_openai_structured_json(const string &model,
     schema["required"] = json::array({"response_type", "content"});
     schema["additionalProperties"] = false;
 
-    req["response_format"]["type"] = "json_schema";
-    req["response_format"]["json_schema"]["name"] = "ai_response";
-    req["response_format"]["json_schema"]["schema"] = schema;
-    req["response_format"]["json_schema"]["strict"] = true;
+    // DeepSeek's OpenAI-compatible endpoint supports response_format
+    // "json_object" but NOT the "json_schema"/strict mode. Fold the schema
+    // requirements into the system prompt (json_object mode also requires
+    // the word "json" to appear in the messages) and ask for a plain JSON
+    // object.
+    (void)schema;
+    req["messages"][0]["content"] =
+        req["messages"][0]["content"].get<string>() +
+        "\n\nRespond with ONLY a single valid JSON object (no markdown fences), "
+        "with keys: \"response_type\" (one of \"command\", \"script\", \"steps\", "
+        "\"answer\"), \"content\" (string), optional \"filename\" (string), and "
+        "optional \"steps\" (array of objects with \"description\" and \"command\").";
+    req["response_format"]["type"] = "json_object";
 
     return req.dump();
 }
@@ -323,10 +332,19 @@ string build_openai_structured_context_json(const string &model,
     schema["required"] = json::array({"response_type", "content"});
     schema["additionalProperties"] = false;
 
-    req["response_format"]["type"] = "json_schema";
-    req["response_format"]["json_schema"]["name"] = "ai_response";
-    req["response_format"]["json_schema"]["schema"] = schema;
-    req["response_format"]["json_schema"]["strict"] = true;
+    // DeepSeek's OpenAI-compatible endpoint supports response_format
+    // "json_object" but NOT the "json_schema"/strict mode. Fold the schema
+    // requirements into the system prompt (json_object mode also requires
+    // the word "json" to appear in the messages) and ask for a plain JSON
+    // object.
+    (void)schema;
+    req["messages"][0]["content"] =
+        req["messages"][0]["content"].get<string>() +
+        "\n\nRespond with ONLY a single valid JSON object (no markdown fences), "
+        "with keys: \"response_type\" (one of \"command\", \"script\", \"steps\", "
+        "\"answer\"), \"content\" (string), optional \"filename\" (string), and "
+        "optional \"steps\" (array of objects with \"description\" and \"command\").";
+    req["response_format"]["type"] = "json_object";
 
     return req.dump();
 }
@@ -1291,7 +1309,7 @@ static string map_ollama_error(int status, const string &body) {
 // OpenAIClient implementation
 // ═════════════════════════════════════════════════════════════════
 
-static const char *kOpenAIChatUrl = "https://api.openai.com/v1/chat/completions";
+static const char *kOpenAIChatUrl = "https://api.deepseek.com/v1/chat/completions";
 
 static ProviderAdapter openai_adapter(const string &api_key,
                                         int connect_timeout, int read_timeout,

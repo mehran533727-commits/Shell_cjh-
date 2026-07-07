@@ -164,6 +164,17 @@ string expand_variables(const string &input, int last_exit_status) {
             i++;
             continue;
         }
+        // D1: a backslash immediately before '$' makes the '$' literal and is
+        // consumed; every other backslash is left untouched for the downstream
+        // stages (tokenizer / glob un-escape), so '\\', '\"', '\*' behaviour
+        // is unchanged. Known limitation: '\\$VAR' (double backslash) still
+        // expands through the general path.
+        if (input[i] == '\\' && i + 1 < input.size() && input[i + 1] == '$') {
+            if (cap_exceeded(1)) return result;
+            result += '$';
+            i += 2;
+            continue;
+        }
         if (input[i] == '$') {
             i++;
             if (i < input.size() && input[i] == '?') {

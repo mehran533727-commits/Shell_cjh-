@@ -688,7 +688,12 @@ TEST(OpenAIClient, BuildsStructuredRequestJson) {
     std::string json_str = build_openai_structured_json("gpt-4o-mini", "sys", "usr");
     auto parsed = nlohmann::json::parse(json_str);
     EXPECT_TRUE(parsed.count("response_format"));
-    EXPECT_EQ(parsed["response_format"]["type"], "json_schema");
+    // DeepSeek's OpenAI-compatible endpoint supports json_object, not the
+    // json_schema/strict mode; schema requirements are folded into the
+    // system prompt instead.
+    EXPECT_EQ(parsed["response_format"]["type"], "json_object");
+    EXPECT_NE(parsed["messages"][0]["content"].get<std::string>().find("response_type"),
+              std::string::npos);
 }
 
 TEST(OllamaClient, BuildsStructuredRequestJson) {
@@ -748,8 +753,10 @@ TEST(GeminiClient, StructuredSchemaIncludesSteps) {
 TEST(OpenAIClient, StructuredSchemaIncludesSteps) {
     std::string json_str = build_openai_structured_json("gpt-4o-mini", "sys", "usr");
     auto parsed = nlohmann::json::parse(json_str);
-    auto &schema = parsed["response_format"]["json_schema"]["schema"];
-    EXPECT_TRUE(schema["properties"].count("steps"));
+    // In json_object mode the schema lives in the system prompt; verify the
+    // "steps" field is described there.
+    std::string sys = parsed["messages"][0]["content"].get<std::string>();
+    EXPECT_NE(sys.find("steps"), std::string::npos);
 }
 
 // ═══════════════════════════════════════════════════════════════

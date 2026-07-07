@@ -100,18 +100,32 @@ bool is_ai_question(const string &input) {
     while (!trimmed.empty() && (trimmed.back() == ' ' || trimmed.back() == '\t'))
         trimmed.pop_back();
 
-    // Must be non-empty and end with '?'
-    if (trimmed.empty() || trimmed.back() != '?')
+    // Must be non-empty and end with '?' — accept both ASCII '?' and the
+    // full-width Chinese question mark '？' (U+FF1F, UTF-8 EF BC 9F).
+    bool ends_ascii_q = (!trimmed.empty() && trimmed.back() == '?');
+    bool ends_cjk_q = (trimmed.size() >= 3 &&
+                       (unsigned char)trimmed[trimmed.size() - 3] == 0xEF &&
+                       (unsigned char)trimmed[trimmed.size() - 2] == 0xBC &&
+                       (unsigned char)trimmed[trimmed.size() - 1] == 0x9F);
+    if (!ends_ascii_q && !ends_cjk_q)
         return false;
 
-    // The trailing '?' must NOT be inside quotes
-    // Find the position of the last '?' in the original (trimmed) string
-    size_t q_pos = trimmed.size() - 1;
-    if (is_inside_quotes(trimmed, q_pos))
-        return false;
+    // The trailing '?' must NOT be inside quotes. Only meaningful for the
+    // ASCII form; the full-width '？' is not a shell metacharacter.
+    if (ends_ascii_q) {
+        size_t q_pos = trimmed.size() - 1;
+        if (is_inside_quotes(trimmed, q_pos))
+            return false;
+    }
 
-    // Must contain at least one space (natural language, not "test?")
-    if (!has_space(trimmed))
+    // Natural language usually contains a space (English). Chinese is often
+    // written without spaces, so also accept input carrying any non-ASCII
+    // (multibyte/CJK) byte. Pure ASCII single words like "test?" stay excluded.
+    bool has_non_ascii = false;
+    for (unsigned char ch : trimmed) {
+        if (ch >= 0x80) { has_non_ascii = true; break; }
+    }
+    if (!has_space(trimmed) && !has_non_ascii)
         return false;
 
     // Extract first word and check if it's a known command

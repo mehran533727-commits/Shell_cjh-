@@ -247,6 +247,22 @@ TEST(ExpandVarsTest, LoneDollar) {
     EXPECT_EQ(expand_variables("cost is $", 0), "cost is $");
 }
 
+TEST(ExpandVarsTest, BackslashDollarIsLiteral) {
+    setenv("TASH_TEST_UNIT", "hello", 1);
+    // D1: a backslash before '$' keeps the '$' literal (no expansion).
+    EXPECT_EQ(expand_variables("\\$TASH_TEST_UNIT", 0), "$TASH_TEST_UNIT");
+    // Plain '$' must still expand — the fix must not touch normal expansion.
+    EXPECT_EQ(expand_variables("$TASH_TEST_UNIT", 0), "hello");
+    unsetenv("TASH_TEST_UNIT");
+}
+
+TEST(ExpandVarsTest, BackslashBeforeNonDollarUnchanged) {
+    // Regression guard: a backslash before a non-'$' char is left untouched
+    // here (downstream stages own '\\', '\"', '\*'). Only '\$' is handled.
+    EXPECT_EQ(expand_variables("a\\b", 0), "a\\b");
+    EXPECT_EQ(expand_variables("\\\\hello", 0), "\\\\hello");
+}
+
 TEST(ExpandVarsTest, NoVars) {
     EXPECT_EQ(expand_variables("hello world", 0), "hello world");
 }
