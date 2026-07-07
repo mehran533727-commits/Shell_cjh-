@@ -1,6 +1,6 @@
-#include "tash/plugins/manpage_completion_provider.h"
-#include "tash/shell.h"
-#include "tash/util/safe_exec.h"
+#include "CJHSH/plugins/manpage_completion_provider.h"
+#include "CJHSH/shell.h"
+#include "CJHSH/util/safe_exec.h"
 
 #include <cstdio>
 #include <cstring>
@@ -160,7 +160,7 @@ std::vector<HelpOption> ManpageCompletionProvider::get_help_options(
     std::string output;
 
 #ifndef TESTING_BUILD
-    auto r = tash::util::safe_exec({command, "--help"}, 2000);
+    auto r = CJHSH::util::safe_exec({command, "--help"}, 2000);
     output = r.stdout_text;
     if (output.size() > 65536) output.resize(65536);
 #endif

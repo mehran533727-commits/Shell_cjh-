@@ -1,4 +1,4 @@
-#include "tash/util/safe_exec.h"
+#include "CJHSH/util/safe_exec.h"
 
 #include <cerrno>
 #include <csignal>
@@ -10,7 +10,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-namespace tash::util {
+namespace CJHSH::util {
 
 namespace {
 
@@ -157,4 +157,4 @@ ExecResult safe_exec(const std::vector<std::string>& argv, int timeout_ms, bool 
     return result;
 }
 
-} // namespace tash::util
+} // namespace CJHSH::util

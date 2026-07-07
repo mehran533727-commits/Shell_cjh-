@@ -15,17 +15,17 @@ TEST(EnvVars, ExpandUSER) {
 }
 
 TEST(EnvVars, ExportAndRead) {
-    auto r = run_shell("export TASH_TEST_VAR=gtest_value_42\necho $TASH_TEST_VAR\nexit\n");
+    auto r = run_shell("export CJHSH_TEST_VAR=gtest_value_42\necho $CJHSH_TEST_VAR\nexit\n");
     EXPECT_NE(r.output.find("gtest_value_42"), std::string::npos);
 }
 
 TEST(EnvVars, UnsetVariable) {
     // Use file side-effect: export a var, unset it, then try to write it to a file.
-    // If unset works, $TASH_UNSET_FILE expands to empty and the redirect target is empty/fails.
+    // If unset works, $CJHSH_UNSET_FILE expands to empty and the redirect target is empty/fails.
     // Instead, verify by exporting a new value after unset — it should not have the old value.
-    std::string marker = "/tmp/tash_unset_" + std::to_string(getpid());
+    std::string marker = "/tmp/CJHSH_unset_" + std::to_string(getpid());
     unlink(marker.c_str());
-    run_shell("export TASH_UNSET_VAR=old_value\nunset TASH_UNSET_VAR\nexport TASH_UNSET_VAR=new_value\necho $TASH_UNSET_VAR > " + marker + "\nexit\n");
+    run_shell("export CJHSH_UNSET_VAR=old_value\nunset CJHSH_UNSET_VAR\nexport CJHSH_UNSET_VAR=new_value\necho $CJHSH_UNSET_VAR > " + marker + "\nexit\n");
     std::string content = read_file(marker);
     EXPECT_NE(content.find("new_value"), std::string::npos) << "Should have new value after re-export";
     EXPECT_EQ(content.find("old_value"), std::string::npos) << "Old value should be gone";
@@ -34,7 +34,7 @@ TEST(EnvVars, UnsetVariable) {
 
 TEST(EnvVars, UndefinedVarExpandsEmpty) {
     // Verify that a defined var works, while undefined expands to empty
-    auto r = run_shell("export TASH_UNDEF_CHECK=found_it\necho $TASH_NEVER_DEFINED_XYZ99\necho $TASH_UNDEF_CHECK\nexit\n");
+    auto r = run_shell("export CJHSH_UNDEF_CHECK=found_it\necho $CJHSH_NEVER_DEFINED_XYZ99\necho $CJHSH_UNDEF_CHECK\nexit\n");
     EXPECT_NE(r.output.find("found_it"), std::string::npos) << "Defined var should expand";
 }
 
@@ -67,7 +67,7 @@ TEST(EnvVars, DollarQuestionFalseIsNonZero) {
 
 TEST(EnvVars, DollarQuestionInChainedSemicolon) {
     // $? should reflect the immediately preceding command, not the end of line
-    std::string marker = "/tmp/tash_chain_" + std::to_string(getpid());
+    std::string marker = "/tmp/CJHSH_chain_" + std::to_string(getpid());
     unlink(marker.c_str());
     run_shell("false; echo $? > " + marker + "\nexit\n");
     std::string content = read_file(marker);
@@ -77,7 +77,7 @@ TEST(EnvVars, DollarQuestionInChainedSemicolon) {
 }
 
 TEST(EnvVars, DollarQuestionCommandNotFound127) {
-    std::string marker = "/tmp/tash_127_" + std::to_string(getpid());
+    std::string marker = "/tmp/CJHSH_127_" + std::to_string(getpid());
     unlink(marker.c_str());
     run_shell("surely_nonexistent_cmd_xyz; echo $? > " + marker + "\nexit\n");
     std::string content = read_file(marker);
@@ -88,16 +88,16 @@ TEST(EnvVars, DollarQuestionCommandNotFound127) {
 
 TEST(EnvVars, SingleQuotesPreventExpansion) {
     // Use script mode to avoid GNU readline echoing the export command
-    std::string script = "/tmp/tash_sq_test_" + std::to_string(getpid()) + ".sh";
-    std::string marker = "/tmp/tash_sq_out_" + std::to_string(getpid());
+    std::string script = "/tmp/CJHSH_sq_test_" + std::to_string(getpid()) + ".sh";
+    std::string marker = "/tmp/CJHSH_sq_out_" + std::to_string(getpid());
     {
         std::ofstream f(script);
-        f << "export TASH_SQ_TEST=secret\n";
-        f << "echo '$TASH_SQ_TEST' > " << marker << "\n";
+        f << "export CJHSH_SQ_TEST=secret\n";
+        f << "echo '$CJHSH_SQ_TEST' > " << marker << "\n";
     }
     run_shell_script(script);
     std::string content = read_file(marker);
-    EXPECT_NE(content.find("$TASH_SQ_TEST"), std::string::npos)
+    EXPECT_NE(content.find("$CJHSH_SQ_TEST"), std::string::npos)
         << "Single quotes should prevent variable expansion, got: " << content;
     EXPECT_EQ(content.find("secret"), std::string::npos)
         << "Variable value should NOT appear inside single quotes, got: " << content;

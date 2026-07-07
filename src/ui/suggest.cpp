@@ -1,5 +1,5 @@
-#include "tash/core/builtins.h"
-#include "tash/ui.h"
+#include "CJHSH/core/builtins.h"
+#include "CJHSH/ui.h"
 #include <dirent.h>
 #include <algorithm>
 #include <optional>

@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
-#include "tash/util/config_resolver.h"
+#include "CJHSH/util/config_resolver.h"
 
 #include <cstdlib>
 #include <string>
 #include <sys/stat.h>
 
-using namespace tash::config;
+using namespace CJHSH::config;
 
 // Each test owns $HOME and the two XDG vars via this fixture so the
 // resolver's fallbacks can be exercised deterministically regardless of
@@ -14,29 +14,29 @@ using namespace tash::config;
 class ConfigResolverTest : public ::testing::Test {
 protected:
     std::string saved_home, saved_xdg_config, saved_xdg_data,
-                saved_tash_config, saved_tash_data;
+                saved_CJHSH_config, saved_CJHSH_data;
 
     void SetUp() override {
         saved_home         = save("HOME");
         saved_xdg_config   = save("XDG_CONFIG_HOME");
         saved_xdg_data     = save("XDG_DATA_HOME");
-        saved_tash_config  = save("TASH_CONFIG_HOME");
-        saved_tash_data    = save("TASH_DATA_HOME");
+        saved_CJHSH_config  = save("CJHSH_CONFIG_HOME");
+        saved_CJHSH_data    = save("CJHSH_DATA_HOME");
 
         // Clean slate for every test.
         unsetenv("XDG_CONFIG_HOME");
         unsetenv("XDG_DATA_HOME");
-        unsetenv("TASH_CONFIG_HOME");
-        unsetenv("TASH_DATA_HOME");
-        setenv("HOME", "/tmp/tash_resolver_home", 1);
+        unsetenv("CJHSH_CONFIG_HOME");
+        unsetenv("CJHSH_DATA_HOME");
+        setenv("HOME", "/tmp/CJHSH_resolver_home", 1);
     }
 
     void TearDown() override {
         restore("HOME",              saved_home);
         restore("XDG_CONFIG_HOME",   saved_xdg_config);
         restore("XDG_DATA_HOME",     saved_xdg_data);
-        restore("TASH_CONFIG_HOME",  saved_tash_config);
-        restore("TASH_DATA_HOME",    saved_tash_data);
+        restore("CJHSH_CONFIG_HOME",  saved_CJHSH_config);
+        restore("CJHSH_DATA_HOME",    saved_CJHSH_data);
     }
 
     static std::string save(const char *k) {
@@ -49,75 +49,75 @@ protected:
     }
 };
 
-// ── Default (no XDG, no TASH_*) ────────────────────────────────
+// ── Default (no XDG, no CJHSH_*) ────────────────────────────────
 
 TEST_F(ConfigResolverTest, DefaultsFromHome) {
-    EXPECT_EQ(get_config_dir(), "/tmp/tash_resolver_home/.config/tash");
-    EXPECT_EQ(get_data_dir(),   "/tmp/tash_resolver_home/.tash");
+    EXPECT_EQ(get_config_dir(), "/tmp/CJHSH_resolver_home/.config/CJHSH");
+    EXPECT_EQ(get_data_dir(),   "/tmp/CJHSH_resolver_home/.CJHSH");
 }
 
 // ── XDG precedence ─────────────────────────────────────────────
 
 TEST_F(ConfigResolverTest, XdgConfigHomeTakesPrecedence) {
     setenv("XDG_CONFIG_HOME", "/tmp/xdg_cfg", 1);
-    EXPECT_EQ(get_config_dir(), "/tmp/xdg_cfg/tash");
+    EXPECT_EQ(get_config_dir(), "/tmp/xdg_cfg/CJHSH");
 }
 
 TEST_F(ConfigResolverTest, XdgDataHomeTakesPrecedence) {
     setenv("XDG_DATA_HOME", "/tmp/xdg_data", 1);
-    EXPECT_EQ(get_data_dir(), "/tmp/xdg_data/tash");
+    EXPECT_EQ(get_data_dir(), "/tmp/xdg_data/CJHSH");
 }
 
-// ── TASH_*_HOME beats XDG ──────────────────────────────────────
+// ── CJHSH_*_HOME beats XDG ──────────────────────────────────────
 
-TEST_F(ConfigResolverTest, TashConfigBeatsXdg) {
+TEST_F(ConfigResolverTest, CJHSHConfigBeatsXdg) {
     setenv("XDG_CONFIG_HOME",  "/tmp/xdg",  1);
-    setenv("TASH_CONFIG_HOME", "/tmp/tash_config_override", 1);
-    EXPECT_EQ(get_config_dir(), "/tmp/tash_config_override");
+    setenv("CJHSH_CONFIG_HOME", "/tmp/CJHSH_config_override", 1);
+    EXPECT_EQ(get_config_dir(), "/tmp/CJHSH_config_override");
 }
 
-TEST_F(ConfigResolverTest, TashDataBeatsXdg) {
+TEST_F(ConfigResolverTest, CJHSHDataBeatsXdg) {
     setenv("XDG_DATA_HOME",  "/tmp/xdg",  1);
-    setenv("TASH_DATA_HOME", "/tmp/tash_data_override", 1);
-    EXPECT_EQ(get_data_dir(), "/tmp/tash_data_override");
+    setenv("CJHSH_DATA_HOME", "/tmp/CJHSH_data_override", 1);
+    EXPECT_EQ(get_data_dir(), "/tmp/CJHSH_data_override");
 }
 
 // ── Derived paths follow the base dirs ─────────────────────────
 
 TEST_F(ConfigResolverTest, ThemePathsUnderConfigDir) {
-    setenv("TASH_CONFIG_HOME", "/cfg", 1);
+    setenv("CJHSH_CONFIG_HOME", "/cfg", 1);
     EXPECT_EQ(get_theme_toml_path(), "/cfg/theme.toml");
     EXPECT_EQ(get_theme_name_path(), "/cfg/theme.name");
     EXPECT_EQ(get_user_themes_dir(), "/cfg/themes");
 }
 
 TEST_F(ConfigResolverTest, DataPathsUnderDataDir) {
-    setenv("TASH_DATA_HOME", "/data", 1);
+    setenv("CJHSH_DATA_HOME", "/data", 1);
     EXPECT_EQ(get_sessions_dir(),    "/data/sessions");
     EXPECT_EQ(get_history_db_path(), "/data/history.db");
 }
 
 TEST_F(ConfigResolverTest, FigCompletionsUnderConfig) {
-    setenv("TASH_CONFIG_HOME", "/cfg", 1);
+    setenv("CJHSH_CONFIG_HOME", "/cfg", 1);
     EXPECT_EQ(get_fig_completions_dir(), "/cfg/completions/fig");
 }
 
-// ── ~/.tashrc, ~/.tash_history, ~/.tash_z stay at $HOME ───────
+// ── ~/.CJHSHrc, ~/.CJHSH_history, ~/.CJHSH_z stay at $HOME ───────
 
-TEST_F(ConfigResolverTest, TashrcStaysAtHome) {
-    setenv("TASH_CONFIG_HOME", "/cfg", 1);  // should NOT affect ~/.tashrc
-    EXPECT_EQ(get_tashrc_path(),       "/tmp/tash_resolver_home/.tashrc");
-    EXPECT_EQ(get_history_file_path(), "/tmp/tash_resolver_home/.tash_history");
-    EXPECT_EQ(get_frecency_path(),     "/tmp/tash_resolver_home/.tash_z");
+TEST_F(ConfigResolverTest, CJHSHrcStaysAtHome) {
+    setenv("CJHSH_CONFIG_HOME", "/cfg", 1);  // should NOT affect ~/.CJHSHrc
+    EXPECT_EQ(get_CJHSHrc_path(),       "/tmp/CJHSH_resolver_home/.CJHSHrc");
+    EXPECT_EQ(get_history_file_path(), "/tmp/CJHSH_resolver_home/.CJHSH_history");
+    EXPECT_EQ(get_frecency_path(),     "/tmp/CJHSH_resolver_home/.CJHSH_z");
 }
 
 // ── ensure_dir creates nested paths ────────────────────────────
 
 TEST_F(ConfigResolverTest, EnsureDirCreatesNested) {
-    std::string base = "/tmp/tash_resolver_test_" +
+    std::string base = "/tmp/CJHSH_resolver_test_" +
                        std::to_string(getpid()) + "/a/b/c";
     // Pre-cleanup
-    int rc = system(("rm -rf /tmp/tash_resolver_test_" +
+    int rc = system(("rm -rf /tmp/CJHSH_resolver_test_" +
                     std::to_string(getpid())).c_str());
     (void)rc;
 
@@ -129,7 +129,7 @@ TEST_F(ConfigResolverTest, EnsureDirCreatesNested) {
     // Idempotent.
     EXPECT_TRUE(ensure_dir(base));
 
-    rc = system(("rm -rf /tmp/tash_resolver_test_" +
+    rc = system(("rm -rf /tmp/CJHSH_resolver_test_" +
                 std::to_string(getpid())).c_str());
     (void)rc;
 }

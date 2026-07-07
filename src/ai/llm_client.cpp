@@ -1,10 +1,10 @@
 
-#include "tash/llm_client.h"
-#include "tash/ai.h"
-#include "tash/ai/ai_abort.h"
-#include "tash/ai/llm_diagnostics.h"
-#include "tash/ai/model_defaults.h"
-#include "tash/util/io.h"
+#include "CJHSH/llm_client.h"
+#include "CJHSH/ai.h"
+#include "CJHSH/ai/ai_abort.h"
+#include "CJHSH/ai/llm_diagnostics.h"
+#include "CJHSH/ai/model_defaults.h"
+#include "CJHSH/util/io.h"
 #include <nlohmann/json.hpp>
 #include <string>
 #include <sstream>
@@ -38,16 +38,16 @@ static void retry_sleep() {
 // ═════════════════════════════════════════════════════════════════
 // Diagnostic helpers for O7.2 — rich error output on AI failures.
 // The actual formatting + severity routing lives in src/ai/llm_diagnostics.cpp
-// (exposed via tash::ai::diag) so unit tests can exercise the exact
+// (exposed via CJHSH::ai::diag) so unit tests can exercise the exact
 // output format without mocking HTTPS. Aliased into file scope for
 // brevity; every failure site below funnels through these.
 // ═════════════════════════════════════════════════════════════════
 
-using tash::ai::diag::log_http_failure;
-using tash::ai::diag::log_curl_failure;
-using tash::ai::diag::log_request_debug;
-using tash::ai::diag::log_response_debug;
-using tash::ai::diag::truncate_for_debug;
+using CJHSH::ai::diag::log_http_failure;
+using CJHSH::ai::diag::log_curl_failure;
+using CJHSH::ai::diag::log_request_debug;
+using CJHSH::ai::diag::log_response_debug;
+using CJHSH::ai::diag::truncate_for_debug;
 
 // ═════════════════════════════════════════════════════════════════
 // Gemini JSON helpers (exposed for testing)
@@ -461,9 +461,9 @@ struct CurlStreamContext {
 
 static constexpr size_t kDefaultMaxResponseBytes = 10ull * 1024 * 1024;  // 10 MiB
 
-static std::size_t tash_max_response_bytes() {
+static std::size_t CJHSH_max_response_bytes() {
     static const std::size_t cached = []() -> std::size_t {
-        const char *env = std::getenv("TASH_AI_MAX_RESPONSE_BYTES");
+        const char *env = std::getenv("CJHSH_AI_MAX_RESPONSE_BYTES");
         if (env && *env) {
             // strtoull accepts leading sign characters and returns a wrapped huge
             // value for negative input — reject anything not starting with a digit.
@@ -480,11 +480,11 @@ static std::size_t tash_max_response_bytes() {
     return cached;
 }
 
-static size_t tash_curl_write_cb(char *ptr, size_t size, size_t nmemb, void *userdata) {
+static size_t CJHSH_curl_write_cb(char *ptr, size_t size, size_t nmemb, void *userdata) {
     size_t total = size * nmemb;
     CurlStreamContext *ctx = static_cast<CurlStreamContext*>(userdata);
     ctx->total_bytes += total;
-    if (ctx->total_bytes > tash_max_response_bytes()) {
+    if (ctx->total_bytes > CJHSH_max_response_bytes()) {
         ctx->overflowed = true;
         return 0;  // aborts transfer with CURLE_WRITE_ERROR
     }
@@ -517,10 +517,10 @@ struct CurlBufferContext {
     bool overflowed = false;
 };
 
-static size_t tash_curl_buffer_cb(char *ptr, size_t size, size_t nmemb, void *userdata) {
+static size_t CJHSH_curl_buffer_cb(char *ptr, size_t size, size_t nmemb, void *userdata) {
     size_t total = size * nmemb;
     auto *ctx = static_cast<CurlBufferContext*>(userdata);
-    if (ctx->body.size() + total > tash_max_response_bytes()) {
+    if (ctx->body.size() + total > CJHSH_max_response_bytes()) {
         ctx->overflowed = true;
         return 0;  // aborts transfer with CURLE_WRITE_ERROR
     }
@@ -538,7 +538,7 @@ enum class TransportError {
     DnsFailure,     // could not resolve host
     ConnectFailed,  // refused / network unreachable
     TlsFailure,     // TLS handshake / cert / protocol error
-    Overflow,       // response exceeded TASH_AI_MAX_RESPONSE_BYTES
+    Overflow,       // response exceeded CJHSH_AI_MAX_RESPONSE_BYTES
     CurlInit,       // curl_easy_init returned null (OOM / library broken)
     Other,          // anything else (see curl_message)
 };
@@ -557,8 +557,8 @@ struct [[nodiscard]] CurlPostResult {
 // We use it as the Ctrl+C bail-out path — the SIGINT handler arms the
 // flag (see src/core/signals.cpp), we notice it here, and the caller
 // surfaces "request cancelled" to the user without waiting for timeout.
-static int tash_curl_abort_cb(void *, curl_off_t, curl_off_t, curl_off_t, curl_off_t) {
-    return tash::ai::abort_flag::should_abort() ? 1 : 0;
+static int CJHSH_curl_abort_cb(void *, curl_off_t, curl_off_t, curl_off_t, curl_off_t) {
+    return CJHSH::ai::abort_flag::should_abort() ? 1 : 0;
 }
 
 // Apply the security-critical + common transport options every HTTP call
@@ -579,7 +579,7 @@ static bool configure_common_curl_opts(CURL *curl,
                                        bool allow_plain_http) {
     auto check = [&](const char *name, CURLcode rc) -> bool {
         if (rc != CURLE_OK) {
-            tash::io::error(std::string("curl_easy_setopt(") + name
+            CJHSH::io::error(std::string("curl_easy_setopt(") + name
                             + ") failed: " + curl_easy_strerror(rc));
             return false;
         }
@@ -621,7 +621,7 @@ static bool configure_common_curl_opts(CURL *curl,
     // Arm the progress callback so Ctrl+C interrupts the transfer
     // instead of waiting for the read timeout.
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, tash_curl_abort_cb);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, CJHSH_curl_abort_cb);
     curl_easy_setopt(curl, CURLOPT_XFERINFODATA, nullptr);
     return true;
 }
@@ -634,8 +634,8 @@ static void classify_curl_error(CURLcode res, bool overflowed,
     out.curl_message = curl_easy_strerror(res);
     if (overflowed) {
         out.error_kind = TransportError::Overflow;
-        out.error_message = "response exceeded TASH_AI_MAX_RESPONSE_BYTES ("
-                          + std::to_string(tash_max_response_bytes())
+        out.error_message = "response exceeded CJHSH_AI_MAX_RESPONSE_BYTES ("
+                          + std::to_string(CJHSH_max_response_bytes())
                           + " bytes); aborted";
         return;
     }
@@ -710,7 +710,7 @@ static CurlPostResult curl_post(
         curl_easy_cleanup(curl);
         return out;
     }
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, tash_curl_buffer_cb);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CJHSH_curl_buffer_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ctx);
 
     CURLcode res = curl_easy_perform(curl);
@@ -791,7 +791,7 @@ static LLMResponse curl_streaming_post(
         curl_easy_cleanup(curl);
         return resp;
     }
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, tash_curl_write_cb);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CJHSH_curl_write_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ctx);
 
     CURLcode res = curl_easy_perform(curl);
@@ -898,7 +898,7 @@ static string format_transport_error(const string &provider,
                  + (curl_message.empty() ? raw_message : curl_message);
         case TransportStatus::Overflow:
             return provider + " response too large. "
-                   "Adjust TASH_AI_MAX_RESPONSE_BYTES if you trust the server.";
+                   "Adjust CJHSH_AI_MAX_RESPONSE_BYTES if you trust the server.";
         case TransportStatus::Ok:
         default:
             return "couldn't reach " + provider + ": "
@@ -1005,9 +1005,9 @@ static LLMResponse invoke_once_buffered(const ProviderAdapter &a,
             resp.success = true;
         } else {
             resp.error_message = "unexpected response. Try again.";
-            tash::io::error(std::string(a.display_name)
+            CJHSH::io::error(std::string(a.display_name)
                             + ": HTTP 200 but response body was not parsable");
-            tash::io::debug(std::string(a.display_name) + ": response body: "
+            CJHSH::io::debug(std::string(a.display_name) + ": response body: "
                             + truncate_for_debug(result.body));
         }
         return resp;
@@ -1110,10 +1110,10 @@ GeminiClient::GeminiClient(const string &api_key)
       // Authoritative source: data/ai_models.json. The registry
       // returns a compiled-in default if the file is missing, so
       // construction never fails for lack of config.
-      model_(tash::ai::default_model_for("gemini")),
+      model_(CJHSH::ai::default_model_for("gemini")),
       connect_timeout_(10),
       read_timeout_(30) {
-    for (const auto &m : tash::ai::fallback_models_for("gemini")) {
+    for (const auto &m : CJHSH::ai::fallback_models_for("gemini")) {
         fallback_models_.push_back(m);
     }
 }
@@ -1344,7 +1344,7 @@ static ProviderAdapter openai_adapter(const string &api_key,
 
 OpenAIClient::OpenAIClient(const string &api_key)
     : api_key_(api_key),
-      model_(tash::ai::default_model_for("openai")),
+      model_(CJHSH::ai::default_model_for("openai")),
       connect_timeout_(10),
       read_timeout_(60) {}
 
@@ -1527,7 +1527,7 @@ LLMResponse OllamaClient::generate_structured_with_context(
 // ═════════════════════════════════════════════════════════════════
 // JsonContentStreamer — extracts the root `content` string from a JSON
 // response as its bytes stream in, decoding escapes and forwarding each
-// piece to the emit callback. See tash/llm_client.h for rationale.
+// piece to the emit callback. See CJHSH/llm_client.h for rationale.
 // ═════════════════════════════════════════════════════════════════
 
 JsonContentStreamer::JsonContentStreamer(Emit emit)

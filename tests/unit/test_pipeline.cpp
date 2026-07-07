@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 
-#include "tash/core/structured_pipe.h"
+#include "CJHSH/core/structured_pipe.h"
 
-using namespace tash::structured_pipe;
+using namespace CJHSH::structured_pipe;
 using json = nlohmann::json;
 
 // ═══════════════════════════════════════════════════════════════

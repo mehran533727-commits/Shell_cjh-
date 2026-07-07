@@ -3,14 +3,14 @@
 // banner, the AI setup wizard prompt on first run, and the main input
 // loop. Extracted from main.cpp during the god-file split.
 
-#include "tash/core/executor.h"
-#include "tash/core/parser.h"
-#include "tash/core/signals.h"
-#include "tash/history.h"
-#include "tash/plugin.h"
-#include "tash/ui.h"
-#include "tash/repl.h"
-#include "tash/util/parse_error.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/parser.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/history.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/ui.h"
+#include "CJHSH/repl.h"
+#include "CJHSH/util/parse_error.h"
 #include "theme.h"
 
 #include <cctype>
@@ -19,15 +19,15 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "tash/ai/bootstrap.h"
+#include "CJHSH/ai/bootstrap.h"
 
-#include "tash/ai.h"
-#include "tash/ai/contextual_ai.h"
+#include "CJHSH/ai.h"
+#include "CJHSH/ai/contextual_ai.h"
 
 using namespace std;
 using namespace replxx;
 
-namespace tash {
+namespace CJHSH {
 
 // ── Hint callback (history + context-aware AI) ────────────────
 
@@ -82,35 +82,78 @@ static double get_time_s() {
 
 // ── Banner + AI setup prompt ──────────────────────────────────
 
+static size_t banner_text_width(const string &text) {
+    size_t width = 0;
+    for (unsigned char ch : text) {
+        if ((ch & 0xC0) != 0x80) ++width;
+    }
+    return width;
+}
+
+static string repeat_text(const string &text, size_t count) {
+    string out;
+    for (size_t i = 0; i < count; ++i) out += text;
+    return out;
+}
+
+static void write_banner_rule(const string &left, const string &right,
+                              size_t inner_width) {
+    write_stdout(BANNER_FRAME + "   " + left +
+                 repeat_text("═", inner_width) + right +
+                 CAT_RESET "\n");
+}
+
+static void write_banner_line(const string &rendered, size_t visible_width,
+                              size_t inner_width) {
+    size_t padding = visible_width < inner_width ? inner_width - visible_width : 0;
+    write_stdout(BANNER_FRAME + "   ║" CAT_RESET + rendered +
+                 string(padding, ' ') + BANNER_FRAME + "║" CAT_RESET "\n");
+}
+
 static void print_banner() {
     if (!isatty(STDIN_FILENO)) return;
 
+    const size_t inner_width = 59;
+    const vector<string> logo = {
+        " ██████╗      ██╗ ██╗  ██╗ ███████╗ ██╗  ██╗",
+        "██╔════╝      ██║ ██║  ██║ ██╔════╝ ██║  ██║",
+        "██║           ██║ ███████║ ███████╗ ███████║",
+        "██║      ██   ██║ ██╔══██║ ╚════██║ ██╔══██║",
+        "╚██████╗ ╚█████╔╝ ██║  ██║ ███████║ ██║  ██║",
+        " ╚═════╝  ╚════╝  ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝",
+    };
+
     write_stdout("\n");
-    write_stdout(BANNER_FRAME + "   ╔══════════════════════════════════════════════╗" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "                                              " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_LOGO + "████████╗ █████╗ ███████╗██╗  ██╗" CAT_RESET "          " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_LOGO + "╚══██╔══╝██╔══██╗██╔════╝██║  ██║" CAT_RESET "          " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_LOGO + "   ██║   ███████║███████╗███████║" CAT_RESET "          " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_LOGO + "   ██║   ██╔══██║╚════██║██╔══██║" CAT_RESET "          " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_LOGO + "   ██║   ██║  ██║███████║██║  ██║" CAT_RESET "          " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_LOGO + "   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝" CAT_RESET "          " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "                                              " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_TITLE + "Tavakkoli's Shell" CAT_RESET " " CAT_DIM "───" CAT_RESET " " + BANNER_VERSION + "v" TASH_VERSION_STRING CAT_RESET "               " + BANNER_FRAME + "║" CAT_RESET "\n");
-    // Discovery hints instead of a feature list — feature lists on a
-    // banner rot, cost screen every launch, and experienced users skip
-    // them. Point at where features actually live (the man page, the
-    // --features flag, the AI entrypoints) and let users pull what
-    // they want.
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_FEATURE + "man tash " CAT_DIM "·" CAT_RESET " " + BANNER_FEATURE + "tash --features" CAT_RESET "                 " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "   " + BANNER_FEATURE + "@ai <question>" CAT_RESET " or " + BANNER_FEATURE + "question?" CAT_RESET " for AI help    " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ║" CAT_RESET "                                              " + BANNER_FRAME + "║" CAT_RESET "\n");
-    write_stdout(BANNER_FRAME + "   ╚══════════════════════════════════════════════╝" CAT_RESET "\n");
+    write_banner_rule("╔", "╗", inner_width);
+    write_banner_line("", 0, inner_width);
+    for (const string &line : logo) {
+        write_banner_line("   " + BANNER_LOGO + line + CAT_RESET,
+                          3 + banner_text_width(line), inner_width);
+    }
+    write_banner_line("", 0, inner_width);
+
+    string title_text = string("CJHSH Shell ") + "─── v" + CJHSH_VERSION_STRING;
+    write_banner_line("   " + BANNER_TITLE + "CJHSH Shell" CAT_RESET " " CAT_DIM
+                      "───" CAT_RESET " " + BANNER_VERSION + "v" +
+                      CJHSH_VERSION_STRING CAT_RESET,
+                      3 + banner_text_width(title_text), inner_width);
+
+    string tools_text = "jobs · bglist · help";
+    write_banner_line("   " + BANNER_FEATURE + "jobs" CAT_RESET " " CAT_DIM
+                      "·" CAT_RESET " " + BANNER_FEATURE + "bglist" CAT_RESET
+                      " " CAT_DIM "·" CAT_RESET " " + BANNER_FEATURE + "help" CAT_RESET,
+                      3 + banner_text_width(tools_text), inner_width);
+
+    string ai_text = "@ai <question> or question? for AI help";
+    write_banner_line("   " + BANNER_FEATURE + "@ai <question>" CAT_RESET
+                      " or " + BANNER_FEATURE + "question?" CAT_RESET
+                      " for AI help",
+                      3 + banner_text_width(ai_text), inner_width);
+    write_banner_line("", 0, inner_width);
+    write_banner_rule("╚", "╝", inner_width);
     write_stdout("\n");
 
-    // The AI setup wizard (and any future AI-visible first-run prompts)
-    // live in src/ai/ai_bootstrap.cpp. Noop when AI is disabled or the
-    // user already has a provider configured.
-    tash::ai::offer_setup_wizard();
+    CJHSH::ai::offer_setup_wizard();
 }
 
 // ── Replxx keybinding setup ───────────────────────────────────
@@ -122,7 +165,7 @@ static void configure_replxx(Replxx &rx, ShellState &state) {
 
     // Hydrate the ring from SQLite (or whichever primary IHistoryProvider
     // is installed) so up-arrow sees the full cross-session corpus, not
-    // just whatever happens to be in .tash_history. Replxx loads are
+    // just whatever happens to be in .CJHSH_history. Replxx loads are
     // O(ring_size) against flat text; SQLite is indexed on timestamp so
     // pulling the latest N is cheap. We still call history_load on the
     // plain-text file as a fallback: when there's no history provider
@@ -257,7 +300,7 @@ int run_interactive(ShellState &state) {
                 break;
             }
             write_stdout("\n");
-            write_stderr("tash: press Ctrl-D again or type 'exit' to quit\n");
+            write_stderr("CJHSH: press Ctrl-D again or type 'exit' to quit\n");
             continue;
         }
         state.core.ctrl_d_count = 0;
@@ -289,7 +332,7 @@ int run_interactive(ShellState &state) {
                 // REPL heredoc aborts on Ctrl-D. Column is elided (0)
                 // because the EOF is interactive and has no meaningful
                 // offset into the original command line.
-                tash::parse::emit_parse_error(
+                CJHSH::parse::emit_parse_error(
                     {"unexpected EOF while looking for heredoc delimiter", 1, 0});
                 continue;
             }
@@ -376,11 +419,11 @@ int run_interactive(ShellState &state) {
     return 0;
 }
 
-} // namespace tash
+} // namespace CJHSH
 
 // ── History bang expansion (!! / !n) ──────────────────────────
 //
-// Moved here from src/core/parser.cpp so tash/core/parser.h doesn't
+// Moved here from src/core/parser.cpp so CJHSH/core/parser.h doesn't
 // have to include replxx.hxx transitively — this is the only function
 // in the parse-surface that touched the replxx ring.
 
@@ -401,7 +444,7 @@ std::string expand_history_bang(const std::string &line, replxx::Replxx &rx) {
     // hist_entries is oldest-first (history_scan iterates chronologically).
     if (trimmed == "!!") {
         if (hist_entries.empty()) {
-            tash::parse::emit_parse_error({"!!: event not found", 1, 1});
+            CJHSH::parse::emit_parse_error({"!!: event not found", 1, 1});
             return "";
         }
         return hist_entries.back();  // most recent = last element
@@ -420,7 +463,7 @@ std::string expand_history_bang(const std::string &line, replxx::Replxx &rx) {
             // !1 = first command = hist_entries[0] (1-based).
             int idx = n - 1;
             if (idx < 0 || idx >= (int)hist_entries.size()) {
-                tash::parse::emit_parse_error(
+                CJHSH::parse::emit_parse_error(
                     {"!" + num_str + ": event not found", 1, 1});
                 return "";
             }

@@ -2,7 +2,7 @@
 // repl.cpp as part of the main-split refactor so everything
 // AI-adjacent is localised:
 //
-//   tash::ai::bootstrap(state)
+//   CJHSH::ai::bootstrap(state)
 //     ├─ builds the context-aware transition map from history
 //     └─ prompts the user to run the setup wizard on first run
 //
@@ -10,18 +10,18 @@
 // history path.
 
 
-#include "tash/ai.h"
-#include "tash/ai/bootstrap.h"
-#include "tash/ai/llm_registry.h"
-#include "tash/core/signals.h"
-#include "tash/history.h"
+#include "CJHSH/ai.h"
+#include "CJHSH/ai/bootstrap.h"
+#include "CJHSH/ai/llm_registry.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/history.h"
 #include "theme.h"
 
 #include <string>
 #include <termios.h>
 #include <unistd.h>
 
-namespace tash::ai {
+namespace CJHSH::ai {
 
 // Build the context-aware suggestion map from the recorded history
 // file so repl hints can offer "after X, people run Y" completions.
@@ -45,7 +45,7 @@ void offer_setup_wizard() {
     auto key = ai_load_provider_key(provider);
     if (key || provider == "ollama") return;
 
-    write_stdout(AI_LABEL + "tash ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
+    write_stdout(AI_LABEL + "CJHSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
                  "AI features available! Set up now? [y/n] ");
     char setup_ch = 0;
     struct termios old_t, new_t;
@@ -66,5 +66,5 @@ void offer_setup_wizard() {
     write_stdout("\n");
 }
 
-} // namespace tash::ai
+} // namespace CJHSH::ai
 

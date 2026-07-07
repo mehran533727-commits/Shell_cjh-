@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 
-#include "tash/plugins/ai_error_hook_provider.h"
-#include "tash/llm_client.h"
-#include "tash/shell.h"
+#include "CJHSH/plugins/ai_error_hook_provider.h"
+#include "CJHSH/llm_client.h"
+#include "CJHSH/shell.h"
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -95,7 +95,7 @@ protected:
 
     void SetUp() override {
         mock_client.set_response(
-            R"({"explanation":"Permission denied on the file.","fix":"sudo chmod 644 test.txt"})");
+            R"({"explanation":"Permission denied on the file.","fix":""})");
         state.ai.ai_enabled = true;
         state.ai.last_command_text = "";
         state.ai.last_executed_cmd = "";
@@ -256,7 +256,7 @@ TEST_F(AiErrorHookTest, FactoryStaysDormantUntilClientAvailable) {
 TEST_F(AiErrorHookTest, FactoryActivatesHookWhenClientAppears) {
     auto mock = std::make_shared<MockLLMClient>();
     mock->set_response(
-        "{\"explanation\":\"cmd not found\",\"fix\":\"which mycmd\"}");
+        "{\"explanation\":\"cmd not found\",\"fix\":\"\"}");
 
     int factory_calls = 0;
     AiErrorHookProvider hook(

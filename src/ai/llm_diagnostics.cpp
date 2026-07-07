@@ -1,9 +1,9 @@
-#include "tash/ai/llm_diagnostics.h"
-#include "tash/util/io.h"
+#include "CJHSH/ai/llm_diagnostics.h"
+#include "CJHSH/util/io.h"
 
 #include <string>
 
-namespace tash::ai::diag {
+namespace CJHSH::ai::diag {
 
 const char *http_reason_phrase(int status) {
     switch (status) {
@@ -31,9 +31,9 @@ std::string truncate_for_debug(const std::string &body, std::size_t max_chars) {
 
 static void emit_failure(bool final, const std::string &msg) {
     if (final) {
-        tash::io::error(msg);
+        CJHSH::io::error(msg);
     } else {
-        tash::io::warning(msg);
+        CJHSH::io::warning(msg);
     }
 }
 
@@ -50,7 +50,7 @@ void log_http_failure(const std::string &provider,
     if (final) msg += " - giving up";
     emit_failure(final, msg);
     if (!response_body.empty()) {
-        tash::io::debug(provider + ": response body: "
+        CJHSH::io::debug(provider + ": response body: "
                         + truncate_for_debug(response_body));
     }
 }
@@ -70,8 +70,8 @@ void log_curl_failure(const std::string &provider,
 void log_request_debug(const std::string &provider,
                        const std::string &model,
                        std::size_t body_bytes) {
-    if (tash::io::current_log_level() > tash::io::Level::Debug) return;
-    tash::io::debug(provider + ": POST " + model
+    if (CJHSH::io::current_log_level() > CJHSH::io::Level::Debug) return;
+    CJHSH::io::debug(provider + ": POST " + model
                     + " (body " + std::to_string(body_bytes) + " bytes)");
 }
 
@@ -79,10 +79,10 @@ void log_response_debug(const std::string &provider,
                         int status,
                         std::size_t body_bytes,
                         long long elapsed_ms) {
-    if (tash::io::current_log_level() > tash::io::Level::Debug) return;
-    tash::io::debug(provider + ": HTTP " + std::to_string(status)
+    if (CJHSH::io::current_log_level() > CJHSH::io::Level::Debug) return;
+    CJHSH::io::debug(provider + ": HTTP " + std::to_string(status)
                     + " (" + std::to_string(body_bytes) + " bytes, "
                     + std::to_string(elapsed_ms) + "ms)");
 }
 
-} // namespace tash::ai::diag
+} // namespace CJHSH::ai::diag

@@ -1,7 +1,7 @@
-#include "tash/plugins/safety_hook_provider.h"
-#include "tash/core/parser.h"
-#include "tash/core/signals.h"
-#include "tash/shell.h"
+#include "CJHSH/plugins/safety_hook_provider.h"
+#include "CJHSH/core/parser.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/shell.h"
 #include "theme.h"
 #include <algorithm>
 #include <cctype>

@@ -9,9 +9,9 @@
 #include <cstdio>
 #include <string>
 
-#include "tash/core/executor.h"
-#include "tash/plugin.h"
-#include "tash/shell.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/shell.h"
 
 namespace {
 
@@ -94,7 +94,7 @@ TEST(HookedCapture, SkipPathBlocksExecution) {
     // the child never forks and the file never appears.
     char path[128];
     std::snprintf(path, sizeof(path),
-                  "/tmp/tash_hc_sentinel_%d", (int)::getpid());
+                  "/tmp/CJHSH_hc_sentinel_%d", (int)::getpid());
     ::unlink(path);  // ensure clean state from any prior run
 
     ShellState state;

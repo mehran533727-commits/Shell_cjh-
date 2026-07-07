@@ -2,7 +2,7 @@
 // edit. Source: data/ai_models.json. Bumping the JSON updates this
 // automatically. See src/ai/model_defaults.cpp for how it's consumed.
 
-namespace tash::ai::detail {
+namespace CJHSH::ai::detail {
 
 // `extern const` — namespace-scope `const` defaults to internal
 // linkage in C++, so without `extern` the symbol never escapes this
@@ -10,6 +10,6 @@ namespace tash::ai::detail {
 // Raw-string-literal delimiter keeps JSON's own quotes/backslashes
 // untouched.
 extern const char* const kEmbeddedModelsJson;
-const char* const kEmbeddedModelsJson = R"TASH_AI_MODELS(@TASH_AI_MODELS_JSON_CONTENT@)TASH_AI_MODELS";
+const char* const kEmbeddedModelsJson = R"CJHSH_AI_MODELS(@CJHSH_AI_MODELS_JSON_CONTENT@)CJHSH_AI_MODELS";
 
-} // namespace tash::ai::detail
+} // namespace CJHSH::ai::detail

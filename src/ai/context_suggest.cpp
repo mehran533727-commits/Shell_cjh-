@@ -1,5 +1,5 @@
 
-#include "tash/ai.h"
+#include "CJHSH/ai.h"
 #include <fstream>
 #include <cstdlib>
 
@@ -63,9 +63,9 @@ string context_suggest(const string &last_command, const TransitionMap &tmap) {
     string best;
     int best_count = 0;
 
-    // Default threshold: 3 (configurable via TASH_SUGGEST_THRESHOLD)
+    // Default threshold: 3 (configurable via CJHSH_SUGGEST_THRESHOLD)
     int threshold = 3;
-    const char *env_thresh = getenv("TASH_SUGGEST_THRESHOLD");
+    const char *env_thresh = getenv("CJHSH_SUGGEST_THRESHOLD");
     if (env_thresh) {
         try { threshold = stoi(string(env_thresh)); } catch (...) {}
         if (threshold < 1) threshold = 1;

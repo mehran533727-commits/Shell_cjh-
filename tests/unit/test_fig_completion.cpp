@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "tash/plugins/fig_completion_provider.h"
-#include "tash/shell.h"
+#include "CJHSH/plugins/fig_completion_provider.h"
+#include "CJHSH/shell.h"
 
 #include <fstream>
 #include <cstdlib>
@@ -10,7 +10,7 @@
 // ── Helper: create a temporary directory ─────────────────────
 
 static std::string make_temp_dir(const std::string &suffix) {
-    std::string base = "/tmp/tash_test_fig_" + suffix + "_XXXXXX";
+    std::string base = "/tmp/CJHSH_test_fig_" + suffix + "_XXXXXX";
     std::vector<char> buf(base.begin(), base.end());
     buf.push_back('\0');
     char *result = mkdtemp(buf.data());

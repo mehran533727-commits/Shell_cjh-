@@ -3,20 +3,20 @@
 // Everything else was extracted as part of the main-split refactor:
 //   src/core/executor.cpp  — command execution pipeline
 //   src/core/signals.cpp   — SIGINT/SIGCHLD handlers + install helper
-//   src/startup.cpp        — plugin registration, tashrc load, --benchmark
+//   src/startup.cpp        — plugin registration, CJHSHrc load, --benchmark
 //   src/repl.cpp           — interactive loop, banner, replxx setup
 //
 // main.cpp is now ~60 LOC, which is the point.
 
-#include "tash/ai/bootstrap.h"
-#include "tash/core/executor.h"
-#include "tash/core/signals.h"
-#include "tash/history.h"
-#include "tash/plugin.h"
-#include "tash/repl.h"
-#include "tash/startup.h"
-#include "tash/ui.h"
-#include "tash/util/crash_dump.h"
+#include "CJHSH/ai/bootstrap.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/history.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/repl.h"
+#include "CJHSH/startup.h"
+#include "CJHSH/ui.h"
+#include "CJHSH/util/crash_dump.h"
 #include "theme.h"
 
 #include <cstdio>
@@ -25,7 +25,7 @@
 
 using std::string;
 
-// I/O helpers are inline in tash/core.h so standalone plugin tests
+// I/O helpers are inline in CJHSH/core.h so standalone plugin tests
 // (TEST_STANDALONE targets not linked to shell_lib) can resolve them.
 
 // ── --version / --features ─────────────────────────────────────
@@ -39,13 +39,13 @@ using std::string;
 // Output format is stable (space-separated `+feat` / `-feat` tokens)
 // so scripts can grep it.
 static int print_version_and_features() {
-#ifndef TASH_VERSION_STRING
-#define TASH_VERSION_STRING "unknown"
+#ifndef CJHSH_VERSION_STRING
+#define CJHSH_VERSION_STRING "unknown"
 #endif
-    std::printf("tash %s\n", TASH_VERSION_STRING);
+    std::printf("CJHSH %s\n", CJHSH_VERSION_STRING);
     std::printf("features:");
     std::printf(" +ai");
-#ifdef TASH_SQLITE_ENABLED
+#ifdef CJHSH_SQLITE_ENABLED
     std::printf(" +sqlite-history");
 #else
     std::printf(" -sqlite-history");
@@ -62,7 +62,7 @@ static int print_version_and_features() {
 
 #ifndef TESTING_BUILD
 int main(int argc, char *argv[]) {
-    // `tash --version` / `tash --features` — report build info and exit.
+    // `CJHSH --version` / `CJHSH --features` — report build info and exit.
     if (argc == 2 &&
         (string(argv[1]) == "--version" ||
          string(argv[1]) == "-V" ||
@@ -70,9 +70,9 @@ int main(int argc, char *argv[]) {
         return print_version_and_features();
     }
 
-    // `tash --benchmark` — print a startup-stage breakdown and exit.
+    // `CJHSH --benchmark` — print a startup-stage breakdown and exit.
     if (argc == 2 && string(argv[1]) == "--benchmark") {
-        return tash::run_benchmark_mode();
+        return CJHSH::run_benchmark_mode();
     }
 
     if (argc > 2) {
@@ -81,29 +81,29 @@ int main(int argc, char *argv[]) {
 
     // Interactive or script mode — both share one-time startup.
     load_user_theme();
-    tash::register_default_plugins();
+    CJHSH::register_default_plugins();
 
     ShellState state;
     install_signal_handlers();
     // Crash handlers (SIGSEGV/SIGABRT/SIGBUS) dump a short diagnostic
     // — last command, exit status, cwd, backtrace — before re-raising
     // so the OS still produces a core dump. Deep-review finding O7.4.
-    tash::util::install_crash_handler(state);
+    CJHSH::util::install_crash_handler(state);
 
-    // `tash <script.tash>` — run the file and exit.
+    // `CJHSH <script.CJHSH>` — run the file and exit.
     if (argc == 2) {
         return execute_script_file(argv[1], state);
     }
 
     build_command_cache();
-    tash::ai::build_history_context();
-    tash::load_tashrc(state);
+    CJHSH::ai::build_history_context();
+    CJHSH::load_CJHSHrc(state);
 
-    // Fire lifecycle on_startup hooks now that state + tashrc are
+    // Fire lifecycle on_startup hooks now that state + CJHSHrc are
     // both ready. Plugins can observe the initialized state (aliases,
     // env, dir stack) before the first REPL iteration.
     global_plugin_registry().fire_startup(state);
 
-    return tash::run_interactive(state);
+    return CJHSH::run_interactive(state);
 }
 #endif // TESTING_BUILD

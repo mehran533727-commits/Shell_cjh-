@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "tash/ui/block_renderer.h"
+#include "CJHSH/ui/block_renderer.h"
 
 #include <cstdlib>
 #include <string>

@@ -12,7 +12,7 @@
 namespace {
 
 std::string tmp_script(const std::string &tag, const std::string &body) {
-    std::string path = "/tmp/tash_source_" + tag + "_" +
+    std::string path = "/tmp/CJHSH_source_" + tag + "_" +
                        std::to_string(getpid()) + ".sh";
     std::ofstream f(path);
     f << body;
@@ -77,7 +77,7 @@ TEST(Source, NestedSourceExecutesAllCommands) {
 
 TEST(Source, SourcedCommandsCanChangeDirectory) {
     // cd inside a sourced file must persist in the parent session.
-    std::string tmpdir = "/tmp/tash_source_cd_" +
+    std::string tmpdir = "/tmp/CJHSH_source_cd_" +
                          std::to_string(getpid());
     std::filesystem::create_directories(tmpdir);
     std::string s = tmp_script("cd", "cd " + tmpdir + "\n");

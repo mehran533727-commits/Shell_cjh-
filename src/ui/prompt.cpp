@@ -1,12 +1,13 @@
-#include "tash/core/signals.h"
-#include "tash/plugin.h"
-#include "tash/ui.h"
-#include "tash/util/cwd.h"
-#include "tash/util/safe_exec.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/ui.h"
+#include "CJHSH/util/cwd.h"
+#include "CJHSH/util/safe_exec.h"
 #include "theme.h"
 
 #include <sstream>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -16,7 +17,7 @@ string get_git_branch() {
     // suppress_stderr=true: in a non-repo cwd git writes
     // "fatal: not a git repository" to stderr — we must not leak that
     // to the terminal on every prompt render.
-    auto r = tash::util::safe_exec(
+    auto r = CJHSH::util::safe_exec(
         {"git", "rev-parse", "--abbrev-ref", "HEAD"}, 500,
         /*suppress_stderr=*/true);
     if (r.exit_code != 0) return "";
@@ -28,7 +29,7 @@ string get_git_branch() {
 }
 
 string get_git_status_indicators() {
-    auto r = tash::util::safe_exec(
+    auto r = CJHSH::util::safe_exec(
         {"git", "status", "--porcelain"}, 500,
         /*suppress_stderr=*/true);
     if (r.exit_code < 0) return "";
@@ -93,68 +94,83 @@ static string format_duration(double seconds) {
     }
 }
 
+static size_t running_background_jobs(const ShellState &state) {
+    size_t count = 0;
+    for (const auto &entry : state.core.background_processes) {
+        if (entry.second.running) ++count;
+    }
+    return count;
+}
+
 string write_shell_prefix(const ShellState &state) {
     // Let a registered prompt provider (e.g. Starship) override the builtin
     // prompt. Empty result means "fall through to builtin".
     {
         std::string custom = global_plugin_registry().render_prompt(state);
         if (!custom.empty()) {
-            set_terminal_title("tash");
+            set_terminal_title("CJHSH");
             return custom;
         }
     }
 
-    string cwd = tash::util::current_working_directory();
+    string cwd = CJHSH::util::current_working_directory();
+    const char *env_user = getenv("USER");
     const char *login = getlogin();
-    const char *home = getenv("HOME");
-    string user = login ? short_name(string(login)) : "user";
-    string cwd_display = cwd;
-    if (home) {
-        string home_str(home);
-        size_t pos = cwd_display.find(home_str);
-        if (pos == 0) {
-            cwd_display = "~" + cwd_display.substr(home_str.size());
-        }
-    }
+    string user = env_user && *env_user ? string(env_user)
+                                        : (login ? string(login) : "user");
+    char host_buf[256] = {0};
+    string host = (gethostname(host_buf, sizeof(host_buf) - 1) == 0 &&
+                   host_buf[0] != '\0')
+                      ? short_name(string(host_buf))
+                      : "localhost";
+    size_t running_jobs = running_background_jobs(state);
     string branch = get_git_branch();
 
-    set_terminal_title("tash: " + cwd_display);
+    set_terminal_title("CJHSH Shell: " + cwd);
 
     if (isatty(STDOUT_FILENO)) {
         // Catppuccin Mocha colored prompt — first line written to stdout
-        string line1;
-        line1 += PROMPT_SEPARATOR + "\u256d\u2500 " CAT_RESET;
-        line1 += PROMPT_USER + user + CAT_RESET;
-        line1 += PROMPT_TEXT + " in " CAT_RESET;
-        line1 += PROMPT_PATH + cwd_display + CAT_RESET;
+        string prefix;
+        prefix += PROMPT_SEPARATOR + "\u250c\u2500" CAT_RESET;
+        prefix += PROMPT_TEXT + "[CJHSH Shell] " CAT_RESET;
+        prefix += PROMPT_USER + user + "@" + host + CAT_RESET;
         if (!branch.empty()) {
-            line1 += PROMPT_TEXT + " on " CAT_RESET;
-            line1 += PROMPT_BRANCH + "\ue0a0 " + branch + CAT_RESET;
-
             string git_indicators = get_git_status_indicators();
+            prefix += PROMPT_TEXT + " git:" CAT_RESET;
+            prefix += PROMPT_BRANCH + branch + CAT_RESET;
             if (!git_indicators.empty()) {
-                line1 += PROMPT_GIT_DIRTY + " [" + git_indicators + "]" CAT_RESET;
+                prefix += PROMPT_GIT_DIRTY + "[" + git_indicators + "]" CAT_RESET;
             }
         }
 
         if (state.core.last_cmd_duration >= 0.5) {
-            line1 += PROMPT_DURATION + " took " + format_duration(state.core.last_cmd_duration) + CAT_RESET;
+            prefix += PROMPT_DURATION + " took " +
+                      format_duration(state.core.last_cmd_duration) + CAT_RESET;
         }
 
-        line1 += "\n";
-        write_stdout(line1);
+        prefix += "\n";
+        prefix += PROMPT_SEPARATOR + "\u251c\u2500 " CAT_RESET +
+                  PROMPT_TEXT + "cwd: " CAT_RESET +
+                  PROMPT_PATH + cwd + CAT_RESET + "\n";
+        prefix += PROMPT_SEPARATOR + "\u251c\u2500 " CAT_RESET +
+                  PROMPT_TEXT + "jobs: " CAT_RESET +
+                  to_string(running_jobs) + " running | last: exit " +
+                  to_string(state.core.last_exit_status) + "\n";
+        write_stdout(prefix);
 
         // Second line — the actual prompt passed to replxx
-        string arrow_color = (state.core.last_exit_status == 0) ? PROMPT_ARROW_OK : PROMPT_ARROW_ERR;
-        return PROMPT_SEPARATOR + "\u2570\u2500" CAT_RESET
-               + arrow_color + "\u276f " CAT_RESET;
+        string arrow_color = (state.core.last_exit_status == 0)
+                                 ? PROMPT_ARROW_OK
+                                 : PROMPT_ARROW_ERR;
+        return PROMPT_SEPARATOR + "\u2514\u2500" CAT_RESET
+               + arrow_color + "\u27a4 " CAT_RESET;
     } else {
         stringstream ss;
-        ss << user << " " << cwd_display;
-        if (!branch.empty()) {
-            ss << " (" << branch << ")";
-        }
-        ss << " > ";
+        ss << "\u250c\u2500[CJHSH Shell] " << user << "@" << host << "\n";
+        ss << "\u251c\u2500 cwd: " << cwd << "\n";
+        ss << "\u251c\u2500 jobs: " << running_jobs
+           << " running | last: exit " << state.core.last_exit_status << "\n";
+        ss << "\u2514\u2500\u27a4 ";
         return ss.str();
     }
 }

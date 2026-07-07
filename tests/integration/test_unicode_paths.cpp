@@ -18,7 +18,7 @@ namespace {
 struct Sandbox {
     std::string root;
     Sandbox() {
-        root = "/tmp/tash_unicode_" + std::to_string(getpid());
+        root = "/tmp/CJHSH_unicode_" + std::to_string(getpid());
         int rc = ::system(("rm -rf " + root + " && mkdir -p " + root).c_str());
         (void)rc;
     }

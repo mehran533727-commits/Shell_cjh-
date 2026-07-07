@@ -24,7 +24,7 @@ TEST(RichOutputIntegration, TableRendersBoxDrawing) {
     // Use a synthetic 3-line block so the heuristic (≥2 aligned data rows)
     // fires regardless of the test runner's live process list.
     auto r = run_shell(
-        "printf 'PID  CPU  CMD\\n1234 5.2  node\\n5678 1.1  tash\\n'"
+        "printf 'PID  CPU  CMD\\n1234 5.2  node\\n5678 1.1  CJHSH\\n'"
         " | table\nexit\n");
     bool has_box = r.output.find("\xe2\x94\x8c") != std::string::npos || // ┌
                    r.output.find("\xe2\x94\x9c") != std::string::npos;   // ├
@@ -38,17 +38,17 @@ TEST(RichOutputIntegration, TablePassesThroughUnstructured) {
     EXPECT_EQ(r.output.find("\xe2\x94\x8c"), std::string::npos);
 }
 
-// TASH_AUTO_LINKIFY=1 makes every external command's stdout get its URLs
+// CJHSH_AUTO_LINKIFY=1 makes every external command's stdout get its URLs
 // wrapped in OSC 8 automatically, without piping through `linkify`.
 TEST(RichOutputIntegration, AutoLinkifyWrapsExternalCommandOutput) {
-    setenv("TASH_AUTO_LINKIFY", "1", 1);
-    std::string path = "/tmp/tash_autolinkify_" + std::to_string(getpid());
+    setenv("CJHSH_AUTO_LINKIFY", "1", 1);
+    std::string path = "/tmp/CJHSH_autolinkify_" + std::to_string(getpid());
     {
         std::ofstream f(path);
         f << "visit https://example.com today\n";
     }
     auto r = run_shell("cat " + path + "\nexit\n");
-    unsetenv("TASH_AUTO_LINKIFY");
+    unsetenv("CJHSH_AUTO_LINKIFY");
     unlink(path.c_str());
     EXPECT_NE(r.output.find("\x1b]8;;https://example.com\x1b\\"),
               std::string::npos);
@@ -56,8 +56,8 @@ TEST(RichOutputIntegration, AutoLinkifyWrapsExternalCommandOutput) {
 
 // With the env var OFF, external command output is untouched.
 TEST(RichOutputIntegration, NoAutoLinkifyByDefault) {
-    unsetenv("TASH_AUTO_LINKIFY");
-    std::string path = "/tmp/tash_autolinkify_off_" + std::to_string(getpid());
+    unsetenv("CJHSH_AUTO_LINKIFY");
+    std::string path = "/tmp/CJHSH_autolinkify_off_" + std::to_string(getpid());
     {
         std::ofstream f(path);
         f << "visit https://example.com today\n";
@@ -139,9 +139,9 @@ TEST(RichOutputIntegration, LinkifyInMultiStagePipeline) {
 // negative by verifying that commands with a redirection are bypassed
 // (redirection path is also excluded from interception).
 TEST(RichOutputIntegration, AutoLinkifyBypassedByRedirection) {
-    setenv("TASH_AUTO_LINKIFY", "1", 1);
-    std::string in = "/tmp/tash_redir_in_" + std::to_string(getpid());
-    std::string out = "/tmp/tash_redir_out_" + std::to_string(getpid());
+    setenv("CJHSH_AUTO_LINKIFY", "1", 1);
+    std::string in = "/tmp/CJHSH_redir_in_" + std::to_string(getpid());
+    std::string out = "/tmp/CJHSH_redir_out_" + std::to_string(getpid());
     {
         std::ofstream f(in);
         f << "url https://example.com\n";
@@ -150,7 +150,7 @@ TEST(RichOutputIntegration, AutoLinkifyBypassedByRedirection) {
     std::ifstream rf(out);
     std::string written((std::istreambuf_iterator<char>(rf)),
                         std::istreambuf_iterator<char>());
-    unsetenv("TASH_AUTO_LINKIFY");
+    unsetenv("CJHSH_AUTO_LINKIFY");
     unlink(in.c_str());
     unlink(out.c_str());
     EXPECT_NE(written.find("url https://example.com"), std::string::npos);

@@ -1,5 +1,5 @@
-#include "tash/plugins/fig_completion_provider.h"
-#include "tash/util/config_resolver.h"
+#include "CJHSH/plugins/fig_completion_provider.h"
+#include "CJHSH/util/config_resolver.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -21,7 +21,7 @@ static std::string expand_home(const std::string &path) {
 // ── Constructor (default dir) ────────────────────────────────
 
 FigCompletionProvider::FigCompletionProvider()
-    : spec_dir_(tash::config::get_fig_completions_dir() + "/") {
+    : spec_dir_(CJHSH::config::get_fig_completions_dir() + "/") {
     // Build index of available spec files
     DIR *dp = opendir(spec_dir_.c_str());
     if (!dp) return;

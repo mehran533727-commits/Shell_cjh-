@@ -1,4 +1,4 @@
-#include "tash/plugins/fish_completion_provider.h"
+#include "CJHSH/plugins/fish_completion_provider.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>

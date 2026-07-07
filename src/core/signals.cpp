@@ -3,11 +3,11 @@
 // that `install_signal_handlers()` makes the shell Ctrl-C friendly and
 // SIGCHLD-aware.
 
-#include "tash/core/executor.h"
-#include "tash/core/parser.h"
-#include "tash/core/signals.h"
-#include "tash/util/io.h"
-#include "tash/ai/ai_abort.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/parser.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/util/io.h"
+#include "CJHSH/ai/ai_abort.h"
 #include <atomic>
 #include <csignal>
 #include <pthread.h>
@@ -17,19 +17,19 @@
 
 // Globals the handlers touch. Defined here (not main.cpp) so anything
 // linking the shell library sees them. The lock-free static_asserts for
-// std::atomic<pid_t> live in include/tash/shell.h so every TU that reads
+// std::atomic<pid_t> live in include/CJHSH/shell.h so every TU that reads
 // this atomic from a signal-adjacent path inherits the check.
 volatile sig_atomic_t sigchld_received = 0;
 std::atomic<pid_t> fg_child_pid{0};
 
-// Pending-trap flags: one slot per signum up to TASH_MAX_SIGNAL. The
+// Pending-trap flags: one slot per signum up to CJHSH_MAX_SIGNAL. The
 // signal handler writes 1 here (async-signal-safe); the main loop drains
 // it via check_and_fire_traps() so the actual trap command runs in a
 // normal execution context.
-#ifndef TASH_MAX_SIGNAL
-#define TASH_MAX_SIGNAL 64
+#ifndef CJHSH_MAX_SIGNAL
+#define CJHSH_MAX_SIGNAL 64
 #endif
-volatile sig_atomic_t pending_traps[TASH_MAX_SIGNAL] = {0};
+volatile sig_atomic_t pending_traps[CJHSH_MAX_SIGNAL] = {0};
 
 // ── Handlers ──────────────────────────────────────────────────
 
@@ -46,9 +46,9 @@ static void sigint_handler(int) {
     // Arm the AI abort flag if a request is in flight — the curl progress
     // callback polls this and bails out of the HTTPS read. Async-signal-safe
     // because it's just atomic<bool> stores with lock-free guarantees.
-    tash::ai::abort_flag::sigint_raise();
+    CJHSH::ai::abort_flag::sigint_raise();
     // Queue the trap; the main loop fires it between commands.
-    if (SIGINT < TASH_MAX_SIGNAL) pending_traps[SIGINT] = 1;
+    if (SIGINT < CJHSH_MAX_SIGNAL) pending_traps[SIGINT] = 1;
 }
 
 static void sigchld_handler(int) {
@@ -59,7 +59,7 @@ static void sigchld_handler(int) {
 // which the shell doesn't otherwise care about (e.g. SIGTERM, SIGUSR1).
 // Just records the signal; the main loop runs the trap command.
 static void trap_only_handler(int signum) {
-    if (signum >= 0 && signum < TASH_MAX_SIGNAL) pending_traps[signum] = 1;
+    if (signum >= 0 && signum < CJHSH_MAX_SIGNAL) pending_traps[signum] = 1;
 }
 
 // ── Install ───────────────────────────────────────────────────
@@ -69,7 +69,7 @@ void reset_child_signal_state() {
     sigset_t empty;
     sigemptyset(&empty);
     (void)pthread_sigmask(SIG_SETMASK, &empty, nullptr);
-    // Restore default disposition for the handlers tash installs. The
+    // Restore default disposition for the handlers CJHSH installs. The
     // parent's SIGINT handler arms AI-abort/fg_child_pid logic that is
     // meaningless in a child; SIGCHLD sets a flag the parent reads;
     // SIGQUIT is a common cleanup target. Leave other signals at the
@@ -100,7 +100,7 @@ void install_signal_handlers() {
 // ── trap plumbing ─────────────────────────────────────────────
 
 void install_trap_handler(int signum) {
-    if (signum <= 0 || signum >= TASH_MAX_SIGNAL) return;
+    if (signum <= 0 || signum >= CJHSH_MAX_SIGNAL) return;
     // SIGINT already has a richer handler; it sets pending_traps itself.
     if (signum == SIGINT) return;
     struct sigaction sa;
@@ -111,7 +111,7 @@ void install_trap_handler(int signum) {
 }
 
 void uninstall_trap_handler(int signum) {
-    if (signum <= 0 || signum >= TASH_MAX_SIGNAL) return;
+    if (signum <= 0 || signum >= CJHSH_MAX_SIGNAL) return;
     if (signum == SIGINT) return;      // keep the shell's own handler
     struct sigaction sa;
     sa.sa_handler = SIG_DFL;
@@ -121,7 +121,7 @@ void uninstall_trap_handler(int signum) {
 }
 
 void ignore_signal(int signum) {
-    if (signum <= 0 || signum >= TASH_MAX_SIGNAL) return;
+    if (signum <= 0 || signum >= CJHSH_MAX_SIGNAL) return;
     struct sigaction sa;
     sa.sa_handler = SIG_IGN;
     sigemptyset(&sa.sa_mask);
@@ -137,17 +137,17 @@ void check_and_fire_traps(ShellState &state) {
     // itself only sets the pending flag — debug() is not async-signal-safe).
     if (pending_traps[SIGINT]) {
         pid_t fg = fg_child_pid.load(std::memory_order_acquire);
-        tash::io::debug("SIGINT received (pid=" + std::to_string(::getpid()) +
+        CJHSH::io::debug("SIGINT received (pid=" + std::to_string(::getpid()) +
                         ", fg_child=" + std::to_string(fg) + ")");
     }
-    for (int signum = 1; signum < TASH_MAX_SIGNAL; ++signum) {
+    for (int signum = 1; signum < CJHSH_MAX_SIGNAL; ++signum) {
         if (!pending_traps[signum]) continue;
         pending_traps[signum] = 0;
         auto it = state.exec.traps.find(signum);
         if (it == state.exec.traps.end()) continue;
         const std::string &cmd = it->second;
         if (cmd.empty()) continue;     // "ignore" form
-        tash::io::debug("firing trap for signal " + std::to_string(signum));
+        CJHSH::io::debug("firing trap for signal " + std::to_string(signum));
         std::vector<CommandSegment> segs = parse_command_line(cmd);
         execute_command_line(segs, state);
     }

@@ -15,8 +15,8 @@
 // adding a builtin in exactly one place (the table below) is enough
 // to register it and make it discoverable via `help`.
 
-#include "tash/builtins.h"
-#include "tash/core/builtins.h"
+#include "CJHSH/builtins.h"
+#include "CJHSH/core/builtins.h"
 using namespace std;
 
 const vector<BuiltinInfo>& get_builtins_info() {
@@ -37,6 +37,7 @@ const vector<BuiltinInfo>& get_builtins_info() {
 
         // bg.cpp
         {"bglist",   builtin_bglist,   "bglist",                      "List background jobs"},
+        {"jobs",     builtin_bglist,   "jobs",                        "List background jobs"},
         {"bgkill",   builtin_bgkill,   "bgkill <n>",                  "Send SIGTERM to background job #n"},
         {"bgstop",   builtin_bgstop,   "bgstop <n>",                  "Send SIGSTOP to background job #n"},
         {"bgstart",  builtin_bgstart,  "bgstart <n>",                 "Send SIGCONT to background job #n"},
@@ -63,7 +64,7 @@ const vector<BuiltinInfo>& get_builtins_info() {
         {"help",     builtin_help,     "help [name]",                 "List builtins, or show usage for a specific builtin"},
 
         // config.cpp
-        {"config",   builtin_config,   "config <subcommand>",         "Inspect or modify tash configuration (sync)"},
+        {"config",   builtin_config,   "config <subcommand>",         "Inspect or modify CJHSH configuration (sync)"},
         {"session",  builtin_session,  "session <list|save|load|rm>", "Save or restore shell session state"},
         {"theme",    builtin_theme,    "theme <list|current|set|preview>", "List, switch, or preview color themes"},
 

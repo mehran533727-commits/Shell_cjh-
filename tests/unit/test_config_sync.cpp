@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "tash/core/config_sync.h"
+#include "CJHSH/core/config_sync.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-using namespace tash::config_sync;
+using namespace CJHSH::config_sync;
 
 // ── Test fixture: temp directory with automatic cleanup ──────
 
@@ -17,7 +17,7 @@ protected:
 
     void SetUp() override {
         // Create a unique temp directory
-        char tmpl[] = "/tmp/tash_config_sync_test_XXXXXX";
+        char tmpl[] = "/tmp/CJHSH_config_sync_test_XXXXXX";
         char *dir = mkdtemp(tmpl);
         ASSERT_NE(dir, nullptr) << "Failed to create temp directory";
         temp_dir = std::string(dir);
@@ -96,12 +96,12 @@ TEST_F(ConfigSyncTest, IsInitializedFalse) {
 TEST_F(ConfigSyncTest, SetRemoteAddsOrigin) {
     sync_init(temp_dir);
 
-    bool result = sync_set_remote(temp_dir, "https://github.com/user/tash-config.git");
+    bool result = sync_set_remote(temp_dir, "https://github.com/user/CJHSH-config.git");
     ASSERT_TRUE(result);
 
     CmdResult remote_out = run_git_argv(temp_dir, {"remote", "-v"});
     EXPECT_EQ(remote_out.exit_code, 0);
-    EXPECT_NE(remote_out.output.find("https://github.com/user/tash-config.git"),
+    EXPECT_NE(remote_out.output.find("https://github.com/user/CJHSH-config.git"),
               std::string::npos);
 }
 

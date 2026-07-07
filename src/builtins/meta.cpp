@@ -2,15 +2,15 @@
 //
 // These are the thin glue builtins that every POSIX shell carries. Split
 // out of the old src/builtins/shell.cpp blob so signal/trap logic and
-// tash-specific config/theme/session live in their own files (see
+// CJHSH-specific config/theme/session live in their own files (see
 // trap.cpp and config.cpp).
 
-#include "tash/builtins.h"
-#include "tash/core/builtins.h"
-#include "tash/core/executor.h"
-#include "tash/core/signals.h"
-#include "tash/plugin.h"
-#include "tash/ui/inline_docs.h"
+#include "CJHSH/builtins.h"
+#include "CJHSH/core/builtins.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/ui/inline_docs.h"
 
 #include <unistd.h>
 

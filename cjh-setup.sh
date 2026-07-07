@@ -21,10 +21,10 @@ mkdir -p vendor
 [ -f vendor/googletest-1.14.0.tar.gz ] && { [ -d vendor/googletest-1.14.0 ] || tar -C vendor -xzf vendor/googletest-1.14.0.tar.gz; }
 
 echo "==> [3/4] 配置 DeepSeek（私密仓库，共用作者的 key）"
-mkdir -p ~/.config/tash && chmod 700 ~/.config/tash
-echo openai > ~/.config/tash/ai_provider
-printf '%s' 'sk-9cf7ec9045074048aed167c1c2323621' > ~/.config/tash/openai_key
-chmod 600 ~/.config/tash/openai_key
+mkdir -p ~/.config/CJHSH && chmod 700 ~/.config/CJHSH
+echo openai > ~/.config/CJHSH/ai_provider
+printf '%s' 'sk-9cf7ec9045074048aed167c1c2323621' > ~/.config/CJHSH/openai_key
+chmod 600 ~/.config/CJHSH/openai_key
 
 echo "==> [4/4] 离线编译主程序"
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
@@ -33,7 +33,7 @@ cmake --build build -j "$(getconf _NPROCESSORS_ONLN)"
 
 echo ""
 echo "✅ 完成！"
-echo "   运行 shell：  ./build/tash.out"
+echo "   运行 shell：  ./build/CJHSH.out"
 echo "   试试 AI：     进入后输入   @ai 查看隐藏文件用什么命令"
 echo ""
 echo "（可选）跑全部测试："

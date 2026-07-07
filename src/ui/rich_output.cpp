@@ -1,10 +1,10 @@
-#include "tash/ui/rich_output.h"
+#include "CJHSH/ui/rich_output.h"
 
 #include <algorithm>
 #include <sstream>
 #include <cctype>
 
-namespace tash::ui {
+namespace CJHSH::ui {
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -367,4 +367,4 @@ std::string export_as_markdown(const std::string &command,
     return md;
 }
 
-} // namespace tash::ui
+} // namespace CJHSH::ui

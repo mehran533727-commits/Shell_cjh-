@@ -40,7 +40,7 @@ TEST(Suggest, VeryDifferentCommandNoSuggestion) {
 }
 
 TEST(Suggest, ExitCode127OnCommandNotFound) {
-    std::string marker = "/tmp/tash_suggest_exit_" + std::to_string(getpid());
+    std::string marker = "/tmp/CJHSH_suggest_exit_" + std::to_string(getpid());
     unlink(marker.c_str());
     run_shell("nonexistent_cmd_xyz; echo $? > " + marker + "\nexit\n");
     std::string content = read_file(marker);
@@ -55,7 +55,7 @@ TEST(Suggest, ExitCode127OnCommandNotFound) {
 
 TEST(AutoCd, DirectoryNameChangesDir) {
     // auto-cd writes the new directory to stdout, so we can check script output
-    std::string script = "/tmp/tash_autocd_s_" + std::to_string(getpid()) + ".sh";
+    std::string script = "/tmp/CJHSH_autocd_s_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script);
         f << "/tmp\n";
@@ -68,7 +68,7 @@ TEST(AutoCd, DirectoryNameChangesDir) {
 }
 
 TEST(AutoCd, TildeExpandsAndChangesDir) {
-    std::string script = "/tmp/tash_autocd_tilde_" + std::to_string(getpid()) + ".sh";
+    std::string script = "/tmp/CJHSH_autocd_tilde_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script);
         f << "~\n";
@@ -94,8 +94,8 @@ TEST(AutoCd, NonDirectoryNotAutoCd) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(Multiline, ScriptBackslashContinuation) {
-    std::string script = "/tmp/tash_ml_" + std::to_string(getpid()) + ".sh";
-    std::string marker = "/tmp/tash_ml_out_" + std::to_string(getpid());
+    std::string script = "/tmp/CJHSH_ml_" + std::to_string(getpid()) + ".sh";
+    std::string marker = "/tmp/CJHSH_ml_out_" + std::to_string(getpid());
     {
         std::ofstream f(script);
         f << "echo hello \\\n";
@@ -114,7 +114,7 @@ TEST(Multiline, ScriptBackslashContinuation) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(PersistentHistory, HistoryFileCreated) {
-    // Run a command, then check that ~/.tash_history exists
+    // Run a command, then check that ~/.CJHSH_history exists
     // (This test modifies a real file, so just check the mechanism works
     //  by checking the binary doesn't crash with history operations)
     auto r = run_shell("echo persistent_test_cmd\nexit\n");
@@ -165,7 +165,7 @@ TEST(ZCommand, ZNoMatchShowsError) {
 
 TEST(ZCommand, ZAfterCdFindsDirectory) {
     // z prints the target directory to stdout
-    std::string script = "/tmp/tash_z_s_" + std::to_string(getpid()) + ".sh";
+    std::string script = "/tmp/CJHSH_z_s_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script);
         f << "cd /tmp\n";
@@ -249,7 +249,7 @@ TEST(HistoryIgnoreSpace, SpacePrefixedNotInHistory) {
     // Commands starting with space should not appear in history
     // We can test indirectly: run a space-prefixed command, then
     // check history doesn't include it
-    std::string script = "/tmp/tash_space_" + std::to_string(getpid()) + ".sh";
+    std::string script = "/tmp/CJHSH_space_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script);
         f << " echo secret_cmd\n";

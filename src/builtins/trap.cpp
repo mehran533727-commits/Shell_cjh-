@@ -12,8 +12,8 @@
 // Signal names are recognized with or without the SIG prefix; numeric
 // signums are accepted too. Unknown names produce an error.
 
-#include "tash/builtins.h"
-#include "tash/core/signals.h"
+#include "CJHSH/builtins.h"
+#include "CJHSH/core/signals.h"
 #include <csignal>
 #include <cstdio>
 

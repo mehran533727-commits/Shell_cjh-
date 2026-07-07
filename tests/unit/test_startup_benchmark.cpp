@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "tash/util/benchmark.h"
+#include "CJHSH/util/benchmark.h"
 
 #include <algorithm>
 #include <cmath>

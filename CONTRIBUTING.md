@@ -1,6 +1,6 @@
-# Contributing to Tash
+# Contributing to CJHSH
 
-Thanks for your interest in contributing to Tash! Here's how to get started.
+Thanks for your interest in contributing to CJHSH! Here's how to get started.
 
 ## Getting Started
 
@@ -16,7 +16,7 @@ Thanks for your interest in contributing to Tash! Here's how to get started.
    ```
 4. Run the shell:
    ```sh
-   ./build/tash.out
+   ./build/CJHSH.out
    ```
 
 ## Making Changes
@@ -30,7 +30,7 @@ Thanks for your interest in contributing to Tash! Here's how to get started.
 
 ## What to Work On
 
-- Check [open issues](https://github.com/tavakkoliamirmohammad/tash-shell/issues) — look for `good first issue` labels
+- Check [open issues](https://github.com/tavakkoliamirmohammad/CJHSH-shell/issues) — look for `good first issue` labels
 - Bug fixes are always welcome
 - New builtins, completions, or shell features
 - Documentation improvements
@@ -53,4 +53,4 @@ Open an issue with:
 
 ## Questions?
 
-Open a [discussion](https://github.com/tavakkoliamirmohammad/tash-shell/discussions) or an issue — happy to help.
+Open a [discussion](https://github.com/tavakkoliamirmohammad/CJHSH-shell/discussions) or an issue — happy to help.

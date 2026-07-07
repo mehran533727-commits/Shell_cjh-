@@ -1,8 +1,8 @@
 
-#include "tash/ai.h"
-#include "tash/core/signals.h"
-#include "tash/util/config_resolver.h"
-#include "tash/util/io.h"
+#include "CJHSH/ai.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/util/config_resolver.h"
+#include "CJHSH/util/io.h"
 #include "theme.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -18,26 +18,27 @@
 #include <iostream>
 #include <algorithm>
 #include <optional>
+#include <vector>
 
 using namespace std;
 
 // ── XDG config directory ─────────────────────────────────────
 
 string ai_get_config_dir() {
-    return tash::config::get_config_dir();
+    return CJHSH::config::get_config_dir();
 }
 
 static bool ensure_config_dir() {
     string dir = ai_get_config_dir();
     if (dir.empty()) return false;
-    if (!tash::config::ensure_dir(dir)) return false;
+    if (!CJHSH::config::ensure_dir(dir)) return false;
 
     struct stat st{};
     if (lstat(dir.c_str(), &st) == 0) {
         if (S_ISLNK(st.st_mode)) {
             static bool warned = false;
             if (!warned) {
-                tash::io::error("refusing to operate on " + dir
+                CJHSH::io::error("refusing to operate on " + dir
                                 + " — it is a symbolic link; key files would be exposed");
                 warned = true;
             }
@@ -52,7 +53,7 @@ static bool ensure_config_dir() {
                 // Only log once per process to avoid noise on every key access.
                 static bool logged = false;
                 if (!logged) {
-                    tash::io::info("tightened permissions on " + dir + " to 0700");
+                    CJHSH::io::info("tightened permissions on " + dir + " to 0700");
                     logged = true;
                 }
             }
@@ -67,7 +68,7 @@ static bool write_secure_file(const string &path, const string &content) {
     if (path.empty()) return false;
     int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     if (fd < 0) {
-        tash::io::error("could not open " + path + ": " + strerror(errno));
+        CJHSH::io::error("could not open " + path + ": " + strerror(errno));
         return false;
     }
     // If the file already existed with looser perms, tighten now.
@@ -86,7 +87,7 @@ static bool write_secure_file(const string &path, const string &content) {
     // filesystem journal flush does not leave a truncated/zero-length key.
     // fsync failure is logged but not fatal — data is already written.
     if (::fsync(fd) != 0) {
-        tash::io::warning("fsync on " + path + ": " + strerror(errno));
+        CJHSH::io::warning("fsync on " + path + ": " + strerror(errno));
     }
     bool ok = (::close(fd) == 0);
     return ok;
@@ -155,6 +156,103 @@ static KeyLoadResult classify_file_read(const string &path) {
     return out;
 }
 
+static bool key_provider_supported(const string &provider) {
+    return provider == "gemini" || provider == "openai" ||
+           provider == "deepseek" || provider == "ollama";
+}
+
+static std::vector<std::string> legacy_config_dirs() {
+    std::vector<std::string> dirs;
+
+    if (const char *env = getenv("TASH_CONFIG_HOME")) {
+        if (*env) dirs.emplace_back(env);
+    }
+
+    std::string home;
+    if (const char *env = getenv("HOME")) {
+        if (*env) home = env;
+    }
+    if (home.empty()) home = "/tmp";
+
+    if (const char *xdg = getenv("XDG_CONFIG_HOME")) {
+        if (*xdg) dirs.emplace_back(std::string(xdg) + "/tash");
+    }
+    dirs.emplace_back(home + "/.config/tash");
+    dirs.emplace_back(home + "/.tash");
+    return dirs;
+}
+
+static KeyLoadResult load_provider_key_from_dirs(
+    const string &provider, const std::vector<std::string> &dirs) {
+    KeyLoadResult first_problem;
+    first_problem.status = KeyStatus::Absent;
+
+    for (const auto &dir : dirs) {
+        if (dir.empty()) continue;
+        KeyLoadResult r = classify_file_read(dir + "/" + provider + "_key");
+        if (r.status == KeyStatus::Ok) return r;
+        if (first_problem.status == KeyStatus::Absent &&
+            r.status != KeyStatus::Absent) {
+            first_problem = r;
+        }
+    }
+    return first_problem;
+}
+
+static std::optional<std::string> bundled_default_setup_script() {
+    if (const char *env = getenv("CJHSH_DEFAULT_SETUP_SCRIPT")) {
+        if (*env) return std::string(env);
+    }
+#ifdef CJHSH_SOURCE_DIR
+    return std::string(CJHSH_SOURCE_DIR) + "/cjh-setup.sh";
+#else
+    return std::nullopt;
+#endif
+}
+
+static std::optional<std::string> read_bundled_default_key(const string &provider) {
+    if (provider != "openai") return std::nullopt;
+
+    auto script_path = bundled_default_setup_script();
+    if (!script_path) return std::nullopt;
+    std::ifstream file(*script_path);
+    if (!file.is_open()) return std::nullopt;
+
+    const string key_file = provider + "_key";
+    string line;
+    while (getline(file, line)) {
+        if (line.find(key_file) == string::npos ||
+            line.find("printf") == string::npos) {
+            continue;
+        }
+
+        size_t redirect = line.find('>');
+        string left = redirect == string::npos ? line : line.substr(0, redirect);
+        string last_quoted;
+        size_t pos = 0;
+        while (true) {
+            size_t start = left.find('\'', pos);
+            if (start == string::npos) break;
+            size_t end = left.find('\'', start + 1);
+            if (end == string::npos) break;
+            last_quoted = left.substr(start + 1, end - start - 1);
+            pos = end + 1;
+        }
+        if (!last_quoted.empty() && last_quoted != "%s") return last_quoted;
+    }
+    return std::nullopt;
+}
+
+static KeyLoadResult load_bundled_default_provider_key(const string &provider) {
+    KeyLoadResult out;
+    out.status = KeyStatus::Absent;
+    auto key = read_bundled_default_key(provider);
+    if (!key || key->empty()) return out;
+    out.status = KeyStatus::Ok;
+    out.value = *key;
+    return out;
+}
+
 // ── Helper: write single-line file ───────────────────────────
 
 static bool write_file_line(const string &path, const string &content) {
@@ -167,9 +265,17 @@ static bool write_file_line(const string &path, const string &content) {
 
 string ai_get_provider() {
     string dir = ai_get_config_dir();
-    if (dir.empty()) return "gemini";
-    string val = read_file_line(dir + "/ai_provider");
-    return val.empty() ? "gemini" : val;
+    if (!dir.empty()) {
+        string val = read_file_line(dir + "/ai_provider");
+        if (key_provider_supported(val)) return val;
+    }
+    if (ai_load_provider_key_ex("openai").status == KeyStatus::Ok) {
+        return "openai";
+    }
+    if (ai_load_provider_key_ex("gemini").status == KeyStatus::Ok) {
+        return "gemini";
+    }
+    return "gemini";
 }
 
 void ai_set_provider(const string &provider) {
@@ -200,21 +306,37 @@ std::optional<std::string> ai_load_provider_key(const string &provider) {
 
 KeyLoadResult ai_load_provider_key_ex(const string &provider) {
     KeyLoadResult out;
-    if (provider != "gemini" && provider != "openai" && provider != "ollama") {
+    if (!key_provider_supported(provider)) {
         out.status = KeyStatus::Absent;
         return out;
     }
     string dir = ai_get_config_dir();
+    KeyLoadResult current;
+    current.status = KeyStatus::Absent;
+    if (!dir.empty()) {
+        current = classify_file_read(dir + "/" + provider + "_key");
+        if (current.status == KeyStatus::Ok) return current;
+    }
+
+    KeyLoadResult legacy = load_provider_key_from_dirs(provider, legacy_config_dirs());
+    if (legacy.status == KeyStatus::Ok) return legacy;
+
+    KeyLoadResult bundled = load_bundled_default_provider_key(provider);
+    if (bundled.status == KeyStatus::Ok) return bundled;
+
+    if (current.status != KeyStatus::Absent) return current;
+    if (legacy.status != KeyStatus::Absent) return legacy;
     if (dir.empty()) {
         out.status = KeyStatus::Unreadable;
         out.diagnostic = "config dir unavailable";
         return out;
     }
-    return classify_file_read(dir + "/" + provider + "_key");
+    out.status = KeyStatus::Absent;
+    return out;
 }
 
 bool ai_save_provider_key(const string &provider, const string &key) {
-    if (provider != "gemini" && provider != "openai" && provider != "ollama") return false;
+    if (!key_provider_supported(provider)) return false;
     string dir = ai_get_config_dir();
     if (dir.empty()) return false;
     string path = dir + "/" + provider + "_key";
@@ -241,7 +363,7 @@ bool ai_run_setup_wizard() {
     string provider = ai_get_provider();
 
     write_stdout("\n");
-    write_stdout(AI_LABEL + "tash ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
+    write_stdout(AI_LABEL + "CJHSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
                  "AI features configuration\n\n");
 
     if (provider == "gemini") {
@@ -463,7 +585,7 @@ void ai_clear_conversation_file() {
 // ── Usage tracking ────────────────────────────────────────────
 
 string ai_get_usage_path() {
-    const char *override_path = getenv("TASH_AI_USAGE_PATH");
+    const char *override_path = getenv("CJHSH_AI_USAGE_PATH");
     if (override_path && override_path[0] != '\0') return string(override_path);
 
     string dir = ai_get_config_dir();

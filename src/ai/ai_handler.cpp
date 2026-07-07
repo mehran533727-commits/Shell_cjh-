@@ -1,13 +1,13 @@
 
-#include "tash/ai.h"
-#include "tash/ai/ai_abort.h"
-#include "tash/ai/llm_registry.h"
-#include "tash/ai/model_defaults.h"
-#include "tash/core/builtins.h"
-#include "tash/core/executor.h"
-#include "tash/core/signals.h"
-#include "tash/plugin.h"
-#include "tash/util/io.h"
+#include "CJHSH/ai.h"
+#include "CJHSH/ai/ai_abort.h"
+#include "CJHSH/ai/llm_registry.h"
+#include "CJHSH/ai/model_defaults.h"
+#include "CJHSH/core/builtins.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/util/io.h"
 #include "theme.h"
 #include <nlohmann/json.hpp>
 #include <sys/utsname.h>
@@ -24,6 +24,11 @@
 using json = nlohmann::json;
 
 using namespace std;
+
+static bool is_supported_ai_provider(const string &provider) {
+    return provider == "gemini" || provider == "openai" ||
+           provider == "deepseek" || provider == "ollama";
+}
 
 // ── Read a single character without waiting for Enter ─────────
 
@@ -127,7 +132,7 @@ static void stop_spinner() {
 // Each provider builds its own schema; this text just tells the model
 // which response shapes are legal so it picks one consistently.
 static const char *PROMPT_UNIFIED =
-    "You are an AI assistant embedded in tash (Tavakkoli's Shell). The user types "
+    "You are an AI assistant embedded in CJHSH (CJHSH Shell). The user types "
     "natural language and you respond based on what they ask.\n\n"
     "Guidelines:\n"
     "- Single command: set response_type to \"command\", content to the command.\n"
@@ -144,7 +149,7 @@ static const char *PROMPT_UNIFIED =
 // ── Output helpers ────────────────────────────────────────────
 
 static void ai_print_label() {
-    write_stdout(AI_LABEL + "tash ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET);
+    write_stdout(AI_LABEL + "CJHSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET);
 }
 
 static void ai_print_error(const string &msg) {
@@ -188,7 +193,7 @@ static void add_to_conversation(const string &role, const string &text) {
 
 // ── Context-aware system prompt ──────────────────────────────
 
-// Cached for the life of the process — the tash binary never mutates its
+// Cached for the life of the process — the CJHSH binary never mutates its
 // builtin table at runtime, and uname() values don't change mid-session
 // either. Keeps the per-request overhead at zero.
 static const string& cached_env_context() {
@@ -205,12 +210,12 @@ static const string& cached_env_context() {
             ctx += "OS: " + string(u.sysname) + " " + string(u.release)
                  + " (" + string(u.machine) + "). ";
         }
-        ctx += "Shell: tash " + string(TASH_VERSION_STRING) + ". ";
+        ctx += "Shell: CJHSH " + string(CJHSH_VERSION_STRING) + ". ";
 
-        // Tash-specific builtin list. Without this the model happily
-        // suggests bash idioms for things tash already implements
+        // CJHSH-specific builtin list. Without this the model happily
+        // suggests bash idioms for things CJHSH already implements
         // natively (z, session, trap, bglist, etc.).
-        ctx += "tash builtins (prefer these over external tools when they "
+        ctx += "CJHSH builtins (prefer these over external tools when they "
                "apply): ";
         const auto &binfo = get_builtins_info();
         bool first = true;
@@ -219,7 +224,7 @@ static const string& cached_env_context() {
             ctx += b.name;
             first = false;
         }
-        ctx += ". Tash also supports: pipes (|), structured pipelines (|>), "
+        ctx += ". CJHSH also supports: pipes (|), structured pipelines (|>), "
                "redirections (>, >>, <, 2>, 2>&1), heredocs (<<, <<-), "
                "command substitution ($(...)), subshells (cmd; cmd), "
                "operators (&&, ||, ;), aliases, globs, tilde and $VAR "
@@ -363,7 +368,7 @@ static bool is_valid_model_name(const std::string &s) {
 static bool model_matches_provider(const std::string &provider,
                                     const std::string &model) {
     if (model.empty()) return true;
-    const auto &prefixes = tash::ai::id_prefixes_for(provider);
+    const auto &prefixes = CJHSH::ai::id_prefixes_for(provider);
     if (prefixes.empty()) {
         // Providers without prefix discipline (ollama hosts user-chosen
         // local model names) accept anything.
@@ -392,7 +397,7 @@ static unique_ptr<LLMClient> create_current_client() {
         if (!announced && isatty(STDOUT_FILENO)) {
             // Visible, one-per-process notice. Goes through ai_print_label
             // so users see the origin of the message instead of a silent
-            // reset buried behind --debug. Still logged through tash::io
+            // reset buried behind --debug. Still logged through CJHSH::io
             // so scripts scraping stderr pick it up too.
             ai_print_label();
             write_stdout(CAT_YELLOW + "resetting saved model '"
@@ -401,7 +406,7 @@ static unique_ptr<LLMClient> create_current_client() {
                          + provider + "' (using provider default).\n" CAT_RESET);
             announced = true;
         }
-        tash::io::warning("ignoring saved model '" + *model_override +
+        CJHSH::io::warning("ignoring saved model '" + *model_override +
                            "' — incompatible with provider '" + provider +
                            "'. Using provider default.");
         ai_set_model_override("");
@@ -413,11 +418,13 @@ static unique_ptr<LLMClient> create_current_client() {
         key = ai_load_provider_key("gemini").value_or("");
     } else if (provider == "openai") {
         key = ai_load_provider_key("openai").value_or("");
+    } else if (provider == "deepseek") {
+        key = ai_load_provider_key("deepseek").value_or("");
     } else if (provider == "ollama") {
         key = ai_get_ollama_url();
     }
 
-    unique_ptr<LLMClient> client = tash::ai::create_llm_client(provider, key);
+    unique_ptr<LLMClient> client = CJHSH::ai::create_llm_client(provider, key);
     if (!client) return client;
 
     if (model_override) {
@@ -436,7 +443,7 @@ std::unique_ptr<LLMClient> ai_create_client() {
         static std::atomic<bool> logged{false};
         bool expected = false;
         if (logged.compare_exchange_strong(expected, true)) {
-            tash::io::debug("ai: client built for provider=" +
+            CJHSH::io::debug("ai: client built for provider=" +
                             ai_get_provider() +
                             " model=" + client->get_model());
         }
@@ -460,7 +467,7 @@ static unique_ptr<LLMClient> ensure_client(ShellState &state) {
     }
 
     // Validate provider
-    if (provider != "gemini" && provider != "openai") {
+    if (!is_supported_ai_provider(provider)) {
         ai_print_error("unknown provider '" + provider + "'. Run @ai config.");
         return unique_ptr<LLMClient>();
     }
@@ -603,7 +610,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
     // render char-by-char instead of waiting for the whole JSON. The
     // spinner's only job now is bridging the connection-setup latency
     // before the first byte arrives.
-    tash::ai::abort_flag::begin_request();
+    CJHSH::ai::abort_flag::begin_request();
 
     // Track whether we've begun visible output so we can turn off the
     // spinner exactly once when the first user-facing byte shows up.
@@ -622,7 +629,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
         content_stream.feed(chunk);
     };
 
-    // Pull persisted turns from $TASH_DATA_HOME/ai/conversation.json so
+    // Pull persisted turns from $CJHSH_DATA_HOME/ai/conversation.json so
     // "now delete those files" still has context across a Ctrl+D.
     load_conversation_if_needed();
 
@@ -636,7 +643,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
             system_prompt, enriched_query, on_chunk);
     }
     stop_spinner();
-    tash::ai::abort_flag::end_request();
+    CJHSH::ai::abort_flag::end_request();
 
     if (label_printed) {
         // Finish the streamed line cleanly before any follow-up prompts
@@ -911,7 +918,7 @@ static int handle_privacy(const string &rest) {
     write_stdout("Privacy policy\n\n");
     write_stdout("  Every @ai call sends these fields to the provider:\n");
     write_stdout("    - Your prompt (the text after @ai)\n");
-    write_stdout("    - OS + kernel + tash version (uname -sr)\n");
+    write_stdout("    - OS + kernel + CJHSH version (uname -sr)\n");
     write_stdout("    - Current working directory\n");
     write_stdout("    - Up to 8 recent commands in this cwd (from history)\n");
     write_stdout("    - Conversation history for this session (up to 10 turns)\n\n");
@@ -995,7 +1002,7 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         write_stdout("  Status:   " + string(state.ai.ai_enabled ? AI_CMD + "enabled" : AI_ERROR + "disabled") + CAT_RESET "\n");
         write_stdout("  Today:    " + AI_CMD + to_string(usage) + " requests" CAT_RESET
                      "  Rate: " CAT_DIM "10/min (enforced)" CAT_RESET "\n\n");
-        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " Switch provider (gemini/openai/ollama)\n");
+        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " Switch provider (gemini/openai/deepseek/ollama)\n");
         write_stdout(AI_STEP_NUM + "  2." CAT_RESET " Change model\n");
         write_stdout(AI_STEP_NUM + "  3." CAT_RESET " Set API key\n");
         write_stdout(AI_STEP_NUM + "  4." CAT_RESET " Set Ollama URL\n");
@@ -1007,11 +1014,11 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         write_stdout(string(1, ch) + "\n\n");
 
         if (ch == '1') {
-            write_stdout("  Provider (gemini/openai/ollama): ");
+            write_stdout("  Provider (gemini/openai/deepseek/ollama): ");
             string p;
             if (getline(cin, p)) {
                 p = sanitize_menu_input(p);
-                if (p == "gemini" || p == "openai" || p == "ollama") {
+                if (is_supported_ai_provider(p)) {
                     ai_set_provider(p);
                     ai_set_model_override("");
                     ai_print_label();
@@ -1137,8 +1144,8 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         string provider = rest.substr(9);
         while (!provider.empty() && provider.front() == ' ') provider.erase(provider.begin());
         while (!provider.empty() && provider.back() == ' ') provider.pop_back();
-        if (provider != "gemini" && provider != "openai" && provider != "ollama") {
-            ai_print_error("unknown provider. Use: gemini, openai, or ollama");
+        if (!is_supported_ai_provider(provider)) {
+            ai_print_error("unknown provider. Use: gemini, openai, deepseek, or ollama");
             return 1;
         }
         ai_set_provider(provider);

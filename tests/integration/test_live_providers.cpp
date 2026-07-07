@@ -1,5 +1,5 @@
 // End-to-end tests that the previously-dead plugin providers are now
-// registered and actually fire in a running tash process.
+// registered and actually fire in a running CJHSH process.
 
 #include "test_helpers.h"
 
@@ -18,7 +18,7 @@ struct HomeGuard {
     HomeGuard() {
         const char *h = getenv("HOME");
         original = h ? h : "";
-        tmp = "/tmp/tash_live_providers_" + std::to_string(getpid());
+        tmp = "/tmp/CJHSH_live_providers_" + std::to_string(getpid());
         std::string cmd = "rm -rf " + tmp + " && mkdir -p " + tmp;
         int rc = system(cmd.c_str()); (void)rc;
         setenv("HOME", tmp.c_str(), 1);
@@ -38,7 +38,7 @@ bool has_sqlite3() {
 } // namespace
 
 // ─────────────────────────────────────────────────────────────────────
-// SqliteHistoryProvider: every executed command lands in ~/.tash/history.db
+// SqliteHistoryProvider: every executed command lands in ~/.CJHSH/history.db
 // ─────────────────────────────────────────────────────────────────────
 
 TEST(LiveProviders, SqliteHistoryPersistsCommands) {
@@ -47,10 +47,10 @@ TEST(LiveProviders, SqliteHistoryPersistsCommands) {
     // Run a shell and execute two commands.
     run_shell("echo first_probe\necho second_probe\nexit\n");
 
-    std::string db = home.tmp + "/.tash/history.db";
+    std::string db = home.tmp + "/.CJHSH/history.db";
     struct stat st;
     ASSERT_EQ(stat(db.c_str(), &st), 0)
-        << "~/.tash/history.db not created — SqliteHistoryProvider "
+        << "~/.CJHSH/history.db not created — SqliteHistoryProvider "
         << "not registered at startup?";
 
     if (!has_sqlite3()) {

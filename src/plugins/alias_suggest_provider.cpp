@@ -1,6 +1,6 @@
-#include "tash/plugins/alias_suggest_provider.h"
-#include "tash/core/signals.h"
-#include "tash/shell.h"
+#include "CJHSH/plugins/alias_suggest_provider.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/shell.h"
 
 // ── Helper: find the alias whose value best matches the command ──
 

@@ -1,8 +1,8 @@
-#include "tash/core/builtins.h"
-#include "tash/plugin.h"
-#include "tash/ui.h"
-#include "tash/ui/fuzzy_finder.h"
-#include "tash/util/safe_exec.h"
+#include "CJHSH/core/builtins.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/ui.h"
+#include "CJHSH/ui/fuzzy_finder.h"
+#include "CJHSH/util/safe_exec.h"
 #include "theme.h"
 
 #include <algorithm>
@@ -80,7 +80,7 @@ Replxx::completions_t completion_callback(const string &input, int &context_len)
         if (completions.empty() && prefix.size() >= 2) {
             vector<string> candidates = builtin_names;
             candidates.insert(candidates.end(), path_cmds.begin(), path_cmds.end());
-            auto ranked = tash::fuzzy_filter(prefix, candidates, 20);
+            auto ranked = CJHSH::fuzzy_filter(prefix, candidates, 20);
             for (const auto &r : ranked) {
                 bool is_builtin_name =
                     std::find(builtin_names.begin(), builtin_names.end(), r.text) !=
@@ -157,7 +157,7 @@ Replxx::completions_t completion_callback(const string &input, int &context_len)
     if (kill_cmds.count(cmd)) {
         // 500ms timeout matches the prompt's git queries -- on a
         // process-table lookup this is ample.
-        auto ps = tash::util::safe_exec({"ps", "-eo", "pid,comm="}, 500);
+        auto ps = CJHSH::util::safe_exec({"ps", "-eo", "pid,comm="}, 500);
         const std::string &out = ps.stdout_text;
         size_t line_start = 0;
         while (line_start < out.size()) {

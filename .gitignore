@@ -35,8 +35,8 @@ lcov.info
 Testing/
 
 # 运行时各自的用户数据（历史 / 数据库，会冲突）
-.tash/
-.tash_history
+.CJHSH/
+.CJHSH_history
 history.db
 *.db-shm
 *.db-wal

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "tash/plugins/alias_suggest_provider.h"
-#include "tash/shell.h"
+#include "CJHSH/plugins/alias_suggest_provider.h"
+#include "CJHSH/shell.h"
 
 // ── find_matching_alias tests ────────────────────────────────
 

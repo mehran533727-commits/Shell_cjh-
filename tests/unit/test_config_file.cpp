@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "tash/util/config_file.h"
-#include "tash/util/config_resolver.h"
+#include "CJHSH/util/config_file.h"
+#include "CJHSH/util/config_resolver.h"
 
 #include <chrono>
 #include <cstdio>
@@ -28,31 +28,31 @@ private:
 };
 
 // Each test gets its own temporary $HOME so `get_data_dir()` resolves
-// under it (with XDG/TASH_DATA_HOME cleared). That means writing a
-// config at `<home>/.tash/config.json` is the file the loader reads.
+// under it (with XDG/CJHSH_DATA_HOME cleared). That means writing a
+// config at `<home>/.CJHSH/config.json` is the file the loader reads.
 class ConfigFileTest : public ::testing::Test {
 protected:
     std::string tmp_home;
-    std::string saved_home, saved_xdg_data, saved_tash_data, saved_log_level;
+    std::string saved_home, saved_xdg_data, saved_CJHSH_data, saved_log_level;
 
     void SetUp() override {
         saved_home       = save("HOME");
         saved_xdg_data   = save("XDG_DATA_HOME");
-        saved_tash_data  = save("TASH_DATA_HOME");
-        saved_log_level  = save("TASH_LOG_LEVEL");
+        saved_CJHSH_data  = save("CJHSH_DATA_HOME");
+        saved_log_level  = save("CJHSH_LOG_LEVEL");
 
         unsetenv("XDG_DATA_HOME");
-        unsetenv("TASH_DATA_HOME");
-        unsetenv("TASH_LOG_LEVEL");
+        unsetenv("CJHSH_DATA_HOME");
+        unsetenv("CJHSH_LOG_LEVEL");
 
         // PID + nanosecond suffix to avoid collisions between
         // concurrent tests.
-        tmp_home = "/tmp/tash_config_file_test_" +
+        tmp_home = "/tmp/CJHSH_config_file_test_" +
                    std::to_string(::getpid()) + "_" +
                    std::to_string(std::chrono::steady_clock::now()
                                   .time_since_epoch().count());
         fs::remove_all(tmp_home);
-        fs::create_directories(tmp_home + "/.tash");
+        fs::create_directories(tmp_home + "/.CJHSH");
         setenv("HOME", tmp_home.c_str(), 1);
     }
 
@@ -60,11 +60,11 @@ protected:
         fs::remove_all(tmp_home);
         restore("HOME",           saved_home);
         restore("XDG_DATA_HOME",  saved_xdg_data);
-        restore("TASH_DATA_HOME", saved_tash_data);
-        restore("TASH_LOG_LEVEL", saved_log_level);
+        restore("CJHSH_DATA_HOME", saved_CJHSH_data);
+        restore("CJHSH_LOG_LEVEL", saved_log_level);
     }
 
-    std::string config_path() const { return tmp_home + "/.tash/config.json"; }
+    std::string config_path() const { return tmp_home + "/.CJHSH/config.json"; }
 
     void write_config(const std::string &body) const {
         std::ofstream out(config_path());
@@ -85,7 +85,7 @@ protected:
 
 TEST_F(ConfigFileTest, MissingFileYieldsDefaults) {
     // No config.json written.
-    auto cfg = tash::config::load();
+    auto cfg = CJHSH::config::load();
     EXPECT_TRUE(cfg.disabled_plugins.empty());
     EXPECT_EQ(cfg.log_level, "info");
 }
@@ -98,7 +98,7 @@ TEST_F(ConfigFileTest, ValidConfigIsParsed) {
         "log_level": "warn"
     })");
 
-    auto cfg = tash::config::load();
+    auto cfg = CJHSH::config::load();
     ASSERT_EQ(cfg.disabled_plugins.size(), 2u);
     EXPECT_EQ(cfg.disabled_plugins[0], "safety");
     EXPECT_EQ(cfg.disabled_plugins[1], "fish");
@@ -113,7 +113,7 @@ TEST_F(ConfigFileTest, UnknownFieldsAreIgnored) {
         "totally_new_setting": { "nested": true }
     })");
 
-    auto cfg = tash::config::load();
+    auto cfg = CJHSH::config::load();
     EXPECT_EQ(cfg.log_level, "debug");
     EXPECT_TRUE(cfg.disabled_plugins.empty());
 }
@@ -123,36 +123,36 @@ TEST_F(ConfigFileTest, UnknownFieldsAreIgnored) {
 TEST_F(ConfigFileTest, MalformedJsonYieldsDefaultsWithWarning) {
     write_config("{ this is not json");
 
-    tash::config::UserConfig cfg;
+    CJHSH::config::UserConfig cfg;
     std::string stderr_text;
     {
         StderrCapture cap;
-        EXPECT_NO_THROW(cfg = tash::config::load());
+        EXPECT_NO_THROW(cfg = CJHSH::config::load());
         stderr_text = cap.str();
     }
 
     EXPECT_TRUE(cfg.disabled_plugins.empty());
     EXPECT_EQ(cfg.log_level, "info");
-    EXPECT_NE(stderr_text.find("tash: warning"), std::string::npos);
+    EXPECT_NE(stderr_text.find("CJHSH: warning"), std::string::npos);
     EXPECT_NE(stderr_text.find("config.json"), std::string::npos);
 }
 
-// ── TASH_LOG_LEVEL env override wins ───────────────────────────
+// ── CJHSH_LOG_LEVEL env override wins ───────────────────────────
 
 TEST_F(ConfigFileTest, EnvLogLevelOverridesFile) {
     write_config(R"({ "log_level": "warn" })");
-    setenv("TASH_LOG_LEVEL", "debug", 1);
+    setenv("CJHSH_LOG_LEVEL", "debug", 1);
 
-    auto cfg = tash::config::load();
+    auto cfg = CJHSH::config::load();
     EXPECT_EQ(cfg.log_level, "debug");
 }
 
-// ── TASH_LOG_LEVEL applies even when no file exists ────────────
+// ── CJHSH_LOG_LEVEL applies even when no file exists ────────────
 
 TEST_F(ConfigFileTest, EnvLogLevelAppliesWithoutFile) {
-    setenv("TASH_LOG_LEVEL", "error", 1);
+    setenv("CJHSH_LOG_LEVEL", "error", 1);
 
-    auto cfg = tash::config::load();
+    auto cfg = CJHSH::config::load();
     EXPECT_EQ(cfg.log_level, "error");
     EXPECT_TRUE(cfg.disabled_plugins.empty());
 }
@@ -164,7 +164,7 @@ TEST_F(ConfigFileTest, NonStringDisabledEntriesAreSkipped) {
         "plugins": { "disabled": ["fig", 42, null, "starship"] }
     })");
 
-    auto cfg = tash::config::load();
+    auto cfg = CJHSH::config::load();
     ASSERT_EQ(cfg.disabled_plugins.size(), 2u);
     EXPECT_EQ(cfg.disabled_plugins[0], "fig");
     EXPECT_EQ(cfg.disabled_plugins[1], "starship");
@@ -173,15 +173,15 @@ TEST_F(ConfigFileTest, NonStringDisabledEntriesAreSkipped) {
 // ── loaded() reflects set_loaded() ─────────────────────────────
 
 TEST_F(ConfigFileTest, LoadedAccessorMirrorsSetLoaded) {
-    tash::config::UserConfig cfg;
+    CJHSH::config::UserConfig cfg;
     cfg.disabled_plugins = {"fish"};
     cfg.log_level = "debug";
-    tash::config::set_loaded(cfg);
+    CJHSH::config::set_loaded(cfg);
 
-    EXPECT_EQ(tash::config::loaded().log_level, "debug");
-    ASSERT_EQ(tash::config::loaded().disabled_plugins.size(), 1u);
-    EXPECT_EQ(tash::config::loaded().disabled_plugins[0], "fish");
+    EXPECT_EQ(CJHSH::config::loaded().log_level, "debug");
+    ASSERT_EQ(CJHSH::config::loaded().disabled_plugins.size(), 1u);
+    EXPECT_EQ(CJHSH::config::loaded().disabled_plugins[0], "fish");
 
     // Reset so other tests start from a clean slate.
-    tash::config::set_loaded(tash::config::UserConfig{});
+    CJHSH::config::set_loaded(CJHSH::config::UserConfig{});
 }

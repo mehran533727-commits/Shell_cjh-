@@ -1,6 +1,6 @@
-#include "tash/util/safe_tmpdir.h"
+#include "CJHSH/util/safe_tmpdir.h"
 
-#include "tash/util/io.h"
+#include "CJHSH/util/io.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-namespace tash::util {
+namespace CJHSH::util {
 
 static bool tmpdir_is_trusted(const char *dir) {
     if (!dir || !*dir) return false;
@@ -28,7 +28,7 @@ std::string resolve_safe_tmpdir() {
     const char *tmpdir = std::getenv("TMPDIR");
     if (tmpdir_is_trusted(tmpdir)) {
         std::string s(tmpdir);
-        // Strip any trailing slash so callers can append "/tash-..." unconditionally.
+        // Strip any trailing slash so callers can append "/CJHSH-..." unconditionally.
         while (s.size() > 1 && s.back() == '/') s.pop_back();
         return s;
     }
@@ -41,9 +41,9 @@ void ensure_private_perms(const std::string &path, mode_t mode) {
         // tmpfs on some CI runners silently rejects chmod. Log once per
         // path but continue -- a missing chmod is not a security
         // regression over the previous umask-only behaviour.
-        tash::io::warning("could not tighten permissions on " + path +
+        CJHSH::io::warning("could not tighten permissions on " + path +
                           ": " + std::strerror(errno));
     }
 }
 
-} // namespace tash::util
+} // namespace CJHSH::util

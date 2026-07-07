@@ -1,6 +1,6 @@
 
-#include "tash/ai/contextual_ai.h"
-#include "tash/core/builtins.h"
+#include "CJHSH/ai/contextual_ai.h"
+#include "CJHSH/core/builtins.h"
 #include <cstdlib>
 #include <cstring>
 #include <fstream>

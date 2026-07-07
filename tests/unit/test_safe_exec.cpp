@@ -1,4 +1,4 @@
-// Tests for tash::util::safe_exec.
+// Tests for CJHSH::util::safe_exec.
 //
 // The critical property is that argv[1..] is delivered to the child
 // process verbatim -- no shell substitution. Feeding "$(whoami)" as
@@ -6,9 +6,9 @@
 // user name.
 
 #include <gtest/gtest.h>
-#include "tash/util/safe_exec.h"
+#include "CJHSH/util/safe_exec.h"
 
-using tash::util::safe_exec;
+using CJHSH::util::safe_exec;
 
 TEST(SafeExecTest, ShellMetacharsAreLiteral) {
     auto r = safe_exec({"echo", "$(whoami)"});
@@ -47,7 +47,7 @@ TEST(SafeExecTest, EmptyArgvFailsCleanly) {
 }
 
 TEST(SafeExecTest, UnknownCommandReturns127) {
-    auto r = safe_exec({"tash-this-does-not-exist-xyzzy"});
+    auto r = safe_exec({"CJHSH-this-does-not-exist-xyzzy"});
     EXPECT_EQ(r.exit_code, 127);
 }
 

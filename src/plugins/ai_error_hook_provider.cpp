@@ -1,10 +1,10 @@
 
-#include "tash/plugins/ai_error_hook_provider.h"
-#include "tash/ai.h"
-#include "tash/ai/ai_abort.h"
-#include "tash/core/executor.h"
-#include "tash/core/signals.h"
-#include "tash/util/io.h"
+#include "CJHSH/plugins/ai_error_hook_provider.h"
+#include "CJHSH/ai.h"
+#include "CJHSH/ai/ai_abort.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/util/io.h"
 #include "theme.h"
 #include <nlohmann/json.hpp>
 #include <termios.h>
@@ -97,25 +97,25 @@ void AiErrorHookProvider::on_after_command(
     // preference — the whole point of the auto-recovery hook is to use
     // the error output, but users who opted out explicitly don't want
     // that data sent.
-    tash::ai::abort_flag::begin_request();
+    CJHSH::ai::abort_flag::begin_request();
     const string effective_stderr =
         ai_get_send_stderr() ? stderr_output : string();
     string context = build_context_json(command, exit_code,
                                          effective_stderr, state);
     LLMResponse resp = cl->generate(system_prompt(), context);
-    tash::ai::abort_flag::end_request();
+    CJHSH::ai::abort_flag::end_request();
 
     if (!resp.success) {
         // Don't stay silent — the user just saw their command fail and
         // may be waiting for AI-powered advice. One short line explains
         // why the recovery attempt didn't land so they know to retry or
-        // fall back to `@ai explain`. Goes through tash::io so piped
+        // fall back to `@ai explain`. Goes through CJHSH::io so piped
         // output stays clean.
         if (resp.transport == TransportStatus::Aborted) {
             // User hit Ctrl+C; they already know why. No noise.
             return;
         }
-        tash::io::warning("ai error-recovery unavailable: "
+        CJHSH::io::warning("ai error-recovery unavailable: "
                           + (resp.error_message.empty()
                                 ? "unknown error"
                                 : resp.error_message));

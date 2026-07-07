@@ -1,4 +1,4 @@
-// Tests for tash::util::FileDescriptor: RAII close, move semantics,
+// Tests for CJHSH::util::FileDescriptor: RAII close, move semantics,
 // release() ownership transfer.
 
 #include <gtest/gtest.h>
@@ -6,9 +6,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "tash/util/fd.h"
+#include "CJHSH/util/fd.h"
 
-using tash::util::FileDescriptor;
+using CJHSH::util::FileDescriptor;
 
 TEST(FileDescriptor, DefaultConstructedIsInvalid) {
     FileDescriptor fd;

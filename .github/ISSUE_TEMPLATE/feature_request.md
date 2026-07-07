@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for Tash
+about: Suggest a new feature for CJHSH
 title: ''
 labels: enhancement
 assignees: ''

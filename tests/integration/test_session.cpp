@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// Test sessions are stored under ~/.tash/sessions. To avoid polluting
+// Test sessions are stored under ~/.CJHSH/sessions. To avoid polluting
 // a developer's real home, redirect $HOME to a per-test temp dir.
 namespace {
 struct HomeGuard {
@@ -15,7 +15,7 @@ struct HomeGuard {
     HomeGuard() {
         const char *h = getenv("HOME");
         original = h ? h : "";
-        tmp = "/tmp/tash_session_test_home_" + std::to_string(getpid());
+        tmp = "/tmp/CJHSH_session_test_home_" + std::to_string(getpid());
         std::error_code ec;
         std::filesystem::create_directories(tmp, ec);
         setenv("HOME", tmp.c_str(), 1);

@@ -1,11 +1,11 @@
-#include "tash/util/io.h"
+#include "CJHSH/util/io.h"
 
 #include <atomic>
 #include <cctype>
 #include <string>
 #include <unistd.h>
 
-namespace tash::io {
+namespace CJHSH::io {
 
 // Global level, defaulted to Info so calls that land before
 // set_log_level() runs at startup behave sensibly.
@@ -29,8 +29,8 @@ static constexpr const char *ANSI_RESET = "\033[0m";
 static void emit(Level lvl, std::string_view msg) {
     if (lvl < g_level.load(std::memory_order_relaxed)) return;
 
-    // Build the line: "tash: <tag>: <msg>\n". Info has no tag per spec,
-    // just "tash: <msg>\n".
+    // Build the line: "CJHSH: <tag>: <msg>\n". Info has no tag per spec,
+    // just "CJHSH: <msg>\n".
     std::string line;
     line.reserve(msg.size() + 32);
 
@@ -44,7 +44,7 @@ static void emit(Level lvl, std::string_view msg) {
         case Level::Info:    color = nullptr;     tag = nullptr;   break;
     }
 
-    line += "tash: ";
+    line += "CJHSH: ";
     if (tag) {
         if (tty && color) line += color;
         line += tag;
@@ -93,4 +93,4 @@ Level parse_log_level(std::string_view s) {
     return Level::Info;
 }
 
-} // namespace tash::io
+} // namespace CJHSH::io

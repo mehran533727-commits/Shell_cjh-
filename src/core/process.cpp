@@ -1,19 +1,24 @@
-#include "tash/core/builtins.h"
-#include "tash/core/executor.h"
-#include "tash/core/parser.h"
-#include "tash/core/signals.h"
-#include "tash/ui/rich_output.h"
-#include "tash/util/io.h"
-#include "tash/util/limits.h"
-#include "tash/util/safe_tmpdir.h"
+#include "CJHSH/core/builtins.h"
+#include "CJHSH/core/executor.h"
+#include "CJHSH/core/parser.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/ui/rich_output.h"
+#include "CJHSH/util/io.h"
+#include "CJHSH/util/limits.h"
+#include "CJHSH/util/safe_tmpdir.h"
+#include <algorithm>
 #include <atomic>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
+#include <iomanip>
+#include <poll.h>
 #include <pthread.h>
 #include <signal.h>
+#include <sstream>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/wait.h>
 #include <unordered_set>
 #include <vector>
@@ -32,21 +37,21 @@ using namespace std;
 // they also controlled.
 //
 // Security (deep-review finding #4): body size is capped at
-// TASH_MAX_HEREDOC_BYTES -- a runaway redirection can't fill /tmp.
+// CJHSH_MAX_HEREDOC_BYTES -- a runaway redirection can't fill /tmp.
 int open_heredoc_fd(const std::string &body) {
-    if (body.size() > tash::util::TASH_MAX_HEREDOC_BYTES) {
-        write_stderr("tash: heredoc body exceeds maximum size (100 MiB)\n");
+    if (body.size() > CJHSH::util::CJHSH_MAX_HEREDOC_BYTES) {
+        write_stderr("CJHSH: heredoc body exceeds maximum size (100 MiB)\n");
         return -1;
     }
 
-    std::string base = tash::util::resolve_safe_tmpdir();
-    std::string pattern = base + "/tash-hd-XXXXXX";
+    std::string base = CJHSH::util::resolve_safe_tmpdir();
+    std::string pattern = base + "/CJHSH-hd-XXXXXX";
     std::vector<char> buf(pattern.begin(), pattern.end());
     buf.push_back('\0');
     int fd = ::mkstemp(buf.data());
     if (fd < 0 && errno == ENOENT && base != "/tmp") {
         // Fallback: resolved tmp dir is invalid for some reason, try /tmp.
-        std::string fallback = "/tmp/tash-hd-XXXXXX";
+        std::string fallback = "/tmp/CJHSH-hd-XXXXXX";
         std::vector<char> fb(fallback.begin(), fallback.end());
         fb.push_back('\0');
         fd = ::mkstemp(fb.data());
@@ -109,13 +114,13 @@ void setup_child_io(const vector<Redirection> &redirections) {
             if (r.is_heredoc) {
                 in = open_heredoc_fd(r.heredoc_body);
                 if (in < 0) {
-                    write_stderr("tash: heredoc: tmpfile failed\n");
+                    write_stderr("CJHSH: heredoc: tmpfile failed\n");
                     _exit(1);
                 }
             } else {
                 in = open(r.filename.c_str(), O_RDONLY);
                 if (in < 0) {
-                    write_stderr("tash: " + r.filename + ": No such file or directory\n");
+                    write_stderr("CJHSH: " + r.filename + ": No such file or directory\n");
                     _exit(1);
                 }
             }
@@ -129,7 +134,7 @@ void setup_child_io(const vector<Redirection> &redirections) {
                 out = open(r.filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
             }
             if (out < 0) {
-                write_stderr("tash: " + r.filename + ": Cannot open file\n");
+                write_stderr("CJHSH: " + r.filename + ": Cannot open file\n");
                 _exit(1);
             }
             dup2(out, STDOUT_FILENO);
@@ -137,7 +142,7 @@ void setup_child_io(const vector<Redirection> &redirections) {
         } else if (r.fd == 2) {
             int err = open(r.filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (err < 0) {
-                write_stderr("tash: " + r.filename + ": Cannot open file\n");
+                write_stderr("CJHSH: " + r.filename + ": Cannot open file\n");
                 _exit(1);
             }
             dup2(err, STDERR_FILENO);
@@ -162,8 +167,39 @@ static bool is_interactive_cmd(const std::string &cmd) {
 }
 
 static bool auto_linkify_enabled() {
-    const char *v = getenv("TASH_AUTO_LINKIFY");
+    const char *v = getenv("CJHSH_AUTO_LINKIFY");
     return v && *v && string(v) != "0";
+}
+
+static string join_command(const vector<string> &argv) {
+    string out;
+    for (size_t i = 0; i < argv.size(); ++i) {
+        if (i > 0) out += " ";
+        out += argv[i];
+    }
+    return out;
+}
+
+static double now_seconds() {
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_sec + tv.tv_usec / 1e6;
+}
+
+int register_background_job(pid_t pid, const string &command,
+                            ShellState &state) {
+    CoreState::BackgroundJob job;
+    job.job_id = state.core.next_background_job_id++;
+    job.pid = pid;
+    job.command = command;
+    job.start_time = now_seconds();
+    job.running = true;
+    state.core.background_processes[pid] = job;
+
+    write_stdout("[JOB " + to_string(job.job_id) + "] started | pid=" +
+                 to_string(pid) + " | cmd=\"" + command +
+                 "\" | mode=background\n");
+    return job.job_id;
 }
 
 int foreground_process(const vector<string> &argv,
@@ -178,7 +214,7 @@ int foreground_process(const vector<string> &argv,
     if (captured_stderr) {
         captured_stderr->clear();
         if (pipe_cloexec(stderr_pipe) < 0) {
-            tash::io::warning("could not capture stderr");
+            CJHSH::io::warning("could not capture stderr");
             captured_stderr = nullptr; // fall back to no capture
         }
     }
@@ -219,7 +255,7 @@ int foreground_process(const vector<string> &argv,
         // _exit, not exit: the forked child must not run C++ global
         // destructors (replxx, sqlite, curl, plugin registry) — those
         // hold resources the parent still owns, and tearing them down
-        // in the child occasionally segfaults (tash issue: $? = 139
+        // in the child occasionally segfaults (CJHSH issue: $? = 139
         // instead of 127 on command-not-found, ~1 in 5 on macOS).
         _exit(127);
     } else {
@@ -229,47 +265,100 @@ int foreground_process(const vector<string> &argv,
 
         fg_child_pid.store(pid, std::memory_order_release);
 
-        // Drain stdout first (line-buffered linkify) so stderr capture below
-        // doesn't deadlock on a child that writes a lot of stdout.
-        if (intercept_stdout) {
+        auto set_nonblocking = [](int fd) {
+            int flags = fcntl(fd, F_GETFL, 0);
+            if (flags >= 0) (void)fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        };
+        auto close_read_fd = [](int &fd) {
+            if (fd >= 0) {
+                close(fd);
+                fd = -1;
+            }
+        };
+
+        std::string stdout_carry;
+        auto drain_stdout = [&]() {
             char buf[4096];
-            std::string carry;
-            ssize_t n;
-            while ((n = read(stdout_pipe[0], buf, sizeof(buf))) > 0) {
-                carry.append(buf, static_cast<size_t>(n));
-                size_t start = 0;
-                while (true) {
-                    size_t nl = carry.find('\n', start);
-                    if (nl == std::string::npos) break;
-                    std::string line = carry.substr(start, nl - start + 1);
-                    std::string linked = tash::ui::linkify_urls(line);
-                    // Short write to STDOUT at shell exit is survivable;
-                    // suppressing -Wunused-result with `if(...){}` matches
-                    // the rest of this TU.
-                    if (write(STDOUT_FILENO, linked.data(), linked.size())) {}
-                    start = nl + 1;
+            while (stdout_pipe[0] >= 0) {
+                ssize_t n = read(stdout_pipe[0], buf, sizeof(buf));
+                if (n > 0) {
+                    stdout_carry.append(buf, static_cast<size_t>(n));
+                    size_t start = 0;
+                    while (true) {
+                        size_t nl = stdout_carry.find('\n', start);
+                        if (nl == std::string::npos) break;
+                        std::string line = stdout_carry.substr(start, nl - start + 1);
+                        std::string linked = CJHSH::ui::linkify_urls(line);
+                        if (write(STDOUT_FILENO, linked.data(), linked.size())) {}
+                        start = nl + 1;
+                    }
+                    stdout_carry.erase(0, start);
+                    continue;
                 }
-                carry.erase(0, start);
+                if (n == 0) {
+                    close_read_fd(stdout_pipe[0]);
+                    break;
+                }
+                if (errno == EINTR) continue;
+                if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+                close_read_fd(stdout_pipe[0]);
+                break;
             }
-            if (!carry.empty()) {
-                std::string linked = tash::ui::linkify_urls(carry);
-                if (write(STDOUT_FILENO, linked.data(), linked.size())) {}
+        };
+
+        auto drain_stderr = [&]() {
+            char buf[4096];
+            while (stderr_pipe[0] >= 0) {
+                ssize_t n = read(stderr_pipe[0], buf, sizeof(buf));
+                if (n > 0) {
+                    if (captured_stderr && captured_stderr->size() < 4096) {
+                        size_t room = 4096 - captured_stderr->size();
+                        captured_stderr->append(buf, std::min(room, static_cast<size_t>(n)));
+                    }
+                    if (write(STDERR_FILENO, buf, static_cast<size_t>(n))) {}
+                    continue;
+                }
+                if (n == 0) {
+                    close_read_fd(stderr_pipe[0]);
+                    break;
+                }
+                if (errno == EINTR) continue;
+                if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+                close_read_fd(stderr_pipe[0]);
+                break;
             }
-            close(stdout_pipe[0]);
+        };
+
+        if (intercept_stdout && stdout_pipe[0] >= 0) set_nonblocking(stdout_pipe[0]);
+        if (captured_stderr && stderr_pipe[0] >= 0) set_nonblocking(stderr_pipe[0]);
+
+        while ((intercept_stdout && stdout_pipe[0] >= 0) ||
+               (captured_stderr && stderr_pipe[0] >= 0)) {
+            pollfd fds[2];
+            int nfds = 0;
+            int stdout_slot = -1;
+            int stderr_slot = -1;
+            if (intercept_stdout && stdout_pipe[0] >= 0) {
+                stdout_slot = nfds;
+                fds[nfds++] = {stdout_pipe[0], POLLIN | POLLHUP | POLLERR, 0};
+            }
+            if (captured_stderr && stderr_pipe[0] >= 0) {
+                stderr_slot = nfds;
+                fds[nfds++] = {stderr_pipe[0], POLLIN | POLLHUP | POLLERR, 0};
+            }
+
+            int pr = poll(fds, nfds, -1);
+            if (pr < 0) {
+                if (errno == EINTR) continue;
+                break;
+            }
+            if (stdout_slot >= 0 && fds[stdout_slot].revents) drain_stdout();
+            if (stderr_slot >= 0 && fds[stderr_slot].revents) drain_stderr();
         }
 
-        // Read stderr BEFORE waitpid to prevent deadlock on large output
-        if (captured_stderr && stderr_pipe[0] >= 0) {
-            char buf[4096];
-            ssize_t n;
-            while ((n = read(stderr_pipe[0], buf, sizeof(buf) - 1)) > 0) {
-                buf[n] = '\0';
-                captured_stderr->append(buf, static_cast<size_t>(n));
-                // Also show to user on real stderr
-                if (write(STDERR_FILENO, buf, static_cast<size_t>(n))) {}
-                if (captured_stderr->size() >= 4096) break;
-            }
-            close(stderr_pipe[0]);
+        if (!stdout_carry.empty()) {
+            std::string linked = CJHSH::ui::linkify_urls(stdout_carry);
+            if (write(STDOUT_FILENO, linked.data(), linked.size())) {}
         }
 
         waitpid(pid, &status, WUNTRACED);
@@ -287,17 +376,27 @@ void background_process(const vector<string> &argv,
                         ShellState &state,
                         const vector<Redirection> &redirections) {
     if (argv.size() < 2) {
-        tash::io::error("bg: usage: bg <command> [args...]");
+        CJHSH::io::error("bg: usage: bg <command> [args...]");
+        return;
+    }
+    vector<string> command(argv.begin() + 1, argv.end());
+    background_command(command, state, redirections);
+}
+
+void background_command(const vector<string> &argv,
+                        ShellState &state,
+                        const vector<Redirection> &redirections) {
+    if (argv.empty()) {
+        CJHSH::io::error("background: missing command");
         return;
     }
     if ((int)state.core.background_processes.size() >= state.core.max_background_processes) {
-        tash::io::error("Maximum number of background processes");
+        CJHSH::io::error("Maximum number of background processes");
         return;
     }
 
-    // argv[0] is "bg", actual command starts at argv[1]
     vector<const char *> c_args;
-    for (size_t i = 1; i < argv.size(); i++) c_args.push_back(argv[i].c_str());
+    for (const string &arg : argv) c_args.push_back(arg.c_str());
     c_args.push_back(nullptr);
 
     pid_t pid = fork();
@@ -311,14 +410,15 @@ void background_process(const vector<string> &argv,
         write_stderr(err_msg);
         _exit(127);  // see note above foreground exec — skip C++ dtors in child
     } else {
-        state.core.background_processes[pid] = argv[1];
-        tash::io::debug("bg: spawned pid=" + to_string(pid) +
-                        " cmd='" + argv[1] + "'");
-        write_stdout("Background process with " + to_string(pid) + " Executing\n");
+        string display = join_command(argv);
+        register_background_job(pid, display, state);
+        CJHSH::io::debug("bg: spawned pid=" + to_string(pid) +
+                        " cmd='" + display + "'");
     }
 }
 
-void check_background_process_finished(unordered_map<pid_t, string> &background_processes) {
+void check_background_process_finished(
+    unordered_map<pid_t, CoreState::BackgroundJob> &background_processes) {
     // Drain all ready children in one call. Unix signals coalesce —
     // if 5 SIGCHLDs arrive while blocked, only one delivery is
     // observable. Previously this reaped a single pid per invocation,
@@ -329,29 +429,43 @@ void check_background_process_finished(unordered_map<pid_t, string> &background_
         int status;
         pid_t pid_finished = waitpid(-1, &status, WNOHANG | WCONTINUED | WUNTRACED);
         if (pid_finished <= 0) break;
+        auto it = background_processes.find(pid_finished);
+        if (it == background_processes.end()) continue;
+        CoreState::BackgroundJob &job = it->second;
         if (WIFCONTINUED(status)) {
-            write_stdout("Background process with " + to_string(pid_finished) + " Continued\n");
+            job.running = true;
+            write_stdout("[JOB " + to_string(job.job_id) + "] continued | pid=" +
+                         to_string(pid_finished) + "\n");
         } else if (WIFSTOPPED(status)) {
-            write_stdout("Background process with " + to_string(pid_finished) + " Stopped\n");
+            job.running = false;
+            write_stdout("[JOB " + to_string(job.job_id) + "] stopped | pid=" +
+                         to_string(pid_finished) + "\n");
         } else if (WIFEXITED(status) || WIFSIGNALED(status)) {
             int exit_code = WIFEXITED(status) ? WEXITSTATUS(status)
                                               : 128 + WTERMSIG(status);
-            tash::io::debug("bg: reaped pid=" + to_string(pid_finished) +
+            double elapsed = now_seconds() - job.start_time;
+            stringstream msg;
+            msg << fixed << setprecision(2);
+            msg << "[JOB " << job.job_id << "] finished | pid="
+                << pid_finished << " | exit=" << exit_code
+                << " | time=" << elapsed << "s\n";
+            CJHSH::io::debug("bg: reaped pid=" + to_string(pid_finished) +
                             " exit=" + to_string(exit_code));
-            background_processes.erase(pid_finished);
-            write_stdout("Background process with " + to_string(pid_finished) + " finished\n");
+            background_processes.erase(it);
+            write_stdout(msg.str());
         }
     }
 }
 
-void reap_background_processes(unordered_map<pid_t, string> &background_processes) {
+void reap_background_processes(
+    unordered_map<pid_t, CoreState::BackgroundJob> &background_processes) {
     while (sigchld_received) {
         sigchld_received = 0;
         size_t before = background_processes.size();
         check_background_process_finished(background_processes);
         size_t reaped = before - background_processes.size();
         if (reaped > 0) {
-            tash::io::debug("SIGCHLD: reaping " + to_string(reaped) + " children");
+            CJHSH::io::debug("SIGCHLD: reaping " + to_string(reaped) + " children");
         }
     }
 }

@@ -1,6 +1,6 @@
-// Tests for the tash::ai::diag helpers that format LLM failure messages.
+// Tests for the CJHSH::ai::diag helpers that format LLM failure messages.
 //
-// These tests capture the stderr bytes written by tash::io:: to verify the
+// These tests capture the stderr bytes written by CJHSH::io:: to verify the
 // exact diagnostic lines an end-user sees when an LLM call fails. The
 // helpers are deliberately decoupled from libcurl so we can exercise the
 // "HTTP 429" path without standing up a TLS server in CI.
@@ -13,20 +13,20 @@
 #include <string>
 #include <unistd.h>
 
-#include "tash/ai/llm_diagnostics.h"
-#include "tash/util/io.h"
+#include "CJHSH/ai/llm_diagnostics.h"
+#include "CJHSH/util/io.h"
 
 namespace {
 
 // RAII stderr redirector: dup2's a temp file over STDERR_FILENO for the
 // lifetime of the scope, then returns the captured bytes. We use write(2)
-// on STDERR_FILENO directly in tash::io::emit(), so gtest's own
+// on STDERR_FILENO directly in CJHSH::io::emit(), so gtest's own
 // testing::internal::CaptureStderr() (which only redirects std::cerr)
 // is not sufficient.
 class StderrCapture {
 public:
     StderrCapture() {
-        char tmpl[] = "/tmp/tash_io_capture_XXXXXX";
+        char tmpl[] = "/tmp/CJHSH_io_capture_XXXXXX";
         fd_ = ::mkstemp(tmpl);
         if (fd_ < 0) std::abort();
         path_ = tmpl;
@@ -58,16 +58,16 @@ private:
 };
 
 // Scoped log-level guard: restores the previous level on destruction so
-// one test's TASH_LOG_LEVEL=debug mode doesn't leak into the next.
+// one test's CJHSH_LOG_LEVEL=debug mode doesn't leak into the next.
 class LogLevelGuard {
 public:
-    explicit LogLevelGuard(tash::io::Level l)
-        : saved_(tash::io::current_log_level()) {
-        tash::io::set_log_level(l);
+    explicit LogLevelGuard(CJHSH::io::Level l)
+        : saved_(CJHSH::io::current_log_level()) {
+        CJHSH::io::set_log_level(l);
     }
-    ~LogLevelGuard() { tash::io::set_log_level(saved_); }
+    ~LogLevelGuard() { CJHSH::io::set_log_level(saved_); }
 private:
-    tash::io::Level saved_;
+    CJHSH::io::Level saved_;
 };
 
 } // namespace
@@ -75,9 +75,9 @@ private:
 // ── log_http_failure ──────────────────────────────────────────────
 
 TEST(LlmDiagnostics, Http429FinalContainsProviderAndStatus) {
-    LogLevelGuard lvl(tash::io::Level::Info);
+    LogLevelGuard lvl(CJHSH::io::Level::Info);
     StderrCapture cap;
-    tash::ai::diag::log_http_failure("gemini", 429, 3, 3,
+    CJHSH::ai::diag::log_http_failure("gemini", 429, 3, 3,
                                      /*final=*/true,
                                      /*response_body=*/"");
     std::string out = cap.read_all();
@@ -92,9 +92,9 @@ TEST(LlmDiagnostics, Http429FinalContainsProviderAndStatus) {
 }
 
 TEST(LlmDiagnostics, Http429RetryableIsWarningNotError) {
-    LogLevelGuard lvl(tash::io::Level::Info);
+    LogLevelGuard lvl(CJHSH::io::Level::Info);
     StderrCapture cap;
-    tash::ai::diag::log_http_failure("openai", 429, 1, 3,
+    CJHSH::ai::diag::log_http_failure("openai", 429, 1, 3,
                                      /*final=*/false,
                                      /*response_body=*/"");
     std::string out = cap.read_all();
@@ -113,9 +113,9 @@ TEST(LlmDiagnostics, ResponseBodyDumpGatedByDebugLevel) {
 
     // At Info level the body line must NOT appear on stderr.
     {
-        LogLevelGuard lvl(tash::io::Level::Info);
+        LogLevelGuard lvl(CJHSH::io::Level::Info);
         StderrCapture cap;
-        tash::ai::diag::log_http_failure("gemini", 403, 1, 1,
+        CJHSH::ai::diag::log_http_failure("gemini", 403, 1, 1,
                                          /*final=*/true, body);
         std::string out = cap.read_all();
         EXPECT_EQ(out.find("quota exceeded"), std::string::npos)
@@ -124,9 +124,9 @@ TEST(LlmDiagnostics, ResponseBodyDumpGatedByDebugLevel) {
 
     // At Debug level it must appear, tagged with the provider name.
     {
-        LogLevelGuard lvl(tash::io::Level::Debug);
+        LogLevelGuard lvl(CJHSH::io::Level::Debug);
         StderrCapture cap;
-        tash::ai::diag::log_http_failure("gemini", 403, 1, 1,
+        CJHSH::ai::diag::log_http_failure("gemini", 403, 1, 1,
                                          /*final=*/true, body);
         std::string out = cap.read_all();
         EXPECT_NE(out.find("quota exceeded"), std::string::npos)
@@ -139,9 +139,9 @@ TEST(LlmDiagnostics, ResponseBodyDumpGatedByDebugLevel) {
 // ── log_curl_failure ──────────────────────────────────────────────
 
 TEST(LlmDiagnostics, CurlFailureIncludesProviderAndUpstreamMessage) {
-    LogLevelGuard lvl(tash::io::Level::Info);
+    LogLevelGuard lvl(CJHSH::io::Level::Info);
     StderrCapture cap;
-    tash::ai::diag::log_curl_failure("ollama",
+    CJHSH::ai::diag::log_curl_failure("ollama",
                                      "Could not resolve host: localhost",
                                      2, 3, /*final=*/false);
     std::string out = cap.read_all();
@@ -155,10 +155,10 @@ TEST(LlmDiagnostics, CurlFailureIncludesProviderAndUpstreamMessage) {
 // ── debug traces ──────────────────────────────────────────────────
 
 TEST(LlmDiagnostics, RequestDebugSilentWhenLogLevelAboveDebug) {
-    LogLevelGuard lvl(tash::io::Level::Info);
+    LogLevelGuard lvl(CJHSH::io::Level::Info);
     StderrCapture cap;
-    tash::ai::diag::log_request_debug("gemini", "gemini-3-flash-preview", 1234);
-    tash::ai::diag::log_response_debug("gemini", 200, 5678, 42);
+    CJHSH::ai::diag::log_request_debug("gemini", "gemini-3-flash-preview", 1234);
+    CJHSH::ai::diag::log_response_debug("gemini", 200, 5678, 42);
     std::string out = cap.read_all();
 
     EXPECT_TRUE(out.empty())
@@ -166,10 +166,10 @@ TEST(LlmDiagnostics, RequestDebugSilentWhenLogLevelAboveDebug) {
 }
 
 TEST(LlmDiagnostics, RequestDebugEmittedAtDebugLevel) {
-    LogLevelGuard lvl(tash::io::Level::Debug);
+    LogLevelGuard lvl(CJHSH::io::Level::Debug);
     StderrCapture cap;
-    tash::ai::diag::log_request_debug("gemini", "gemini-3-flash-preview", 1234);
-    tash::ai::diag::log_response_debug("gemini", 200, 5678, 42);
+    CJHSH::ai::diag::log_request_debug("gemini", "gemini-3-flash-preview", 1234);
+    CJHSH::ai::diag::log_response_debug("gemini", 200, 5678, 42);
     std::string out = cap.read_all();
 
     EXPECT_NE(out.find("gemini: POST gemini-3-flash-preview"), std::string::npos)
@@ -183,12 +183,12 @@ TEST(LlmDiagnostics, RequestDebugEmittedAtDebugLevel) {
 // ── truncate_for_debug ────────────────────────────────────────────
 
 TEST(LlmDiagnostics, TruncateForDebugLeavesShortBodiesUntouched) {
-    EXPECT_EQ(tash::ai::diag::truncate_for_debug("hi", 500), "hi");
+    EXPECT_EQ(CJHSH::ai::diag::truncate_for_debug("hi", 500), "hi");
 }
 
 TEST(LlmDiagnostics, TruncateForDebugClipsLongBodies) {
     std::string body(800, 'x');
-    std::string out = tash::ai::diag::truncate_for_debug(body, 500);
+    std::string out = CJHSH::ai::diag::truncate_for_debug(body, 500);
     EXPECT_EQ(out.size(), 500u + std::string("... [truncated]").size());
     EXPECT_NE(out.find("... [truncated]"), std::string::npos);
 }
@@ -196,9 +196,9 @@ TEST(LlmDiagnostics, TruncateForDebugClipsLongBodies) {
 // ── http_reason_phrase ────────────────────────────────────────────
 
 TEST(LlmDiagnostics, HttpReasonPhraseCoversCommonLlmStatuses) {
-    EXPECT_STREQ(tash::ai::diag::http_reason_phrase(429), "Too Many Requests");
-    EXPECT_STREQ(tash::ai::diag::http_reason_phrase(401), "Unauthorized");
-    EXPECT_STREQ(tash::ai::diag::http_reason_phrase(500), "Server Error");
-    EXPECT_STREQ(tash::ai::diag::http_reason_phrase(999), "HTTP error")
+    EXPECT_STREQ(CJHSH::ai::diag::http_reason_phrase(429), "Too Many Requests");
+    EXPECT_STREQ(CJHSH::ai::diag::http_reason_phrase(401), "Unauthorized");
+    EXPECT_STREQ(CJHSH::ai::diag::http_reason_phrase(500), "Server Error");
+    EXPECT_STREQ(CJHSH::ai::diag::http_reason_phrase(999), "HTTP error")
         << "unknown statuses should fall back to the generic phrase";
 }

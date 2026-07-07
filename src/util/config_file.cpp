@@ -1,7 +1,7 @@
-#include "tash/util/config_file.h"
+#include "CJHSH/util/config_file.h"
 
-#include "tash/util/config_resolver.h"
-#include "tash/util/io.h"
+#include "CJHSH/util/config_resolver.h"
+#include "CJHSH/util/io.h"
 
 #include <nlohmann/json.hpp>
 
@@ -11,7 +11,7 @@
 #include <sstream>
 #include <string>
 
-namespace tash::config {
+namespace CJHSH::config {
 namespace {
 
 // Process-wide copy of the config loaded at startup. Stored so the
@@ -25,10 +25,10 @@ std::string env_or_empty(const char *name) {
     return (v && *v) ? std::string(v) : std::string();
 }
 
-// Apply TASH_LOG_LEVEL if set; overrides whatever was read from the
+// Apply CJHSH_LOG_LEVEL if set; overrides whatever was read from the
 // file (per the spec).
 void apply_env_overrides(UserConfig &cfg) {
-    std::string env_lvl = env_or_empty("TASH_LOG_LEVEL");
+    std::string env_lvl = env_or_empty("CJHSH_LOG_LEVEL");
     if (!env_lvl.empty()) {
         cfg.log_level = env_lvl;
     }
@@ -43,7 +43,7 @@ UserConfig load() {
     std::ifstream in(path);
     if (!in.is_open()) {
         // Missing file is expected: silent defaults.
-        tash::io::debug("config: no file at " + path + ", using defaults");
+        CJHSH::io::debug("config: no file at " + path + ", using defaults");
         apply_env_overrides(cfg);
         return cfg;
     }
@@ -55,7 +55,7 @@ UserConfig load() {
         // Malformed JSON: warn, keep defaults, don't abort. We use
         // std::cerr directly because there's no shared `io::warning`
         // helper yet — that'll come in a later PR.
-        std::cerr << "tash: warning: failed to parse " << path << ": "
+        std::cerr << "CJHSH: warning: failed to parse " << path << ": "
                   << e.what() << " (using defaults)\n";
         apply_env_overrides(cfg);
         return cfg;
@@ -73,7 +73,7 @@ UserConfig load() {
             }
         }
     } catch (const std::exception &e) {
-        std::cerr << "tash: warning: " << path
+        std::cerr << "CJHSH: warning: " << path
                   << ": invalid `plugins.disabled` (" << e.what()
                   << "), ignoring\n";
         cfg.disabled_plugins.clear();
@@ -85,7 +85,7 @@ UserConfig load() {
             cfg.log_level = j["log_level"].get<std::string>();
         }
     } catch (const std::exception &e) {
-        std::cerr << "tash: warning: " << path
+        std::cerr << "CJHSH: warning: " << path
                   << ": invalid `log_level` (" << e.what()
                   << "), using default\n";
         cfg.log_level = "info";
@@ -99,7 +99,7 @@ UserConfig load() {
         if (i) disabled_csv += ",";
         disabled_csv += cfg.disabled_plugins[i];
     }
-    tash::io::debug("config: loaded " + path +
+    CJHSH::io::debug("config: loaded " + path +
                     " (plugins.disabled=[" + disabled_csv +
                     "], log_level=" + cfg.log_level + ")");
     return cfg;
@@ -113,4 +113,4 @@ void set_loaded(UserConfig cfg) {
     g_loaded = std::move(cfg);
 }
 
-} // namespace tash::config
+} // namespace CJHSH::config

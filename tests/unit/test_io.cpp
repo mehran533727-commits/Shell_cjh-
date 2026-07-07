@@ -1,11 +1,11 @@
-// Tests for the tash::io diagnostic namespace: level parsing, filtering,
+// Tests for the CJHSH::io diagnostic namespace: level parsing, filtering,
 // and the set/current APIs. The TTY-coloring code path is not exercised
 // here (CI stderr isn't a tty and colors are intentionally stable on
 // whatever stderr looks like).
 
 #include <gtest/gtest.h>
 
-#include "tash/util/io.h"
+#include "CJHSH/util/io.h"
 
 #include <array>
 #include <cstdio>
@@ -16,15 +16,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-using tash::io::Level;
-using tash::io::parse_log_level;
-using tash::io::set_log_level;
-using tash::io::current_log_level;
+using CJHSH::io::Level;
+using CJHSH::io::parse_log_level;
+using CJHSH::io::set_log_level;
+using CJHSH::io::current_log_level;
 
 namespace {
 
 // Capture stderr output produced by `fn`. Uses a pipe dup'd over
-// STDERR_FILENO so the tash::io helpers (which write(2) directly to
+// STDERR_FILENO so the CJHSH::io helpers (which write(2) directly to
 // STDERR_FILENO) end up in our buffer.
 std::string capture_stderr(const std::function<void()> &fn) {
     int pipefd[2];
@@ -93,14 +93,14 @@ TEST(IoFiltering, SubLevelMessagesAreDropped) {
     Level saved = current_log_level();
 
     set_log_level(Level::Error);
-    tash::io::debug("this must not crash");
-    tash::io::info("this must not crash");
-    tash::io::warning("this must not crash");
-    tash::io::error("error is always emitted but may be suppressed in test output");
+    CJHSH::io::debug("this must not crash");
+    CJHSH::io::info("this must not crash");
+    CJHSH::io::warning("this must not crash");
+    CJHSH::io::error("error is always emitted but may be suppressed in test output");
 
     set_log_level(Level::Debug);
-    tash::io::debug("emitted");
-    tash::io::info("emitted");
+    CJHSH::io::debug("emitted");
+    CJHSH::io::info("emitted");
 
     set_log_level(saved);
     SUCCEED();
@@ -108,7 +108,7 @@ TEST(IoFiltering, SubLevelMessagesAreDropped) {
 
 // ── Consumer-level tests ──────────────────────────────────────
 //
-// These exercise the "does TASH_LOG_LEVEL=debug actually produce output?"
+// These exercise the "does CJHSH_LOG_LEVEL=debug actually produce output?"
 // half of PR #119 by capturing stderr across the emit path. Covers the
 // gate that closes in PR #128 (debug sites added across signal/history/
 // bg/plugin/config/subshell subsystems).
@@ -117,19 +117,19 @@ TEST(IoConsumer, DebugLevelEmitsDebugLine) {
     Level saved = current_log_level();
     set_log_level(Level::Debug);
     std::string out = capture_stderr([] {
-        tash::io::debug("bg: spawned pid=1234 cmd='sleep 1'");
+        CJHSH::io::debug("bg: spawned pid=1234 cmd='sleep 1'");
     });
     set_log_level(saved);
     EXPECT_NE(out.find("bg: spawned pid=1234"), std::string::npos)
         << "captured: [" << out << "]";
-    EXPECT_NE(out.find("tash: "), std::string::npos);
+    EXPECT_NE(out.find("CJHSH: "), std::string::npos);
 }
 
 TEST(IoConsumer, WarningLevelSuppressesDebug) {
     Level saved = current_log_level();
     set_log_level(Level::Warning);
     std::string out = capture_stderr([] {
-        tash::io::debug("should be suppressed");
+        CJHSH::io::debug("should be suppressed");
     });
     set_log_level(saved);
     EXPECT_TRUE(out.empty()) << "unexpected: [" << out << "]";
@@ -139,7 +139,7 @@ TEST(IoConsumer, InfoLevelSuppressesDebug) {
     Level saved = current_log_level();
     set_log_level(Level::Info);
     std::string out = capture_stderr([] {
-        tash::io::debug("should be suppressed at info");
+        CJHSH::io::debug("should be suppressed at info");
     });
     set_log_level(saved);
     EXPECT_TRUE(out.empty());
@@ -149,7 +149,7 @@ TEST(IoConsumer, DebugLevelStillEmitsWarnings) {
     Level saved = current_log_level();
     set_log_level(Level::Debug);
     std::string out = capture_stderr([] {
-        tash::io::warning("still shown");
+        CJHSH::io::warning("still shown");
     });
     set_log_level(saved);
     EXPECT_NE(out.find("warning"), std::string::npos);
@@ -160,8 +160,8 @@ TEST(IoConsumer, ErrorLevelStillEmitsErrors) {
     Level saved = current_log_level();
     set_log_level(Level::Error);
     std::string out = capture_stderr([] {
-        tash::io::error("fatal");
-        tash::io::info("silent");
+        CJHSH::io::error("fatal");
+        CJHSH::io::info("silent");
     });
     set_log_level(saved);
     EXPECT_NE(out.find("error"), std::string::npos);
@@ -175,9 +175,9 @@ TEST(IoConsumer, MultipleDebugCallsAllEmit) {
     Level saved = current_log_level();
     set_log_level(Level::Debug);
     std::string out = capture_stderr([] {
-        tash::io::debug("plugin: registered safety");
-        tash::io::debug("plugin: registered alias-suggest");
-        tash::io::debug("history: opened /tmp/h.db, 0 rows");
+        CJHSH::io::debug("plugin: registered safety");
+        CJHSH::io::debug("plugin: registered alias-suggest");
+        CJHSH::io::debug("history: opened /tmp/h.db, 0 rows");
     });
     set_log_level(saved);
     EXPECT_NE(out.find("plugin: registered safety"), std::string::npos);
@@ -186,21 +186,21 @@ TEST(IoConsumer, MultipleDebugCallsAllEmit) {
     EXPECT_NE(out.find("history: opened"), std::string::npos);
 }
 
-// ── Integration: end-to-end through a tash subprocess ─────────
+// ── Integration: end-to-end through a CJHSH subprocess ─────────
 //
-// Spawns the real tash binary with TASH_LOG_LEVEL=debug and pipes a
+// Spawns the real CJHSH binary with CJHSH_LOG_LEVEL=debug and pipes a
 // short script that triggers the background-process instrumentation.
-// Skipped when TASH_SHELL_BIN isn't set (the unit test suite runs
+// Skipped when CJHSH_SHELL_BIN isn't set (the unit test suite runs
 // standalone and doesn't always have a built binary available).
 
 TEST(IoConsumerIntegration, BgLifecycleEmitsSpawnAndReap) {
-    const char *bin = std::getenv("TASH_SHELL_BIN");
+    const char *bin = std::getenv("CJHSH_SHELL_BIN");
     if (!bin || !*bin) {
-        GTEST_SKIP() << "TASH_SHELL_BIN not set; skipping e2e log consumer";
+        GTEST_SKIP() << "CJHSH_SHELL_BIN not set; skipping e2e log consumer";
     }
     // Run `bg sleep 0.1` then a short blocker so SIGCHLD has time to fire.
-    std::string cmd = std::string("TASH_LOG_LEVEL=debug ") +
-                      "TASH_DISABLE_AI_ERROR_HOOK=1 " + bin +
+    std::string cmd = std::string("CJHSH_LOG_LEVEL=debug ") +
+                      "CJHSH_DISABLE_AI_ERROR_HOOK=1 " + bin +
                       " 2>&1 <<'__EOF__'\n"
                       "bg sleep 0.1\n"
                       "sleep 0.4\n"
@@ -211,6 +211,6 @@ TEST(IoConsumerIntegration, BgLifecycleEmitsSpawnAndReap) {
     std::array<char, 4096> buf{};
     while (::fgets(buf.data(), buf.size(), p)) out.append(buf.data());
     ::pclose(p);
-    EXPECT_NE(out.find("tash: bg: spawned"), std::string::npos)
+    EXPECT_NE(out.find("CJHSH: bg: spawned"), std::string::npos)
         << "captured: " << out;
 }

@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <string>
 
-#include "tash/plugins/sqlite_history_provider.h"
+#include "CJHSH/plugins/sqlite_history_provider.h"
 
 namespace fs = std::filesystem;
 
@@ -22,7 +22,7 @@ struct LikeEscapeFixture : public ::testing::Test {
     std::string tmp_db;
 
     void SetUp() override {
-        tmp_db = "/tmp/tash_like_escape_test_" +
+        tmp_db = "/tmp/CJHSH_like_escape_test_" +
                  std::to_string(::getpid()) + ".db";
         std::error_code ec;
         fs::remove(tmp_db, ec);

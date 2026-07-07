@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "tash/util/safe_tmpdir.h"
+#include "CJHSH/util/safe_tmpdir.h"
 
 namespace fs = std::filesystem;
 
@@ -37,34 +37,34 @@ struct SafeTmpDirFixture : public ::testing::Test {
 } // namespace
 
 TEST_F(SafeTmpDirFixture, WorldWritableTmpdirIsRejected) {
-    created = "/tmp/tash_safe_tmpdir_test_" + std::to_string(::getpid());
+    created = "/tmp/CJHSH_safe_tmpdir_test_" + std::to_string(::getpid());
     std::error_code ec;
     fs::create_directories(created, ec);
     ::chmod(created.c_str(), 0777);
 
     ::setenv("TMPDIR", created.c_str(), 1);
-    std::string resolved = tash::util::resolve_safe_tmpdir();
+    std::string resolved = CJHSH::util::resolve_safe_tmpdir();
     EXPECT_EQ(resolved, "/tmp")
         << "world-writable TMPDIR must be rejected, got " << resolved;
 }
 
 TEST_F(SafeTmpDirFixture, ProperlyLockedTmpdirIsAccepted) {
-    created = "/tmp/tash_safe_tmpdir_trust_" + std::to_string(::getpid());
+    created = "/tmp/CJHSH_safe_tmpdir_trust_" + std::to_string(::getpid());
     std::error_code ec;
     fs::create_directories(created, ec);
     ::chmod(created.c_str(), 0700);
 
     ::setenv("TMPDIR", created.c_str(), 1);
-    std::string resolved = tash::util::resolve_safe_tmpdir();
+    std::string resolved = CJHSH::util::resolve_safe_tmpdir();
     EXPECT_EQ(resolved, created);
 }
 
 TEST_F(SafeTmpDirFixture, UnsetTmpdirFallsBackToTmp) {
     ::unsetenv("TMPDIR");
-    EXPECT_EQ(tash::util::resolve_safe_tmpdir(), "/tmp");
+    EXPECT_EQ(CJHSH::util::resolve_safe_tmpdir(), "/tmp");
 }
 
 TEST_F(SafeTmpDirFixture, NonExistentTmpdirFallsBackToTmp) {
-    ::setenv("TMPDIR", "/tmp/tash_safe_tmpdir_does_not_exist_XYZZY", 1);
-    EXPECT_EQ(tash::util::resolve_safe_tmpdir(), "/tmp");
+    ::setenv("TMPDIR", "/tmp/CJHSH_safe_tmpdir_does_not_exist_XYZZY", 1);
+    EXPECT_EQ(CJHSH::util::resolve_safe_tmpdir(), "/tmp");
 }

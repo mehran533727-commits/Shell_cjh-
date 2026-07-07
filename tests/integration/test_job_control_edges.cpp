@@ -21,8 +21,8 @@ TEST(JobControl, BglistShowsBackgroundJob) {
     // bglist prints the job number + command basename (args aren't
     // preserved in the current implementation, so "sleep" — not
     // "sleep 2" — is what lands in the bglist output).
-    EXPECT_NE(r.output.find("sleep"),     std::string::npos);
-    EXPECT_NE(r.output.find("Background"), std::string::npos);
+    EXPECT_NE(r.output.find("sleep"), std::string::npos);
+    EXPECT_NE(r.output.find("[JOB 1] running"), std::string::npos);
 }
 
 TEST(JobControl, BgkillTerminatesBackgroundJob) {
@@ -76,12 +76,11 @@ TEST(JobControl, MultipleBackgroundJobs) {
         "bgkill 1\n"
         "bgkill 2\n"
         "exit\n");
-    // Two "Background process ... Executing" lines prove both jobs
-    // started (bglist strips args so we can't distinguish the two).
-    size_t first  = r.output.find("Background process");
+    // Two structured start lines prove both jobs started.
+    size_t first  = r.output.find("] started");
     size_t second = first == std::string::npos
                       ? std::string::npos
-                      : r.output.find("Background process", first + 1);
+                      : r.output.find("] started", first + 1);
     EXPECT_NE(first,  std::string::npos);
     EXPECT_NE(second, std::string::npos);
 }

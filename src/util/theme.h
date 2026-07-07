@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "tash/plugins/theme_provider.h"
+#include "CJHSH/plugins/theme_provider.h"
 
 // Theme-independent text modifiers (safe as string literals).
 #define CAT_BOLD   "\033[1m"
@@ -22,11 +22,11 @@ std::string ansi_bg(const RGB &c);
 // Rebuild the semantic-role strings below from the given theme.
 void apply_theme(const Theme &t, const std::string &name = "");
 
-// Load ~/.config/tash/theme.toml (if present) and apply it. Falls back to default.
+// Load ~/.config/CJHSH/theme.toml (if present) and apply it. Falls back to default.
 void load_user_theme();
 
 // Persist the named bundled theme as the active theme (copies the TOML file to
-// ~/.config/tash/theme.toml and applies it in-process). Returns true on success.
+// ~/.config/CJHSH/theme.toml and applies it in-process). Returns true on success.
 bool set_active_theme(const std::string &name, std::string &error_out);
 
 // Resolved directories containing *.toml theme files. Order: user dir first.

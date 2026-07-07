@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "tash/plugins/theme_provider.h"
+#include "CJHSH/plugins/theme_provider.h"
 #include <cstdlib>
 #include <fstream>
 
@@ -7,8 +7,8 @@
 
 static std::string themes_dir() {
     // CMAKE_SOURCE_DIR is passed as a define; fall back to relative path
-#ifdef TASH_THEMES_DIR
-    return TASH_THEMES_DIR;
+#ifdef CJHSH_THEMES_DIR
+    return CJHSH_THEMES_DIR;
 #else
     return "data/themes";
 #endif

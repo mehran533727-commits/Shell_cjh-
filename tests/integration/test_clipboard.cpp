@@ -13,7 +13,7 @@
 // when those aren't installed), producing false failures.
 
 TEST(Clipboard, CopyEmitsOsc52) {
-    auto r = run_shell("copy hello_from_tash\nexit\n");
+    auto r = run_shell("copy hello_from_CJHSH\nexit\n");
     // OSC 52 prefix ("\x1b]52;c;") is always emitted, even when a system
     // clipboard tool also succeeds.
     EXPECT_NE(r.output.find("\x1b]52;c;"), std::string::npos);

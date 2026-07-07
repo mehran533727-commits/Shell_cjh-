@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "tash/ui/inline_docs.h"
+#include "CJHSH/ui/inline_docs.h"
 
 #include <algorithm>
 

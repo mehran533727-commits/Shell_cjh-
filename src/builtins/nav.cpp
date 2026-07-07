@@ -1,9 +1,9 @@
 // Directory navigation builtins: cd, pwd, pushd, popd, dirs, z.
 
-#include "tash/builtins.h"
-#include "tash/core/signals.h"
-#include "tash/history.h"
-#include "tash/util/cwd.h"
+#include "CJHSH/builtins.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/history.h"
+#include "CJHSH/util/cwd.h"
 
 #include <cstring>
 
@@ -13,7 +13,7 @@ using namespace std;
 // directory has been removed underneath us. Returns "" iff we should
 // abort with an error.
 static string cwd_or_fail(const char *builtin_name) {
-    string cwd = tash::util::current_working_directory();
+    string cwd = CJHSH::util::current_working_directory();
     if (cwd.empty()) {
         write_stderr(string(builtin_name) + ": cannot get current directory: "
                      + strerror(errno) + "\n");
@@ -52,7 +52,7 @@ int builtin_cd(const vector<string> &argv, ShellState &state) {
 
     state.core.previous_directory = std::move(cwd);
 
-    string new_cwd = tash::util::current_working_directory();
+    string new_cwd = CJHSH::util::current_working_directory();
     if (!new_cwd.empty()) {
         z_record_directory(new_cwd);
         if (argv.size() > 1 && argv[1] == "-") {
@@ -63,7 +63,7 @@ int builtin_cd(const vector<string> &argv, ShellState &state) {
 }
 
 int builtin_pwd(const vector<string> &, ShellState &) {
-    string cwd = tash::util::current_working_directory();
+    string cwd = CJHSH::util::current_working_directory();
     if (!cwd.empty()) {
         write_stdout(cwd + "\n");
         return 0;
@@ -84,7 +84,7 @@ int builtin_pushd(const vector<string> &argv, ShellState &state) {
         return 1;
     }
     state.core.dir_stack.push_back(std::move(cwd));
-    string new_cwd = tash::util::current_working_directory();
+    string new_cwd = CJHSH::util::current_working_directory();
     if (!new_cwd.empty()) {
         string stack_str = new_cwd;
         for (int si = (int)state.core.dir_stack.size() - 1; si >= 0; si--)
@@ -105,7 +105,7 @@ int builtin_popd(const vector<string> &, ShellState &state) {
         write_stderr("popd: " + target + ": " + string(strerror(errno)) + "\n");
         return 1;
     }
-    string new_cwd = tash::util::current_working_directory();
+    string new_cwd = CJHSH::util::current_working_directory();
     if (!new_cwd.empty()) {
         string stack_str = new_cwd;
         for (int si = (int)state.core.dir_stack.size() - 1; si >= 0; si--)
@@ -116,7 +116,7 @@ int builtin_popd(const vector<string> &, ShellState &state) {
 }
 
 int builtin_dirs(const vector<string> &, ShellState &state) {
-    string cwd = tash::util::current_working_directory();
+    string cwd = CJHSH::util::current_working_directory();
     if (!cwd.empty()) {
         string stack_str = cwd;
         for (int si = (int)state.core.dir_stack.size() - 1; si >= 0; si--)

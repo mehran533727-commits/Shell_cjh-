@@ -1,6 +1,6 @@
 #include "test_helpers.h"
 
-// Helper: check if the tash binary was built with AI support
+// Helper: check if the CJHSH binary was built with AI support
 static bool ai_is_available() {
     auto r = run_shell("@ai\nexit\n");
     // If AI is compiled in, output contains "Usage" or "@ai"

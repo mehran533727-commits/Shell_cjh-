@@ -1,0 +1,90 @@
+#ifndef CJHSH_AI_ERROR_HOOK_PROVIDER_H
+#define CJHSH_AI_ERROR_HOOK_PROVIDER_H
+
+
+#include "CJHSH/plugin.h"
+#include "CJHSH/llm_client.h"
+#include <functional>
+#include <memory>
+#include <string>
+#include <ctime>
+
+// ── Parsed error recovery response ────────────────────────────
+
+struct ErrorRecoveryResponse {
+    std::string explanation;
+    std::string fix;
+    bool valid;
+
+    ErrorRecoveryResponse() : valid(false) {}
+};
+
+// ── AI Error Hook Provider ────────────────────────────────────
+//
+// Watches for failed commands and offers AI-powered explanations
+// and fix suggestions. Integrates with the plugin hook system.
+
+class AiErrorHookProvider : public IHookProvider {
+public:
+    // Factory lazily produces the LLMClient on first use so the hook can
+    // be registered at startup before the AI infrastructure is configured.
+    // A null or empty factory leaves the hook dormant.
+    using ClientFactory = std::function<std::unique_ptr<LLMClient>()>;
+
+    // Injects a pre-built non-owning LLMClient. Used by unit tests to
+    // plug in a mock; production wiring uses the factory overload.
+    explicit AiErrorHookProvider(LLMClient *client);
+    explicit AiErrorHookProvider(ClientFactory factory);
+
+    std::string name() const override;
+
+    void on_before_command(const std::string &command,
+                           ShellState &state) override;
+
+    void on_after_command(const std::string &command,
+                          int exit_code,
+                          const std::string &stderr_output,
+                          ShellState &state) override;
+
+    // No lifecycle state to manage.
+    void on_startup(ShellState &)       override {}
+    void on_exit(ShellState &)          override {}
+    void on_config_reload(ShellState &) override {}
+
+    // Exposed for testing -- check if trigger conditions are met
+    bool should_trigger(int exit_code,
+                        const std::string &stderr_output,
+                        const ShellState &state) const;
+
+    // Exposed for testing -- build the context JSON sent to the LLM
+    std::string build_context_json(const std::string &command,
+                                   int exit_code,
+                                   const std::string &stderr_output,
+                                   const ShellState &state) const;
+
+    // Exposed for testing -- parse the LLM response JSON
+    static ErrorRecoveryResponse parse_response(const std::string &raw);
+
+    // Exposed for testing -- get the system prompt
+    static const char *system_prompt();
+
+    // Exposed for testing -- number of LLM calls made
+    int call_count() const { return call_count_; }
+
+    // Exposed for testing -- reset the rate limiter cooldown
+    void reset_cooldown() { last_call_time_ = 0; }
+
+private:
+    LLMClient *client_;                   // non-owning (test DI path)
+    std::unique_ptr<LLMClient> owned_;    // owned, created by factory_
+    ClientFactory factory_;               // lazy factory
+    time_t last_call_time_;
+    int call_count_;
+
+    static const int COOLDOWN_SECONDS = 5;
+
+    bool rate_limit_allows() const;
+    LLMClient *ensure_client();           // returns active client or nullptr
+};
+
+#endif // CJHSH_AI_ERROR_HOOK_PROVIDER_H

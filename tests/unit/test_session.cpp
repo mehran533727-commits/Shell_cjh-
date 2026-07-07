@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "tash/core/session.h"
-#include "tash/shell.h"
+#include "CJHSH/core/session.h"
+#include "CJHSH/shell.h"
 
 #include <sys/stat.h>
 #include <cstdlib>
@@ -23,7 +23,7 @@ protected:
 
     void SetUp() override {
         // Build a unique temp directory per test.
-        std::string raw_dir = "/tmp/tash_session_test_" + std::to_string(getpid())
+        std::string raw_dir = "/tmp/CJHSH_session_test_" + std::to_string(getpid())
                               + "_" + std::to_string(std::time(nullptr));
         std::filesystem::create_directories(raw_dir);
         // Resolve symlinks (on macOS /tmp -> /private/tmp).
@@ -61,7 +61,7 @@ protected:
         info.working_directory = "/home/testuser/project";
         info.created_at = 1713283200;
         info.last_active = 1713290400;
-        info.socket_path = "/tmp/tash_" + name + ".sock";
+        info.socket_path = "/tmp/CJHSH_" + name + ".sock";
         info.aliases["gst"] = "git status";
         info.aliases["gco"] = "git checkout";
         info.env_vars["EDITOR"] = "vim";
@@ -175,7 +175,7 @@ TEST_F(SessionTest, RestoreSession) {
     info.name = "restore_test";
     info.working_directory = tmp_dir; // use our temp dir (exists)
     info.aliases["hello"] = "echo hello";
-    info.env_vars["TASH_SESSION_TEST_VAR"] = "restored_value";
+    info.env_vars["CJHSH_SESSION_TEST_VAR"] = "restored_value";
 
     ShellState state;
 
@@ -195,13 +195,13 @@ TEST_F(SessionTest, RestoreSession) {
     EXPECT_EQ(state.core.aliases.at("hello"), "echo hello");
 
     // Verify env var set.
-    const char *val = std::getenv("TASH_SESSION_TEST_VAR");
+    const char *val = std::getenv("CJHSH_SESSION_TEST_VAR");
     ASSERT_NE(val, nullptr);
     EXPECT_EQ(std::string(val), "restored_value");
 
     // Cleanup: restore original cwd and unset the test env var.
     chdir(original_cwd);
-    unsetenv("TASH_SESSION_TEST_VAR");
+    unsetenv("CJHSH_SESSION_TEST_VAR");
 }
 
 // ═══════════════════════════════════════════════════════════════

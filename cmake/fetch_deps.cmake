@@ -2,15 +2,20 @@
 #
 # replxx — always fetched (line editor, no system package we trust).
 # nlohmann_json — fetched only when features.cmake couldn't find a
-#                 system package (TASH_NEED_FETCH_JSON).
+#                 system package (CJHSH_NEED_FETCH_JSON).
 
 include(FetchContent)
+
+set(CJHSH_FETCHCONTENT_TIMESTAMP_ARGS)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    list(APPEND CJHSH_FETCHCONTENT_TIMESTAMP_ARGS DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+endif()
 
 # ── replxx (replaces readline/libedit) ────────────────────────
 FetchContent_Declare(
     replxx
     URL https://github.com/AmokHuginnsson/replxx/archive/refs/tags/release-0.0.4.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    ${CJHSH_FETCHCONTENT_TIMESTAMP_ARGS}
 )
 set(REPLXX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 # replxx 0.0.4 uses cmake_minimum_required(<3.10); suppress the deprecation
@@ -24,11 +29,11 @@ if(TARGET replxx)
 endif()
 
 # ── nlohmann_json fallback fetch ──────────────────────────────
-if(TASH_NEED_FETCH_JSON)
+if(CJHSH_NEED_FETCH_JSON)
     FetchContent_Declare(
         nlohmann_json
         URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        ${CJHSH_FETCHCONTENT_TIMESTAMP_ARGS}
     )
     FetchContent_MakeAvailable(nlohmann_json)
 endif()

@@ -24,7 +24,7 @@ TEST(Basic, CtrlDDoesNotCrash) {
 
 TEST(Basic, EchoQuotedStripsQuotes) {
     // Use file side-effect to avoid readline echo issues on Linux
-    std::string testfile = "/tmp/tash_quote_test_" + std::to_string(getpid()) + ".txt";
+    std::string testfile = "/tmp/CJHSH_quote_test_" + std::to_string(getpid()) + ".txt";
     run_shell("echo \"hello world\" > " + testfile + "\nexit\n");
     std::string content = read_file(testfile);
     // File should contain unquoted string
@@ -61,11 +61,11 @@ TEST(Basic, ClearBuiltinDoesNotCrash) {
 TEST(Basic, SigintDoesNotCrashShell) {
     // Start the shell, send SIGINT via kill command, then verify it
     // continues running by checking that a subsequent echo works.
-    std::string marker = "/tmp/tash_sigint_" + std::to_string(getpid());
+    std::string marker = "/tmp/CJHSH_sigint_" + std::to_string(getpid());
     unlink(marker.c_str());
     // The script sends SIGINT to its own process group, then runs echo
     // to prove the shell survived.
-    std::string script = "/tmp/tash_sigint_test_" + std::to_string(getpid()) + ".sh";
+    std::string script = "/tmp/CJHSH_sigint_test_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script);
         f << "kill -INT $$\n";

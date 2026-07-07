@@ -1,10 +1,10 @@
-#include "tash/ui/fuzzy_finder.h"
+#include "CJHSH/ui/fuzzy_finder.h"
 
 #include <algorithm>
 #include <cctype>
 #include <climits>
 
-namespace tash {
+namespace CJHSH {
 
 // ── Internal helpers ─────────────────────────────────────────────
 
@@ -158,4 +158,4 @@ std::vector<FuzzyResult> fuzzy_filter(
     return scored;
 }
 
-} // namespace tash
+} // namespace CJHSH

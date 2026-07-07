@@ -1,13 +1,13 @@
-// tash-specific config builtins: config (sync), session, theme.
+// CJHSH-specific config builtins: config (sync), session, theme.
 //
 // Split out of the old src/builtins/shell.cpp blob so POSIX meta
 // builtins (meta.cpp) and signal/trap logic (trap.cpp) stand on their
 // own.
 
-#include "tash/builtins.h"
-#include "tash/core/signals.h"
-#include "tash/core/config_sync.h"
-#include "tash/core/session.h"
+#include "CJHSH/builtins.h"
+#include "CJHSH/core/signals.h"
+#include "CJHSH/core/config_sync.h"
+#include "CJHSH/core/session.h"
 #include "theme.h"
 
 #include <cstdio>
@@ -18,7 +18,7 @@ int builtin_config(const vector<string> &argv, ShellState &) {
     if (argv.size() < 2) {
         write_stderr(
             "config: usage:\n"
-            "  config sync init                   initialize ~/.tash as a git repo\n"
+            "  config sync init                   initialize ~/.CJHSH as a git repo\n"
             "  config sync remote <url>           set the git remote URL\n"
             "  config sync push                   commit and push changes\n"
             "  config sync pull                   pull latest changes\n"
@@ -34,11 +34,11 @@ int builtin_config(const vector<string> &argv, ShellState &) {
         write_stderr("config: sync requires an action\n");
         return 1;
     }
-    std::string dir = tash::config_sync::get_tash_config_dir();
+    std::string dir = CJHSH::config_sync::get_CJHSH_config_dir();
     const string &action = argv[2];
 
     if (action == "init") {
-        if (!tash::config_sync::sync_init(dir)) {
+        if (!CJHSH::config_sync::sync_init(dir)) {
             write_stderr("config: sync init failed\n");
             return 1;
         }
@@ -50,7 +50,7 @@ int builtin_config(const vector<string> &argv, ShellState &) {
             write_stderr("config: remote requires a URL\n");
             return 1;
         }
-        if (!tash::config_sync::sync_set_remote(dir, argv[3])) {
+        if (!CJHSH::config_sync::sync_set_remote(dir, argv[3])) {
             write_stderr("config: setting remote failed\n");
             return 1;
         }
@@ -58,7 +58,7 @@ int builtin_config(const vector<string> &argv, ShellState &) {
         return 0;
     }
     if (action == "push") {
-        if (!tash::config_sync::sync_push(dir)) {
+        if (!CJHSH::config_sync::sync_push(dir)) {
             write_stderr("config: push failed\n");
             return 1;
         }
@@ -66,7 +66,7 @@ int builtin_config(const vector<string> &argv, ShellState &) {
         return 0;
     }
     if (action == "pull") {
-        if (!tash::config_sync::sync_pull(dir)) {
+        if (!CJHSH::config_sync::sync_pull(dir)) {
             write_stderr("config: pull failed\n");
             return 1;
         }
@@ -74,11 +74,11 @@ int builtin_config(const vector<string> &argv, ShellState &) {
         return 0;
     }
     if (action == "diff") {
-        write_stdout(tash::config_sync::sync_diff(dir));
+        write_stdout(CJHSH::config_sync::sync_diff(dir));
         return 0;
     }
     if (action == "status") {
-        if (tash::config_sync::sync_is_initialized(dir)) {
+        if (CJHSH::config_sync::sync_is_initialized(dir)) {
             write_stdout("config: initialized at " + dir + "\n");
             return 0;
         }

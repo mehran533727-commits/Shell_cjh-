@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "tash/core/builtins.h"
-#include "tash/core/parser.h"
-#include "tash/ui.h"
-#include "tash/history.h"
+#include "CJHSH/core/builtins.h"
+#include "CJHSH/core/parser.h"
+#include "CJHSH/ui.h"
+#include "CJHSH/history.h"
 
 #include <sys/stat.h>
 #include <cstdlib>
@@ -222,15 +222,15 @@ TEST(TildeTest, NoTildeExpansion) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(ExpandVarsTest, SimpleVar) {
-    setenv("TASH_TEST_UNIT", "hello", 1);
-    EXPECT_EQ(expand_variables("$TASH_TEST_UNIT", 0), "hello");
-    unsetenv("TASH_TEST_UNIT");
+    setenv("CJHSH_TEST_UNIT", "hello", 1);
+    EXPECT_EQ(expand_variables("$CJHSH_TEST_UNIT", 0), "hello");
+    unsetenv("CJHSH_TEST_UNIT");
 }
 
 TEST(ExpandVarsTest, BracedVar) {
-    setenv("TASH_TEST_UNIT", "world", 1);
-    EXPECT_EQ(expand_variables("${TASH_TEST_UNIT}", 0), "world");
-    unsetenv("TASH_TEST_UNIT");
+    setenv("CJHSH_TEST_UNIT", "world", 1);
+    EXPECT_EQ(expand_variables("${CJHSH_TEST_UNIT}", 0), "world");
+    unsetenv("CJHSH_TEST_UNIT");
 }
 
 TEST(ExpandVarsTest, UndefinedVarEmpty) {
@@ -238,9 +238,9 @@ TEST(ExpandVarsTest, UndefinedVarEmpty) {
 }
 
 TEST(ExpandVarsTest, MixedText) {
-    setenv("TASH_TEST_UNIT", "val", 1);
-    EXPECT_EQ(expand_variables("pre_$TASH_TEST_UNIT_post", 0), "pre_");
-    unsetenv("TASH_TEST_UNIT");
+    setenv("CJHSH_TEST_UNIT", "val", 1);
+    EXPECT_EQ(expand_variables("pre_$CJHSH_TEST_UNIT_post", 0), "pre_");
+    unsetenv("CJHSH_TEST_UNIT");
 }
 
 TEST(ExpandVarsTest, LoneDollar) {
@@ -248,12 +248,12 @@ TEST(ExpandVarsTest, LoneDollar) {
 }
 
 TEST(ExpandVarsTest, BackslashDollarIsLiteral) {
-    setenv("TASH_TEST_UNIT", "hello", 1);
+    setenv("CJHSH_TEST_UNIT", "hello", 1);
     // D1: a backslash before '$' keeps the '$' literal (no expansion).
-    EXPECT_EQ(expand_variables("\\$TASH_TEST_UNIT", 0), "$TASH_TEST_UNIT");
+    EXPECT_EQ(expand_variables("\\$CJHSH_TEST_UNIT", 0), "$CJHSH_TEST_UNIT");
     // Plain '$' must still expand — the fix must not touch normal expansion.
-    EXPECT_EQ(expand_variables("$TASH_TEST_UNIT", 0), "hello");
-    unsetenv("TASH_TEST_UNIT");
+    EXPECT_EQ(expand_variables("$CJHSH_TEST_UNIT", 0), "hello");
+    unsetenv("CJHSH_TEST_UNIT");
 }
 
 TEST(ExpandVarsTest, BackslashBeforeNonDollarUnchanged) {
@@ -272,11 +272,11 @@ TEST(ExpandVarsTest, EmptyInput) {
 }
 
 TEST(ExpandVarsTest, MultipleVars) {
-    setenv("TASH_A", "foo", 1);
-    setenv("TASH_B", "bar", 1);
-    EXPECT_EQ(expand_variables("$TASH_A and $TASH_B", 0), "foo and bar");
-    unsetenv("TASH_A");
-    unsetenv("TASH_B");
+    setenv("CJHSH_A", "foo", 1);
+    setenv("CJHSH_B", "bar", 1);
+    EXPECT_EQ(expand_variables("$CJHSH_A and $CJHSH_B", 0), "foo and bar");
+    unsetenv("CJHSH_A");
+    unsetenv("CJHSH_B");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -313,6 +313,22 @@ TEST(ParseCommandLineTest, SemicolonOperator) {
     EXPECT_EQ(segs[0].command, "echo a");
     EXPECT_EQ(segs[1].command, "echo b");
     EXPECT_EQ(segs[1].op, OP_SEMICOLON);
+}
+
+TEST(ParseCommandLineTest, BackgroundOperator) {
+    auto segs = parse_command_line("sleep 1 & echo done");
+    ASSERT_EQ(segs.size(), 2u);
+    EXPECT_EQ(segs[0].command, "sleep 1");
+    EXPECT_TRUE(segs[0].background);
+    EXPECT_EQ(segs[1].command, "echo done");
+    EXPECT_EQ(segs[1].op, OP_SEMICOLON);
+}
+
+TEST(ParseCommandLineTest, RedirectionDupNotBackgroundOperator) {
+    auto segs = parse_command_line("missing 2>&1");
+    ASSERT_EQ(segs.size(), 1u);
+    EXPECT_EQ(segs[0].command, "missing 2>&1");
+    EXPECT_FALSE(segs[0].background);
 }
 
 TEST(ParseCommandLineTest, MixedOperators) {
@@ -460,15 +476,15 @@ TEST(ExpandVarsTest, DollarDollarInContext) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(ExpandVarsTest, SingleQuotesPreventExpansion) {
-    setenv("TASH_TEST_UNIT", "hello", 1);
-    EXPECT_EQ(expand_variables("'$TASH_TEST_UNIT'", 0), "'$TASH_TEST_UNIT'");
-    unsetenv("TASH_TEST_UNIT");
+    setenv("CJHSH_TEST_UNIT", "hello", 1);
+    EXPECT_EQ(expand_variables("'$CJHSH_TEST_UNIT'", 0), "'$CJHSH_TEST_UNIT'");
+    unsetenv("CJHSH_TEST_UNIT");
 }
 
 TEST(ExpandVarsTest, DoubleQuotesAllowExpansion) {
-    setenv("TASH_TEST_UNIT", "hello", 1);
-    EXPECT_EQ(expand_variables("\"$TASH_TEST_UNIT\"", 0), "\"hello\"");
-    unsetenv("TASH_TEST_UNIT");
+    setenv("CJHSH_TEST_UNIT", "hello", 1);
+    EXPECT_EQ(expand_variables("\"$CJHSH_TEST_UNIT\"", 0), "\"hello\"");
+    unsetenv("CJHSH_TEST_UNIT");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -648,7 +664,7 @@ TEST(PathCommands, ContainsLs) {
 
 TEST(Frecency, RecordAndFind) {
     // Record a unique path and verify we can find it
-    string unique_path = "/tmp/tash_frecency_test_" + to_string(getpid());
+    string unique_path = "/tmp/CJHSH_frecency_test_" + to_string(getpid());
     z_record_directory(unique_path);
     string found = z_find_directory("frecency_test");
     // The path might not exist on disk, so z_find_directory checks stat()
@@ -721,19 +737,19 @@ TEST(CompletionCallback, DockerSubcommands) {
 // -- Environment variable completion --
 
 TEST(CompletionCallback, EnvVarCompletion) {
-    setenv("TASH_TEST_COMP_VAR", "1", 1);
+    setenv("CJHSH_TEST_COMP_VAR", "1", 1);
     int ctx = 0;
-    auto results = completion_callback("echo $TASH_TEST_COMP", ctx);
-    EXPECT_TRUE(completions_contain(results, "$TASH_TEST_COMP_VAR"))
-        << "$TASH_TEST_COMP should complete to $TASH_TEST_COMP_VAR";
-    unsetenv("TASH_TEST_COMP_VAR");
+    auto results = completion_callback("echo $CJHSH_TEST_COMP", ctx);
+    EXPECT_TRUE(completions_contain(results, "$CJHSH_TEST_COMP_VAR"))
+        << "$CJHSH_TEST_COMP should complete to $CJHSH_TEST_COMP_VAR";
+    unsetenv("CJHSH_TEST_COMP_VAR");
 }
 
 // -- File/directory completion --
 
 TEST(CompletionCallback, FileCompletionListsCwd) {
     // Create a temp dir with known contents
-    string tmpdir = "/tmp/tash_comp_test_" + to_string(getpid());
+    string tmpdir = "/tmp/CJHSH_comp_test_" + to_string(getpid());
     std::filesystem::create_directories(tmpdir);
     // Create a file and a subdirectory
     string filepath = tmpdir + "/hello.txt";
@@ -761,7 +777,7 @@ TEST(CompletionCallback, FileCompletionListsCwd) {
 }
 
 TEST(CompletionCallback, FileCompletionWithPrefix) {
-    string tmpdir = "/tmp/tash_comp_pfx_" + to_string(getpid());
+    string tmpdir = "/tmp/CJHSH_comp_pfx_" + to_string(getpid());
     std::filesystem::create_directories(tmpdir);
     string f1 = tmpdir + "/alpha.cpp";
     string f2 = tmpdir + "/alpha.h";
@@ -791,7 +807,7 @@ TEST(CompletionCallback, FileCompletionWithPrefix) {
 }
 
 TEST(CompletionCallback, FileCompletionWithPathPrefix) {
-    string tmpdir = "/tmp/tash_comp_path_" + to_string(getpid());
+    string tmpdir = "/tmp/CJHSH_comp_path_" + to_string(getpid());
     string sub = tmpdir + "/nested";
     std::filesystem::create_directories(sub);
     string f1 = sub + "/foo.txt";
@@ -810,7 +826,7 @@ TEST(CompletionCallback, FileCompletionWithPathPrefix) {
 }
 
 TEST(CompletionCallback, HiddenFilesOnlyWhenDotPrefix) {
-    string tmpdir = "/tmp/tash_comp_dot_" + to_string(getpid());
+    string tmpdir = "/tmp/CJHSH_comp_dot_" + to_string(getpid());
     std::filesystem::create_directories(tmpdir);
     string hidden = tmpdir + "/.hidden";
     string visible = tmpdir + "/visible";
@@ -843,7 +859,7 @@ TEST(CompletionCallback, HiddenFilesOnlyWhenDotPrefix) {
 // -- cd / pushd directory-only completion --
 
 TEST(CompletionCallback, CdCompletesDirectoriesOnly) {
-    string tmpdir = "/tmp/tash_cd_comp_" + to_string(getpid());
+    string tmpdir = "/tmp/CJHSH_cd_comp_" + to_string(getpid());
     std::filesystem::create_directories(tmpdir);
     // Mix of a file and a directory.
     string file1 = tmpdir + "/some_file.txt";

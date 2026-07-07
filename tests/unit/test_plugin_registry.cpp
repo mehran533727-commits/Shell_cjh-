@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "tash/plugin.h"
-#include "tash/shell.h"
+#include "CJHSH/plugin.h"
+#include "CJHSH/shell.h"
 
 // ── Mock providers for testing ────────────────────────────────
 
@@ -213,8 +213,8 @@ TEST_F(PluginRegistryTest, PromptFallbackOnEmpty) {
 
 TEST_F(PluginRegistryTest, PromptSingleProvider) {
     registry.register_prompt_provider(std::unique_ptr<IPromptProvider>(
-        new MockPromptProvider("only", 10, "tash> ")));
-    EXPECT_EQ(registry.render_prompt(state), "tash> ");
+        new MockPromptProvider("only", 10, "CJHSH> ")));
+    EXPECT_EQ(registry.render_prompt(state), "CJHSH> ");
 }
 
 // ── History provider tests ────────────────────────────────────

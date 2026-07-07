@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "tash/plugins/starship_prompt_provider.h"
-#include "tash/shell.h"
+#include "CJHSH/plugins/starship_prompt_provider.h"
+#include "CJHSH/shell.h"
 #include <algorithm>
 #include <cstdlib>
 #include <string>
@@ -68,9 +68,9 @@ TEST_F(StarshipTest, PassesNegativeDurationAsZero) {
 TEST_F(StarshipTest, PassesJobCount) {
     state.core.last_exit_status = 0;
     state.core.last_cmd_duration = 0;
-    state.core.background_processes[100] = "sleep";
-    state.core.background_processes[200] = "make";
-    state.core.background_processes[300] = "cargo build";
+    state.core.background_processes[100] = {1, 100, "sleep", 0.0, true};
+    state.core.background_processes[200] = {2, 200, "make", 0.0, true};
+    state.core.background_processes[300] = {3, 300, "cargo build", 0.0, true};
 
     std::vector<std::string> argv = build_starship_argv(state);
     EXPECT_TRUE(argv_contains(argv, "--jobs=3"));

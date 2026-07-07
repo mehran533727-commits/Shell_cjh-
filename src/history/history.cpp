@@ -1,11 +1,11 @@
-#include "tash/history.h"
-#include "tash/util/config_resolver.h"
+#include "CJHSH/history.h"
+#include "CJHSH/util/config_resolver.h"
 
 using namespace std;
 using namespace replxx;
 
 string history_file_path() {
-    return tash::config::get_history_file_path();
+    return CJHSH::config::get_history_file_path();
 }
 
 bool should_record_history(const string &line, Replxx &rx) {
