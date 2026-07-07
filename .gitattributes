@@ -1,0 +1,4 @@
+# 保证 shell 脚本在任何平台 checkout 都是 LF 行尾，
+# 这样即使在 Windows 侧 clone，拿到 Linux/WSL 里也能正常 bash 运行
+# （否则 CRLF 会让 bash 报 '\r': command not found）。
+*.sh text eol=lf
