@@ -1,90 +1,54 @@
-# Build output
+# ── 私密仓库策略：只忽略"每台机器各自生成、传了会冲突或纯占空间"的东西，其余全传 ──
+
+# 编译产物（各自 cmake 生成，含本机绝对路径，传了必冲突）
 build/
 build-*/
 cmake-build-*/
 out/
-bin/
-lib/
-Testing/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-compile_commands.json
 CTestTestfile.cmake
+compile_commands.json
 install_manifest.txt
-*.cmake.user
 
-# Compiled artifacts
+# 编译中间 / 目标文件
 *.o
 *.obj
-*.lo
-*.slo
 *.a
-*.lib
-*.la
-*.lai
 *.so
 *.dylib
 *.dll
 *.exe
 *.out
-*.app
 *.gch
 *.pch
-*.mod
 
-# Test and coverage artifacts
+# 测试 / 覆盖率产物
 *.gcda
 *.gcno
 *.gcov
 coverage/
 lcov.info
-test-results/
 *.profraw
 *.profdata
+Testing/
 
-# Logs
-*.log
-logs/
-log/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment and secrets
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-
-# Dependency caches and fetched content
-_deps/
-deps/
-vendor/.cache/
-.cache/
-.cmake/
-.ninja_deps
-.ninja_log
-
-# Package manager and generated dependency folders
-node_modules/
-venv/
-.venv/
-env/
-.conda/
-
-# Runtime data
+# 运行时各自的用户数据（历史 / 数据库，会冲突）
 .tash/
 .tash_history
 history.db
 *.db-shm
 *.db-wal
 
-# Temporary files
+# vendor：传依赖 tar 包（离线编译用），解压目录由 cjh-setup.sh 生成、不入库
+vendor/*/
+vendor/.cache/
+_deps/
+
+# 日志 / 临时 / 系统 / 编辑器
+*.log
+logs/
 tmp/
 temp/
 *.tmp
@@ -93,14 +57,9 @@ temp/
 *~
 .DS_Store
 Thumbs.db
-
-# IDE and editor files
 .idea/
 .vscode/
-*.iws
-*.sublime-project
-*.sublime-workspace
 
-# Tool-specific local files
+# 本地工具
 .claude/
 fuzz/artifacts/
