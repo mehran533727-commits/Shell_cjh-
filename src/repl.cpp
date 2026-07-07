@@ -3,14 +3,14 @@
 // banner, the AI setup wizard prompt on first run, and the main input
 // loop. Extracted from main.cpp during the god-file split.
 
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/history.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/ui.h"
-#include "CJHSH/repl.h"
-#include "CJHSH/util/parse_error.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/history.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/ui.h"
+#include "XTFSH/repl.h"
+#include "XTFSH/util/parse_error.h"
 #include "theme.h"
 
 #include <cctype>
@@ -19,15 +19,15 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "CJHSH/ai/bootstrap.h"
+#include "XTFSH/ai/bootstrap.h"
 
-#include "CJHSH/ai.h"
-#include "CJHSH/ai/contextual_ai.h"
+#include "XTFSH/ai.h"
+#include "XTFSH/ai/contextual_ai.h"
 
 using namespace std;
 using namespace replxx;
 
-namespace CJHSH {
+namespace XTFSH {
 
 // ── Hint callback (history + context-aware AI) ────────────────
 
@@ -115,12 +115,12 @@ static void print_banner() {
 
     const size_t inner_width = 59;
     const vector<string> logo = {
-        " ██████╗      ██╗ ██╗  ██╗ ███████╗ ██╗  ██╗",
-        "██╔════╝      ██║ ██║  ██║ ██╔════╝ ██║  ██║",
-        "██║           ██║ ███████║ ███████╗ ███████║",
-        "██║      ██   ██║ ██╔══██║ ╚════██║ ██╔══██║",
-        "╚██████╗ ╚█████╔╝ ██║  ██║ ███████║ ██║  ██║",
-        " ╚═════╝  ╚════╝  ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝",
+        "██╗  ██╗ ████████╗ ███████╗ ██╗ ███████╗ ██╗  ██╗",
+        "╚██╗██╔╝ ╚══██╔══╝ ██╔════╝ ╚═╝ ██╔════╝ ██║  ██║",
+        " ╚███╔╝     ██║    █████╗       ███████╗ ███████║",
+        " ██╔██╗     ██║    ██╔══╝       ╚════██║ ██╔══██║",
+        "██╔╝ ██╗    ██║    ██║         ███████║ ██║  ██║",
+        "╚═╝  ╚═╝    ╚═╝    ╚═╝         ╚══════╝ ╚═╝  ╚═╝",
     };
 
     write_stdout("\n");
@@ -132,10 +132,10 @@ static void print_banner() {
     }
     write_banner_line("", 0, inner_width);
 
-    string title_text = string("CJHSH Shell ") + "─── v" + CJHSH_VERSION_STRING;
-    write_banner_line("   " + BANNER_TITLE + "CJHSH Shell" CAT_RESET " " CAT_DIM
+    string title_text = string("XTF'SH Shell ") + "─── v" + XTFSH_VERSION_STRING;
+    write_banner_line("   " + BANNER_TITLE + "XTF'SH Shell" CAT_RESET " " CAT_DIM
                       "───" CAT_RESET " " + BANNER_VERSION + "v" +
-                      CJHSH_VERSION_STRING CAT_RESET,
+                      XTFSH_VERSION_STRING CAT_RESET,
                       3 + banner_text_width(title_text), inner_width);
 
     string tools_text = "jobs · bglist · help";
@@ -153,7 +153,7 @@ static void print_banner() {
     write_banner_rule("╚", "╝", inner_width);
     write_stdout("\n");
 
-    CJHSH::ai::offer_setup_wizard();
+    XTFSH::ai::offer_setup_wizard();
 }
 
 // ── Replxx keybinding setup ───────────────────────────────────
@@ -165,7 +165,7 @@ static void configure_replxx(Replxx &rx, ShellState &state) {
 
     // Hydrate the ring from SQLite (or whichever primary IHistoryProvider
     // is installed) so up-arrow sees the full cross-session corpus, not
-    // just whatever happens to be in .CJHSH_history. Replxx loads are
+    // just whatever happens to be in .XTFSH_history. Replxx loads are
     // O(ring_size) against flat text; SQLite is indexed on timestamp so
     // pulling the latest N is cheap. We still call history_load on the
     // plain-text file as a fallback: when there's no history provider
@@ -300,7 +300,7 @@ int run_interactive(ShellState &state) {
                 break;
             }
             write_stdout("\n");
-            write_stderr("CJHSH: press Ctrl-D again or type 'exit' to quit\n");
+            write_stderr("XTFSH: press Ctrl-D again or type 'exit' to quit\n");
             continue;
         }
         state.core.ctrl_d_count = 0;
@@ -332,7 +332,7 @@ int run_interactive(ShellState &state) {
                 // REPL heredoc aborts on Ctrl-D. Column is elided (0)
                 // because the EOF is interactive and has no meaningful
                 // offset into the original command line.
-                CJHSH::parse::emit_parse_error(
+                XTFSH::parse::emit_parse_error(
                     {"unexpected EOF while looking for heredoc delimiter", 1, 0});
                 continue;
             }
@@ -419,11 +419,11 @@ int run_interactive(ShellState &state) {
     return 0;
 }
 
-} // namespace CJHSH
+} // namespace XTFSH
 
 // ── History bang expansion (!! / !n) ──────────────────────────
 //
-// Moved here from src/core/parser.cpp so CJHSH/core/parser.h doesn't
+// Moved here from src/core/parser.cpp so XTFSH/core/parser.h doesn't
 // have to include replxx.hxx transitively — this is the only function
 // in the parse-surface that touched the replxx ring.
 
@@ -444,7 +444,7 @@ std::string expand_history_bang(const std::string &line, replxx::Replxx &rx) {
     // hist_entries is oldest-first (history_scan iterates chronologically).
     if (trimmed == "!!") {
         if (hist_entries.empty()) {
-            CJHSH::parse::emit_parse_error({"!!: event not found", 1, 1});
+            XTFSH::parse::emit_parse_error({"!!: event not found", 1, 1});
             return "";
         }
         return hist_entries.back();  // most recent = last element
@@ -463,7 +463,7 @@ std::string expand_history_bang(const std::string &line, replxx::Replxx &rx) {
             // !1 = first command = hist_entries[0] (1-based).
             int idx = n - 1;
             if (idx < 0 || idx >= (int)hist_entries.size()) {
-                CJHSH::parse::emit_parse_error(
+                XTFSH::parse::emit_parse_error(
                     {"!" + num_str + ": event not found", 1, 1});
                 return "";
             }

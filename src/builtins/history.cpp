@@ -1,7 +1,7 @@
 // History builtin.
 //
 // Prior to the SQLite-source-of-truth PR, `history` was a 30-line
-// plain-text dumper that read replxx's `.CJHSH_history`. The builtin now
+// plain-text dumper that read replxx's `.XTFSH_history`. The builtin now
 // queries the primary IHistoryProvider (SQLite in the default build)
 // with support for the filters the README has always promised:
 //
@@ -15,10 +15,10 @@
 // registered (build-without-SQLite or user disabled the plugin) so the
 // command stays useful in either configuration.
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/history.h"
-#include "CJHSH/plugin.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/history.h"
+#include "XTFSH/plugin.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -177,7 +177,7 @@ int render_stats(const HistoryStats &s) {
 }
 
 // Fallback for builds where no history provider is registered (e.g.,
-// CJHSH_SQLITE_ENABLED is off). Keeps the builtin functional — we just
+// XTFSH_SQLITE_ENABLED is off). Keeps the builtin functional — we just
 // lose --here/--failed/stats. Prints the replxx plain-text file.
 int render_plain_text_fallback(const HistoryArgs &args) {
     if (args.want_stats || args.cwd_only || args.failed_only) {

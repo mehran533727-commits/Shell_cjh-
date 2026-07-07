@@ -1,5 +1,5 @@
 #include "theme.h"
-#include "CJHSH/util/config_resolver.h"
+#include "XTFSH/util/config_resolver.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -106,22 +106,22 @@ void apply_theme(const Theme &t, const std::string &name) {
 // ── Theme discovery ───────────────────────────────────────────
 
 static std::string home_theme_dir() {
-    return CJHSH::config::get_user_themes_dir();
+    return XTFSH::config::get_user_themes_dir();
 }
 
 static std::string user_theme_file() {
-    return CJHSH::config::get_theme_toml_path();
+    return XTFSH::config::get_theme_toml_path();
 }
 
 std::vector<std::string> theme_search_dirs() {
     std::vector<std::string> dirs;
-    if (const char *env = getenv("CJHSH_THEMES_DIR")) {
+    if (const char *env = getenv("XTFSH_THEMES_DIR")) {
         if (*env) dirs.push_back(env);
     }
     std::string user_dir = home_theme_dir();
     if (!user_dir.empty()) dirs.push_back(user_dir);
-#ifdef CJHSH_THEMES_DIR
-    dirs.push_back(CJHSH_THEMES_DIR);
+#ifdef XTFSH_THEMES_DIR
+    dirs.push_back(XTFSH_THEMES_DIR);
 #endif
     return dirs;
 }
@@ -181,7 +181,7 @@ static bool copy_file(const std::string &src, const std::string &dst) {
 }
 
 static std::string name_marker_file() {
-    return CJHSH::config::get_theme_name_path();
+    return XTFSH::config::get_theme_name_path();
 }
 
 void load_user_theme() {
@@ -210,7 +210,7 @@ bool set_active_theme(const std::string &name, std::string &error_out) {
         error_out = "HOME is not set";
         return false;
     }
-    // Ensure ~/.config/CJHSH exists.
+    // Ensure ~/.config/XTFSH exists.
     size_t slash = dst.find_last_of('/');
     if (slash != std::string::npos) {
         if (!mkdir_p(dst.substr(0, slash))) {

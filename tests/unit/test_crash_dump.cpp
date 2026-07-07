@@ -1,4 +1,4 @@
-// Tests for CJHSH::util::install_crash_handler.
+// Tests for XTFSH::util::install_crash_handler.
 //
 // Validating an async-signal-safe handler is awkward: by design it ends
 // with raise(sig), which terminates the process. We side-step that by
@@ -14,7 +14,7 @@
 //   3. With last_executed_cmd set to "echo foo", the dump prints
 //      "last command: echo foo".
 //
-// The whole crash test lives behind CJHSH_CRASH_DUMP_TESTS so that
+// The whole crash test lives behind XTFSH_CRASH_DUMP_TESTS so that
 // sanitizer / abort-on-CI lanes that don't tolerate forked SIGABRTs
 // can skip it cleanly. The default build path enables it.
 
@@ -27,8 +27,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "CJHSH/shell.h"
-#include "CJHSH/util/crash_dump.h"
+#include "XTFSH/shell.h"
+#include "XTFSH/util/crash_dump.h"
 
 namespace {
 
@@ -89,7 +89,7 @@ ChildResult run_in_child(void (*body)()) {
 void child_basic() {
     ShellState state;
     state.core.last_exit_status = 42;
-    CJHSH::util::install_crash_handler(state);
+    XTFSH::util::install_crash_handler(state);
     ::raise(SIGABRT);
     // Unreached if the handler re-raised correctly.
 }
@@ -99,13 +99,13 @@ void child_with_last_cmd() {
     ShellState state;
     state.ai.last_executed_cmd = "echo foo";
     state.core.last_exit_status = 7;
-    CJHSH::util::install_crash_handler(state);
+    XTFSH::util::install_crash_handler(state);
     ::raise(SIGABRT);
 }
 
 } // namespace
 
-#ifdef CJHSH_CRASH_DUMP_TESTS
+#ifdef XTFSH_CRASH_DUMP_TESTS
 
 TEST(CrashDump, BasicHandlerFiresAndReraises) {
     ChildResult r = run_in_child(&child_basic);
@@ -118,7 +118,7 @@ TEST(CrashDump, BasicHandlerFiresAndReraises) {
         << "wrong terminating signal; stderr:\n" << r.stderr_text;
 
     // Banner and footer must be present.
-    EXPECT_NE(r.stderr_text.find("=== CJHSH crash"), std::string::npos)
+    EXPECT_NE(r.stderr_text.find("=== XTFSH crash"), std::string::npos)
         << r.stderr_text;
     EXPECT_NE(r.stderr_text.find("SIGABRT"), std::string::npos)
         << r.stderr_text;
@@ -148,12 +148,12 @@ TEST(CrashDump, PrintsLastExecutedCommand) {
         << r.stderr_text;
 }
 
-#else // CJHSH_CRASH_DUMP_TESTS
+#else // XTFSH_CRASH_DUMP_TESTS
 
 TEST(CrashDump, DisabledOnThisBuild) {
     GTEST_SKIP()
-        << "crash-dump tests are gated behind CJHSH_CRASH_DUMP_TESTS "
+        << "crash-dump tests are gated behind XTFSH_CRASH_DUMP_TESTS "
            "(fork + SIGABRT doesn't play well with some CI lanes)";
 }
 
-#endif // CJHSH_CRASH_DUMP_TESTS
+#endif // XTFSH_CRASH_DUMP_TESTS

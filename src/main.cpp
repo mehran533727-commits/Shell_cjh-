@@ -3,20 +3,20 @@
 // Everything else was extracted as part of the main-split refactor:
 //   src/core/executor.cpp  — command execution pipeline
 //   src/core/signals.cpp   — SIGINT/SIGCHLD handlers + install helper
-//   src/startup.cpp        — plugin registration, CJHSHrc load, --benchmark
+//   src/startup.cpp        — plugin registration, XTFSHrc load, --benchmark
 //   src/repl.cpp           — interactive loop, banner, replxx setup
 //
 // main.cpp is now ~60 LOC, which is the point.
 
-#include "CJHSH/ai/bootstrap.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/history.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/repl.h"
-#include "CJHSH/startup.h"
-#include "CJHSH/ui.h"
-#include "CJHSH/util/crash_dump.h"
+#include "XTFSH/ai/bootstrap.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/history.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/repl.h"
+#include "XTFSH/startup.h"
+#include "XTFSH/ui.h"
+#include "XTFSH/util/crash_dump.h"
 #include "theme.h"
 
 #include <cstdio>
@@ -25,7 +25,7 @@
 
 using std::string;
 
-// I/O helpers are inline in CJHSH/core.h so standalone plugin tests
+// I/O helpers are inline in XTFSH/core.h so standalone plugin tests
 // (TEST_STANDALONE targets not linked to shell_lib) can resolve them.
 
 // ── --version / --features ─────────────────────────────────────
@@ -39,13 +39,13 @@ using std::string;
 // Output format is stable (space-separated `+feat` / `-feat` tokens)
 // so scripts can grep it.
 static int print_version_and_features() {
-#ifndef CJHSH_VERSION_STRING
-#define CJHSH_VERSION_STRING "unknown"
+#ifndef XTFSH_VERSION_STRING
+#define XTFSH_VERSION_STRING "unknown"
 #endif
-    std::printf("CJHSH %s\n", CJHSH_VERSION_STRING);
+    std::printf("XTFSH %s\n", XTFSH_VERSION_STRING);
     std::printf("features:");
     std::printf(" +ai");
-#ifdef CJHSH_SQLITE_ENABLED
+#ifdef XTFSH_SQLITE_ENABLED
     std::printf(" +sqlite-history");
 #else
     std::printf(" -sqlite-history");
@@ -62,7 +62,7 @@ static int print_version_and_features() {
 
 #ifndef TESTING_BUILD
 int main(int argc, char *argv[]) {
-    // `CJHSH --version` / `CJHSH --features` — report build info and exit.
+    // `XTFSH --version` / `XTFSH --features` — report build info and exit.
     if (argc == 2 &&
         (string(argv[1]) == "--version" ||
          string(argv[1]) == "-V" ||
@@ -70,9 +70,9 @@ int main(int argc, char *argv[]) {
         return print_version_and_features();
     }
 
-    // `CJHSH --benchmark` — print a startup-stage breakdown and exit.
+    // `XTFSH --benchmark` — print a startup-stage breakdown and exit.
     if (argc == 2 && string(argv[1]) == "--benchmark") {
-        return CJHSH::run_benchmark_mode();
+        return XTFSH::run_benchmark_mode();
     }
 
     if (argc > 2) {
@@ -81,29 +81,29 @@ int main(int argc, char *argv[]) {
 
     // Interactive or script mode — both share one-time startup.
     load_user_theme();
-    CJHSH::register_default_plugins();
+    XTFSH::register_default_plugins();
 
     ShellState state;
     install_signal_handlers();
     // Crash handlers (SIGSEGV/SIGABRT/SIGBUS) dump a short diagnostic
     // — last command, exit status, cwd, backtrace — before re-raising
     // so the OS still produces a core dump. Deep-review finding O7.4.
-    CJHSH::util::install_crash_handler(state);
+    XTFSH::util::install_crash_handler(state);
 
-    // `CJHSH <script.CJHSH>` — run the file and exit.
+    // `XTFSH <script.XTFSH>` — run the file and exit.
     if (argc == 2) {
         return execute_script_file(argv[1], state);
     }
 
     build_command_cache();
-    CJHSH::ai::build_history_context();
-    CJHSH::load_CJHSHrc(state);
+    XTFSH::ai::build_history_context();
+    XTFSH::load_XTFSHrc(state);
 
-    // Fire lifecycle on_startup hooks now that state + CJHSHrc are
+    // Fire lifecycle on_startup hooks now that state + XTFSHrc are
     // both ready. Plugins can observe the initialized state (aliases,
     // env, dir stack) before the first REPL iteration.
     global_plugin_registry().fire_startup(state);
 
-    return CJHSH::run_interactive(state);
+    return XTFSH::run_interactive(state);
 }
 #endif // TESTING_BUILD

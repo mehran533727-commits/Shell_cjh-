@@ -1,7 +1,7 @@
 // Environment + alias builtins: export, unset, alias, unalias.
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/signals.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/signals.h"
 using namespace std;
 
 extern char **environ;

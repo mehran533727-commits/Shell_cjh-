@@ -45,7 +45,7 @@ TEST(SignalHandling, RapidBackgroundBurstIsStable) {
 // shell to exit gracefully on EOF. Neither outcome should be a crash.
 TEST(SignalHandling, ShellSurvivesRepeatedKillSignals) {
     // Start the shell via popen, send SIGWINCH (innocuous) and SIGUSR1
-    // (CJHSH doesn't handle it → default action is to exit immediately).
+    // (XTFSH doesn't handle it → default action is to exit immediately).
     // We skip actual SIGINT delivery because that signal is special on
     // CI runners. The test just makes sure a plain run exits cleanly.
     auto r = run_shell("echo signal_probe\nexit\n");

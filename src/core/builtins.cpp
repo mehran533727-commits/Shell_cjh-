@@ -15,8 +15,8 @@
 // adding a builtin in exactly one place (the table below) is enough
 // to register it and make it discoverable via `help`.
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/builtins.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/builtins.h"
 using namespace std;
 
 const vector<BuiltinInfo>& get_builtins_info() {
@@ -64,7 +64,7 @@ const vector<BuiltinInfo>& get_builtins_info() {
         {"help",     builtin_help,     "help [name]",                 "List builtins, or show usage for a specific builtin"},
 
         // config.cpp
-        {"config",   builtin_config,   "config <subcommand>",         "Inspect or modify CJHSH configuration (sync)"},
+        {"config",   builtin_config,   "config <subcommand>",         "Inspect or modify XTFSH configuration (sync)"},
         {"session",  builtin_session,  "session <list|save|load|rm>", "Save or restore shell session state"},
         {"theme",    builtin_theme,    "theme <list|current|set|preview>", "List, switch, or preview color themes"},
 

@@ -1,23 +1,23 @@
-# Append-only list of CJHSH plugins.
+# Append-only list of XTFSH plugins.
 #
-# To add a plugin, add one `CJHSH_register_plugin(...)` call at the bottom.
+# To add a plugin, add one `XTFSH_register_plugin(...)` call at the bottom.
 # See cmake/plugins.cmake for the full argument reference.
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME plugin_registry
     SOURCES src/plugins/plugin_registry.cpp
     TEST_SOURCES tests/unit/test_plugin_registry.cpp
     TEST_PREFIX "unit/plugins/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME config_resolver
     TEST_SOURCES tests/unit/test_config_resolver.cpp src/util/config_resolver.cpp
     TEST_PREFIX "unit/util/"
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME config_file
     TEST_SOURCES tests/unit/test_config_file.cpp src/util/config_file.cpp src/util/config_resolver.cpp src/util/io.cpp
     TEST_INCLUDES ${nlohmann_json_SOURCE_DIR}/include
@@ -25,7 +25,7 @@ CJHSH_register_plugin(
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME fish_completion
     SOURCES src/plugins/fish_completion_provider.cpp
     TEST_SOURCES tests/unit/test_fish_completion.cpp
@@ -33,7 +33,7 @@ CJHSH_register_plugin(
     TEST_PREFIX "unit/fish/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME fig_completion
     SOURCES src/plugins/fig_completion_provider.cpp
     TEST_SOURCES tests/unit/test_fig_completion.cpp
@@ -41,30 +41,30 @@ CJHSH_register_plugin(
     TEST_PREFIX "unit/fig/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME theme
     SOURCES src/plugins/theme_provider.cpp
     TEST_SOURCES tests/unit/test_theme.cpp src/plugins/theme_provider.cpp
-    TEST_DEFS CJHSH_THEMES_DIR="${CMAKE_SOURCE_DIR}/data/themes"
+    TEST_DEFS XTFSH_THEMES_DIR="${CMAKE_SOURCE_DIR}/data/themes"
     TEST_PREFIX "unit/theme/"
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME starship
     SOURCES src/plugins/starship_prompt_provider.cpp
     TEST_SOURCES tests/unit/test_starship.cpp
     TEST_PREFIX "unit/starship/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME fuzzy_finder
     SOURCES src/ui/fuzzy_finder.cpp
     TEST_SOURCES tests/unit/test_fuzzy_finder.cpp
     TEST_PREFIX "unit/ui/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME ai
     SOURCES
         src/ai/ai_handler.cpp
@@ -78,7 +78,7 @@ CJHSH_register_plugin(
     TEST_PREFIX "unit/ai/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME llm_diagnostics
     TEST_SOURCES tests/unit/test_llm_diagnostics.cpp
                  src/ai/llm_diagnostics.cpp
@@ -87,29 +87,29 @@ CJHSH_register_plugin(
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME ai_error_hook
     SOURCES src/plugins/ai_error_hook_provider.cpp
     TEST_SOURCES tests/unit/test_ai_error_hook.cpp
     TEST_PREFIX "unit/plugins/ai/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME key_file_perms
     TEST_SOURCES tests/unit/test_key_file_perms.cpp
     TEST_PREFIX "unit/ai/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME config_dir_migration
     TEST_SOURCES tests/unit/test_config_dir_migration.cpp
     TEST_PREFIX "unit/ai/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME sqlite_history
     SOURCES src/plugins/sqlite_history_provider.cpp
-    REQUIRES CJHSH_SQLITE_ENABLED
+    REQUIRES XTFSH_SQLITE_ENABLED
     TEST_SOURCES tests/unit/test_sqlite_history.cpp src/plugins/sqlite_history_provider.cpp src/util/config_resolver.cpp src/util/io.cpp
     TEST_INCLUDES ${SQLite3_INCLUDE_DIRS}
     TEST_LIBS ${SQLite3_LIBRARIES}
@@ -117,152 +117,152 @@ CJHSH_register_plugin(
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME contextual_ai
     SOURCES src/ai/contextual_ai.cpp
     TEST_SOURCES tests/unit/test_contextual_ai.cpp
     TEST_PREFIX "unit/ai/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME safety_hook
     SOURCES src/plugins/safety_hook_provider.cpp
     TEST_SOURCES tests/unit/test_safety_hook.cpp
     TEST_PREFIX "unit/plugins/safety/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME inline_docs
     SOURCES src/ui/inline_docs.cpp
     TEST_SOURCES tests/unit/test_inline_docs.cpp
     TEST_PREFIX "unit/ui/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME alias_suggest
     SOURCES src/plugins/alias_suggest_provider.cpp
     TEST_SOURCES tests/unit/test_alias_suggest.cpp
     TEST_PREFIX "unit/plugins/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME clipboard
     SOURCES src/ui/clipboard.cpp
     TEST_SOURCES tests/unit/test_clipboard.cpp
     TEST_PREFIX "unit/ui/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME benchmark
     SOURCES src/util/benchmark.cpp
     TEST_SOURCES tests/unit/test_startup_benchmark.cpp
     TEST_PREFIX "unit/util/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME manpage_completion
     SOURCES src/plugins/manpage_completion_provider.cpp
     TEST_SOURCES tests/unit/test_manpage_completion.cpp
     TEST_PREFIX "unit/plugins/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME rich_output
     SOURCES src/ui/rich_output.cpp
     TEST_SOURCES tests/unit/test_rich_output.cpp
     TEST_PREFIX "unit/ui/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME block_renderer
     SOURCES src/ui/block_renderer.cpp
     TEST_SOURCES tests/unit/test_block_renderer.cpp
     TEST_PREFIX "unit/ui/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME session
     SOURCES src/core/session.cpp
     TEST_SOURCES tests/unit/test_session.cpp
     TEST_PREFIX "unit/session/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME config_sync
     SOURCES src/core/config_sync.cpp
     TEST_SOURCES tests/unit/test_config_sync.cpp
     TEST_PREFIX "unit/core/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME structured_pipe
     SOURCES src/core/structured_pipe.cpp
     TEST_SOURCES tests/unit/test_pipeline.cpp
     TEST_PREFIX "unit/core/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME heredoc_large
     TEST_SOURCES tests/unit/test_heredoc_large.cpp
     TEST_PREFIX "unit/core/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME hooked_capture
     TEST_SOURCES tests/unit/test_hooked_capture.cpp
     TEST_PREFIX "unit/core/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME hook_ordering
     TEST_SOURCES tests/unit/test_hook_ordering.cpp
     TEST_PREFIX "unit/core/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME safe_exec
     TEST_SOURCES tests/unit/test_safe_exec.cpp src/util/safe_exec.cpp
     TEST_PREFIX "unit/util/"
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME safe_tmpdir
     TEST_SOURCES tests/unit/test_safe_tmpdir.cpp src/util/safe_tmpdir.cpp
     TEST_PREFIX "unit/util/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME expansion_caps
     TEST_SOURCES tests/unit/test_expansion_caps.cpp
     TEST_PREFIX "unit/core/"
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME io
     TEST_SOURCES tests/unit/test_io.cpp src/util/io.cpp
     TEST_PREFIX "unit/util/"
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME fd
     TEST_SOURCES tests/unit/test_fd.cpp
     TEST_PREFIX "unit/util/"
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME crash_dump
     TEST_SOURCES tests/unit/test_crash_dump.cpp src/util/crash_dump.cpp
-    TEST_DEFS CJHSH_CRASH_DUMP_TESTS
+    TEST_DEFS XTFSH_CRASH_DUMP_TESTS
     TEST_PREFIX "unit/util/"
     TEST_STANDALONE
 )
 
-CJHSH_register_plugin(
+XTFSH_register_plugin(
     NAME sqlite_history_like_escape
-    REQUIRES CJHSH_SQLITE_ENABLED
+    REQUIRES XTFSH_SQLITE_ENABLED
     TEST_SOURCES tests/unit/test_sqlite_history_like_escape.cpp
                  src/plugins/sqlite_history_provider.cpp
                  src/util/config_resolver.cpp

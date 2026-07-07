@@ -11,9 +11,9 @@
 #include <string>
 #include <unistd.h>
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/builtins.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/builtins.h"
+#include "XTFSH/shell.h"
 
 namespace {
 
@@ -22,7 +22,7 @@ namespace {
 class FdCapture {
 public:
     explicit FdCapture(int which_fd) : which_(which_fd) {
-        char tmpl[] = "/tmp/CJHSH_help_capture_XXXXXX";
+        char tmpl[] = "/tmp/XTFSH_help_capture_XXXXXX";
         fd_ = ::mkstemp(tmpl);
         if (fd_ < 0) std::abort();
         path_ = tmpl;

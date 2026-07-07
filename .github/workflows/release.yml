@@ -21,16 +21,16 @@ jobs:
           # Amazon Linux 2023, Arch.
           - os: ubuntu-22.04
             container: quay.io/pypa/manylinux_2_28_x86_64
-            artifact: CJHSH-linux-amd64
+            artifact: XTFSH-linux-amd64
             kind: linux-manylinux
           # Linux arm64 — same glibc baseline on aarch64.
           - os: ubuntu-24.04-arm
             container: quay.io/pypa/manylinux_2_28_aarch64
-            artifact: CJHSH-linux-arm64
+            artifact: XTFSH-linux-arm64
             kind: linux-manylinux
           # macOS arm64 — Apple Silicon.
           - os: macos-14
-            artifact: CJHSH-macos-arm64
+            artifact: XTFSH-macos-arm64
             kind: macos
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container || '' }}
@@ -49,10 +49,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -71,17 +71,17 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build
         env:
           ARTIFACT: ${{ matrix.artifact }}
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF ${CJHSH_FC_ARGS:-}
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF ${XTFSH_FC_ARGS:-}
           cmake --build build -j "$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
-          strip build/CJHSH.out
-          cp build/CJHSH.out "$ARTIFACT"
+          strip build/XTFSH.out
+          cp build/XTFSH.out "$ARTIFACT"
       - name: Verify binary
-        run: ./${{ matrix.artifact }} -c "echo CJHSH_release_test" 2>/dev/null || echo "Binary built successfully"
+        run: ./${{ matrix.artifact }} -c "echo XTFSH_release_test" 2>/dev/null || echo "Binary built successfully"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

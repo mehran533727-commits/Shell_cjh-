@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for CJHSH
+about: Suggest a new feature for XTFSH
 title: ''
 labels: enhancement
 assignees: ''

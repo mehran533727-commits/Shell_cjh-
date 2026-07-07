@@ -1,8 +1,8 @@
 
-#include "CJHSH/ai.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/util/config_resolver.h"
-#include "CJHSH/util/io.h"
+#include "XTFSH/ai.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/util/config_resolver.h"
+#include "XTFSH/util/io.h"
 #include "theme.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -25,20 +25,20 @@ using namespace std;
 // ── XDG config directory ─────────────────────────────────────
 
 string ai_get_config_dir() {
-    return CJHSH::config::get_config_dir();
+    return XTFSH::config::get_config_dir();
 }
 
 static bool ensure_config_dir() {
     string dir = ai_get_config_dir();
     if (dir.empty()) return false;
-    if (!CJHSH::config::ensure_dir(dir)) return false;
+    if (!XTFSH::config::ensure_dir(dir)) return false;
 
     struct stat st{};
     if (lstat(dir.c_str(), &st) == 0) {
         if (S_ISLNK(st.st_mode)) {
             static bool warned = false;
             if (!warned) {
-                CJHSH::io::error("refusing to operate on " + dir
+                XTFSH::io::error("refusing to operate on " + dir
                                 + " — it is a symbolic link; key files would be exposed");
                 warned = true;
             }
@@ -53,7 +53,7 @@ static bool ensure_config_dir() {
                 // Only log once per process to avoid noise on every key access.
                 static bool logged = false;
                 if (!logged) {
-                    CJHSH::io::info("tightened permissions on " + dir + " to 0700");
+                    XTFSH::io::info("tightened permissions on " + dir + " to 0700");
                     logged = true;
                 }
             }
@@ -68,7 +68,7 @@ static bool write_secure_file(const string &path, const string &content) {
     if (path.empty()) return false;
     int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     if (fd < 0) {
-        CJHSH::io::error("could not open " + path + ": " + strerror(errno));
+        XTFSH::io::error("could not open " + path + ": " + strerror(errno));
         return false;
     }
     // If the file already existed with looser perms, tighten now.
@@ -87,7 +87,7 @@ static bool write_secure_file(const string &path, const string &content) {
     // filesystem journal flush does not leave a truncated/zero-length key.
     // fsync failure is logged but not fatal — data is already written.
     if (::fsync(fd) != 0) {
-        CJHSH::io::warning("fsync on " + path + ": " + strerror(errno));
+        XTFSH::io::warning("fsync on " + path + ": " + strerror(errno));
     }
     bool ok = (::close(fd) == 0);
     return ok;
@@ -200,11 +200,11 @@ static KeyLoadResult load_provider_key_from_dirs(
 }
 
 static std::optional<std::string> bundled_default_setup_script() {
-    if (const char *env = getenv("CJHSH_DEFAULT_SETUP_SCRIPT")) {
+    if (const char *env = getenv("XTFSH_DEFAULT_SETUP_SCRIPT")) {
         if (*env) return std::string(env);
     }
-#ifdef CJHSH_SOURCE_DIR
-    return std::string(CJHSH_SOURCE_DIR) + "/cjh-setup.sh";
+#ifdef XTFSH_SOURCE_DIR
+    return std::string(XTFSH_SOURCE_DIR) + "/cjh-setup.sh";
 #else
     return std::nullopt;
 #endif
@@ -363,7 +363,7 @@ bool ai_run_setup_wizard() {
     string provider = ai_get_provider();
 
     write_stdout("\n");
-    write_stdout(AI_LABEL + "CJHSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
+    write_stdout(AI_LABEL + "XTFSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
                  "AI features configuration\n\n");
 
     if (provider == "gemini") {
@@ -585,7 +585,7 @@ void ai_clear_conversation_file() {
 // ── Usage tracking ────────────────────────────────────────────
 
 string ai_get_usage_path() {
-    const char *override_path = getenv("CJHSH_AI_USAGE_PATH");
+    const char *override_path = getenv("XTFSH_AI_USAGE_PATH");
     if (override_path && override_path[0] != '\0') return string(override_path);
 
     string dir = ai_get_config_dir();

@@ -1,10 +1,10 @@
-#include "CJHSH/ui/fuzzy_finder.h"
+#include "XTFSH/ui/fuzzy_finder.h"
 
 #include <algorithm>
 #include <cctype>
 #include <climits>
 
-namespace CJHSH {
+namespace XTFSH {
 
 // ── Internal helpers ─────────────────────────────────────────────
 
@@ -158,4 +158,4 @@ std::vector<FuzzyResult> fuzzy_filter(
     return scored;
 }
 
-} // namespace CJHSH
+} // namespace XTFSH

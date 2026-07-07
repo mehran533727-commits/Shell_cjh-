@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 
-#include "CJHSH/core/structured_pipe.h"
+#include "XTFSH/core/structured_pipe.h"
 
-using namespace CJHSH::structured_pipe;
+using namespace XTFSH::structured_pipe;
 using json = nlohmann::json;
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,17 +1,17 @@
 # Build-flag toggles: sanitizers, coverage, and static linking.
 #
 # All three apply via add_compile_options/add_link_options so every
-# target — CJHSH.out, shell_lib, test_*, CJHSH_parser_fuzzer — picks up
+# target — XTFSH.out, shell_lib, test_*, XTFSH_parser_fuzzer — picks up
 # the flags without having to opt in individually.
 
 # ── Sanitizers (ASan + UBSan) ─────────────────────────────────
 # Opt-in instrumentation for CI and local debugging. Let CMAKE_BUILD_TYPE
 # drive -O/-g; RelWithDebInfo gives readable stack traces without
 # killing speed.
-option(CJHSH_SANITIZERS "Enable AddressSanitizer + UndefinedBehaviorSanitizer" OFF)
-if(CJHSH_SANITIZERS)
+option(XTFSH_SANITIZERS "Enable AddressSanitizer + UndefinedBehaviorSanitizer" OFF)
+if(XTFSH_SANITIZERS)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        message(FATAL_ERROR "CJHSH_SANITIZERS is not supported on MSVC")
+        message(FATAL_ERROR "XTFSH_SANITIZERS is not supported on MSVC")
     endif()
     message(STATUS "Sanitizers enabled: address,undefined")
     add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer -g)
@@ -22,12 +22,12 @@ endif()
 # --coverage is the portable spelling; GCC and Clang both accept it
 # and emit gcov-compatible notes/data files. MSVC has no equivalent,
 # so we hard-gate to GCC/Clang.
-option(CJHSH_COVERAGE "Enable gcov-compatible coverage instrumentation" OFF)
-if(CJHSH_COVERAGE)
+option(XTFSH_COVERAGE "Enable gcov-compatible coverage instrumentation" OFF)
+if(XTFSH_COVERAGE)
     if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
             CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
         message(FATAL_ERROR
-            "CJHSH_COVERAGE requires GCC or Clang (got ${CMAKE_CXX_COMPILER_ID})")
+            "XTFSH_COVERAGE requires GCC or Clang (got ${CMAKE_CXX_COMPILER_ID})")
     endif()
     message(STATUS "Coverage instrumentation enabled (--coverage)")
     add_compile_options(--coverage)
@@ -35,16 +35,16 @@ if(CJHSH_COVERAGE)
 endif()
 
 # ── Static linking (musl / Alpine) ────────────────────────────
-# Produces a fully-static CJHSH binary. Realistically only works on
+# Produces a fully-static XTFSH binary. Realistically only works on
 # Linux with musl — glibc's NSS pulls in libc internals at runtime
 # that a `-static` link can't resolve cleanly, and macOS has no
 # static libSystem at all. Kept permissive (warn, don't abort) so a
 # developer on macOS/glibc can still attempt a config, and so CI's
 # config-only smoke tests don't need to special-case the option.
-option(CJHSH_STATIC "Link the CJHSH binary statically (requires static libs for deps)" OFF)
-if(CJHSH_STATIC)
+option(XTFSH_STATIC "Link the XTFSH binary statically (requires static libs for deps)" OFF)
+if(XTFSH_STATIC)
     if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        message(WARNING "CJHSH_STATIC is only well-tested on Linux/musl (Alpine). Proceeding anyway.")
+        message(WARNING "XTFSH_STATIC is only well-tested on Linux/musl (Alpine). Proceeding anyway.")
     endif()
     message(STATUS "Static linking enabled (-static)")
     # .a-first search so find_library prefers static. Fall back to shared

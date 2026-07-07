@@ -9,9 +9,9 @@
 #include <cstdio>
 #include <string>
 
-#include "CJHSH/core/executor.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/shell.h"
 
 namespace {
 
@@ -94,7 +94,7 @@ TEST(HookedCapture, SkipPathBlocksExecution) {
     // the child never forks and the file never appears.
     char path[128];
     std::snprintf(path, sizeof(path),
-                  "/tmp/CJHSH_hc_sentinel_%d", (int)::getpid());
+                  "/tmp/XTFSH_hc_sentinel_%d", (int)::getpid());
     ::unlink(path);  // ensure clean state from any prior run
 
     ShellState state;

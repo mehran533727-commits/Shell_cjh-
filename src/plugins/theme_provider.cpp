@@ -1,4 +1,4 @@
-#include "CJHSH/plugins/theme_provider.h"
+#include "XTFSH/plugins/theme_provider.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>

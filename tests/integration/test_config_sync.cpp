@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// config_sync initialises a git repo at ~/.CJHSH. We redirect $HOME per
+// config_sync initialises a git repo at ~/.XTFSH. We redirect $HOME per
 // test so the suite never touches the developer's real one.
 namespace {
 struct HomeGuard {
@@ -14,7 +14,7 @@ struct HomeGuard {
     HomeGuard() {
         const char *h = getenv("HOME");
         original = h ? h : "";
-        tmp = "/tmp/CJHSH_cfg_sync_test_" + std::to_string(getpid());
+        tmp = "/tmp/XTFSH_cfg_sync_test_" + std::to_string(getpid());
         std::error_code ec;
         std::filesystem::create_directories(tmp, ec);
         setenv("HOME", tmp.c_str(), 1);
@@ -77,8 +77,8 @@ TEST(ConfigSync, RemoteRequiresUrl) {
 TEST(ConfigSync, InitCreatesGitRepo) {
     HomeGuard home;
     run_shell("config sync init\nexit\n");
-    // .git directory should now exist under $HOME/.CJHSH
-    std::string git_dir = home.tmp + "/.CJHSH/.git";
+    // .git directory should now exist under $HOME/.XTFSH
+    std::string git_dir = home.tmp + "/.XTFSH/.git";
     struct stat st;
     EXPECT_EQ(stat(git_dir.c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));

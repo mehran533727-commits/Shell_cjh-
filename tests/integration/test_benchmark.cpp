@@ -1,6 +1,6 @@
 #include "test_helpers.h"
 
-// `CJHSH --benchmark` should print a stage-by-stage startup breakdown and
+// `XTFSH --benchmark` should print a stage-by-stage startup breakdown and
 // exit 0. The breakdown format is documented in the PR description as
 // "Startup breakdown:" followed by indented stage lines and a Total:.
 

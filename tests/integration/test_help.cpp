@@ -1,6 +1,6 @@
 #include "test_helpers.h"
 
-// End-to-end smoke of the `help` builtin: spawn CJHSH, run `help`,
+// End-to-end smoke of the `help` builtin: spawn XTFSH, run `help`,
 // verify a few known builtin names appear in its output.
 
 TEST(Help, ListsKnownBuiltins) {

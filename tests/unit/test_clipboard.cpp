@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "CJHSH/ui/clipboard.h"
+#include "XTFSH/ui/clipboard.h"
 
 // ═══════════════════════════════════════════════════════════════
 // Base64 encoding tests

@@ -1,13 +1,13 @@
 
-#include "CJHSH/ai.h"
-#include "CJHSH/ai/ai_abort.h"
-#include "CJHSH/ai/llm_registry.h"
-#include "CJHSH/ai/model_defaults.h"
-#include "CJHSH/core/builtins.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/util/io.h"
+#include "XTFSH/ai.h"
+#include "XTFSH/ai/ai_abort.h"
+#include "XTFSH/ai/llm_registry.h"
+#include "XTFSH/ai/model_defaults.h"
+#include "XTFSH/core/builtins.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/util/io.h"
 #include "theme.h"
 #include <nlohmann/json.hpp>
 #include <sys/utsname.h>
@@ -132,7 +132,7 @@ static void stop_spinner() {
 // Each provider builds its own schema; this text just tells the model
 // which response shapes are legal so it picks one consistently.
 static const char *PROMPT_UNIFIED =
-    "You are an AI assistant embedded in CJHSH (CJHSH Shell). The user types "
+    "You are an AI assistant embedded in XTFSH (XTF'SH Shell). The user types "
     "natural language and you respond based on what they ask.\n\n"
     "Guidelines:\n"
     "- Single command: set response_type to \"command\", content to the command.\n"
@@ -149,7 +149,7 @@ static const char *PROMPT_UNIFIED =
 // ── Output helpers ────────────────────────────────────────────
 
 static void ai_print_label() {
-    write_stdout(AI_LABEL + "CJHSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET);
+    write_stdout(AI_LABEL + "XTFSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET);
 }
 
 static void ai_print_error(const string &msg) {
@@ -193,7 +193,7 @@ static void add_to_conversation(const string &role, const string &text) {
 
 // ── Context-aware system prompt ──────────────────────────────
 
-// Cached for the life of the process — the CJHSH binary never mutates its
+// Cached for the life of the process — the XTFSH binary never mutates its
 // builtin table at runtime, and uname() values don't change mid-session
 // either. Keeps the per-request overhead at zero.
 static const string& cached_env_context() {
@@ -210,12 +210,12 @@ static const string& cached_env_context() {
             ctx += "OS: " + string(u.sysname) + " " + string(u.release)
                  + " (" + string(u.machine) + "). ";
         }
-        ctx += "Shell: CJHSH " + string(CJHSH_VERSION_STRING) + ". ";
+        ctx += "Shell: XTFSH " + string(XTFSH_VERSION_STRING) + ". ";
 
-        // CJHSH-specific builtin list. Without this the model happily
-        // suggests bash idioms for things CJHSH already implements
+        // XTFSH-specific builtin list. Without this the model happily
+        // suggests bash idioms for things XTFSH already implements
         // natively (z, session, trap, bglist, etc.).
-        ctx += "CJHSH builtins (prefer these over external tools when they "
+        ctx += "XTFSH builtins (prefer these over external tools when they "
                "apply): ";
         const auto &binfo = get_builtins_info();
         bool first = true;
@@ -224,7 +224,7 @@ static const string& cached_env_context() {
             ctx += b.name;
             first = false;
         }
-        ctx += ". CJHSH also supports: pipes (|), structured pipelines (|>), "
+        ctx += ". XTFSH also supports: pipes (|), structured pipelines (|>), "
                "redirections (>, >>, <, 2>, 2>&1), heredocs (<<, <<-), "
                "command substitution ($(...)), subshells (cmd; cmd), "
                "operators (&&, ||, ;), aliases, globs, tilde and $VAR "
@@ -368,7 +368,7 @@ static bool is_valid_model_name(const std::string &s) {
 static bool model_matches_provider(const std::string &provider,
                                     const std::string &model) {
     if (model.empty()) return true;
-    const auto &prefixes = CJHSH::ai::id_prefixes_for(provider);
+    const auto &prefixes = XTFSH::ai::id_prefixes_for(provider);
     if (prefixes.empty()) {
         // Providers without prefix discipline (ollama hosts user-chosen
         // local model names) accept anything.
@@ -397,7 +397,7 @@ static unique_ptr<LLMClient> create_current_client() {
         if (!announced && isatty(STDOUT_FILENO)) {
             // Visible, one-per-process notice. Goes through ai_print_label
             // so users see the origin of the message instead of a silent
-            // reset buried behind --debug. Still logged through CJHSH::io
+            // reset buried behind --debug. Still logged through XTFSH::io
             // so scripts scraping stderr pick it up too.
             ai_print_label();
             write_stdout(CAT_YELLOW + "resetting saved model '"
@@ -406,7 +406,7 @@ static unique_ptr<LLMClient> create_current_client() {
                          + provider + "' (using provider default).\n" CAT_RESET);
             announced = true;
         }
-        CJHSH::io::warning("ignoring saved model '" + *model_override +
+        XTFSH::io::warning("ignoring saved model '" + *model_override +
                            "' — incompatible with provider '" + provider +
                            "'. Using provider default.");
         ai_set_model_override("");
@@ -424,7 +424,7 @@ static unique_ptr<LLMClient> create_current_client() {
         key = ai_get_ollama_url();
     }
 
-    unique_ptr<LLMClient> client = CJHSH::ai::create_llm_client(provider, key);
+    unique_ptr<LLMClient> client = XTFSH::ai::create_llm_client(provider, key);
     if (!client) return client;
 
     if (model_override) {
@@ -443,7 +443,7 @@ std::unique_ptr<LLMClient> ai_create_client() {
         static std::atomic<bool> logged{false};
         bool expected = false;
         if (logged.compare_exchange_strong(expected, true)) {
-            CJHSH::io::debug("ai: client built for provider=" +
+            XTFSH::io::debug("ai: client built for provider=" +
                             ai_get_provider() +
                             " model=" + client->get_model());
         }
@@ -610,7 +610,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
     // render char-by-char instead of waiting for the whole JSON. The
     // spinner's only job now is bridging the connection-setup latency
     // before the first byte arrives.
-    CJHSH::ai::abort_flag::begin_request();
+    XTFSH::ai::abort_flag::begin_request();
 
     // Track whether we've begun visible output so we can turn off the
     // spinner exactly once when the first user-facing byte shows up.
@@ -629,7 +629,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
         content_stream.feed(chunk);
     };
 
-    // Pull persisted turns from $CJHSH_DATA_HOME/ai/conversation.json so
+    // Pull persisted turns from $XTFSH_DATA_HOME/ai/conversation.json so
     // "now delete those files" still has context across a Ctrl+D.
     load_conversation_if_needed();
 
@@ -643,7 +643,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
             system_prompt, enriched_query, on_chunk);
     }
     stop_spinner();
-    CJHSH::ai::abort_flag::end_request();
+    XTFSH::ai::abort_flag::end_request();
 
     if (label_printed) {
         // Finish the streamed line cleanly before any follow-up prompts
@@ -918,7 +918,7 @@ static int handle_privacy(const string &rest) {
     write_stdout("Privacy policy\n\n");
     write_stdout("  Every @ai call sends these fields to the provider:\n");
     write_stdout("    - Your prompt (the text after @ai)\n");
-    write_stdout("    - OS + kernel + CJHSH version (uname -sr)\n");
+    write_stdout("    - OS + kernel + XTFSH version (uname -sr)\n");
     write_stdout("    - Current working directory\n");
     write_stdout("    - Up to 8 recent commands in this cwd (from history)\n");
     write_stdout("    - Conversation history for this session (up to 10 turns)\n\n");

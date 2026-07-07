@@ -1,14 +1,14 @@
-// LLM provider factory registry — see include/CJHSH/ai/llm_registry.h
+// LLM provider factory registry — see include/XTFSH/ai/llm_registry.h
 // for the overall design rationale.
 
 
-#include "CJHSH/ai/llm_registry.h"
+#include "XTFSH/ai/llm_registry.h"
 
 #include <algorithm>
 #include <mutex>
 #include <unordered_map>
 
-namespace CJHSH::ai {
+namespace XTFSH::ai {
 
 namespace {
 
@@ -73,5 +73,5 @@ void register_builtin_llm_providers() {
     });
 }
 
-} // namespace CJHSH::ai
+} // namespace XTFSH::ai
 

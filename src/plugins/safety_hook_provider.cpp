@@ -1,7 +1,7 @@
-#include "CJHSH/plugins/safety_hook_provider.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/safety_hook_provider.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/shell.h"
 #include "theme.h"
 #include <algorithm>
 #include <cctype>

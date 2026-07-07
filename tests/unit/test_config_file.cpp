@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "CJHSH/util/config_file.h"
-#include "CJHSH/util/config_resolver.h"
+#include "XTFSH/util/config_file.h"
+#include "XTFSH/util/config_resolver.h"
 
 #include <chrono>
 #include <cstdio>
@@ -28,31 +28,31 @@ private:
 };
 
 // Each test gets its own temporary $HOME so `get_data_dir()` resolves
-// under it (with XDG/CJHSH_DATA_HOME cleared). That means writing a
-// config at `<home>/.CJHSH/config.json` is the file the loader reads.
+// under it (with XDG/XTFSH_DATA_HOME cleared). That means writing a
+// config at `<home>/.XTFSH/config.json` is the file the loader reads.
 class ConfigFileTest : public ::testing::Test {
 protected:
     std::string tmp_home;
-    std::string saved_home, saved_xdg_data, saved_CJHSH_data, saved_log_level;
+    std::string saved_home, saved_xdg_data, saved_XTFSH_data, saved_log_level;
 
     void SetUp() override {
         saved_home       = save("HOME");
         saved_xdg_data   = save("XDG_DATA_HOME");
-        saved_CJHSH_data  = save("CJHSH_DATA_HOME");
-        saved_log_level  = save("CJHSH_LOG_LEVEL");
+        saved_XTFSH_data  = save("XTFSH_DATA_HOME");
+        saved_log_level  = save("XTFSH_LOG_LEVEL");
 
         unsetenv("XDG_DATA_HOME");
-        unsetenv("CJHSH_DATA_HOME");
-        unsetenv("CJHSH_LOG_LEVEL");
+        unsetenv("XTFSH_DATA_HOME");
+        unsetenv("XTFSH_LOG_LEVEL");
 
         // PID + nanosecond suffix to avoid collisions between
         // concurrent tests.
-        tmp_home = "/tmp/CJHSH_config_file_test_" +
+        tmp_home = "/tmp/XTFSH_config_file_test_" +
                    std::to_string(::getpid()) + "_" +
                    std::to_string(std::chrono::steady_clock::now()
                                   .time_since_epoch().count());
         fs::remove_all(tmp_home);
-        fs::create_directories(tmp_home + "/.CJHSH");
+        fs::create_directories(tmp_home + "/.XTFSH");
         setenv("HOME", tmp_home.c_str(), 1);
     }
 
@@ -60,11 +60,11 @@ protected:
         fs::remove_all(tmp_home);
         restore("HOME",           saved_home);
         restore("XDG_DATA_HOME",  saved_xdg_data);
-        restore("CJHSH_DATA_HOME", saved_CJHSH_data);
-        restore("CJHSH_LOG_LEVEL", saved_log_level);
+        restore("XTFSH_DATA_HOME", saved_XTFSH_data);
+        restore("XTFSH_LOG_LEVEL", saved_log_level);
     }
 
-    std::string config_path() const { return tmp_home + "/.CJHSH/config.json"; }
+    std::string config_path() const { return tmp_home + "/.XTFSH/config.json"; }
 
     void write_config(const std::string &body) const {
         std::ofstream out(config_path());
@@ -85,7 +85,7 @@ protected:
 
 TEST_F(ConfigFileTest, MissingFileYieldsDefaults) {
     // No config.json written.
-    auto cfg = CJHSH::config::load();
+    auto cfg = XTFSH::config::load();
     EXPECT_TRUE(cfg.disabled_plugins.empty());
     EXPECT_EQ(cfg.log_level, "info");
 }
@@ -98,7 +98,7 @@ TEST_F(ConfigFileTest, ValidConfigIsParsed) {
         "log_level": "warn"
     })");
 
-    auto cfg = CJHSH::config::load();
+    auto cfg = XTFSH::config::load();
     ASSERT_EQ(cfg.disabled_plugins.size(), 2u);
     EXPECT_EQ(cfg.disabled_plugins[0], "safety");
     EXPECT_EQ(cfg.disabled_plugins[1], "fish");
@@ -113,7 +113,7 @@ TEST_F(ConfigFileTest, UnknownFieldsAreIgnored) {
         "totally_new_setting": { "nested": true }
     })");
 
-    auto cfg = CJHSH::config::load();
+    auto cfg = XTFSH::config::load();
     EXPECT_EQ(cfg.log_level, "debug");
     EXPECT_TRUE(cfg.disabled_plugins.empty());
 }
@@ -123,36 +123,36 @@ TEST_F(ConfigFileTest, UnknownFieldsAreIgnored) {
 TEST_F(ConfigFileTest, MalformedJsonYieldsDefaultsWithWarning) {
     write_config("{ this is not json");
 
-    CJHSH::config::UserConfig cfg;
+    XTFSH::config::UserConfig cfg;
     std::string stderr_text;
     {
         StderrCapture cap;
-        EXPECT_NO_THROW(cfg = CJHSH::config::load());
+        EXPECT_NO_THROW(cfg = XTFSH::config::load());
         stderr_text = cap.str();
     }
 
     EXPECT_TRUE(cfg.disabled_plugins.empty());
     EXPECT_EQ(cfg.log_level, "info");
-    EXPECT_NE(stderr_text.find("CJHSH: warning"), std::string::npos);
+    EXPECT_NE(stderr_text.find("XTFSH: warning"), std::string::npos);
     EXPECT_NE(stderr_text.find("config.json"), std::string::npos);
 }
 
-// ── CJHSH_LOG_LEVEL env override wins ───────────────────────────
+// ── XTFSH_LOG_LEVEL env override wins ───────────────────────────
 
 TEST_F(ConfigFileTest, EnvLogLevelOverridesFile) {
     write_config(R"({ "log_level": "warn" })");
-    setenv("CJHSH_LOG_LEVEL", "debug", 1);
+    setenv("XTFSH_LOG_LEVEL", "debug", 1);
 
-    auto cfg = CJHSH::config::load();
+    auto cfg = XTFSH::config::load();
     EXPECT_EQ(cfg.log_level, "debug");
 }
 
-// ── CJHSH_LOG_LEVEL applies even when no file exists ────────────
+// ── XTFSH_LOG_LEVEL applies even when no file exists ────────────
 
 TEST_F(ConfigFileTest, EnvLogLevelAppliesWithoutFile) {
-    setenv("CJHSH_LOG_LEVEL", "error", 1);
+    setenv("XTFSH_LOG_LEVEL", "error", 1);
 
-    auto cfg = CJHSH::config::load();
+    auto cfg = XTFSH::config::load();
     EXPECT_EQ(cfg.log_level, "error");
     EXPECT_TRUE(cfg.disabled_plugins.empty());
 }
@@ -164,7 +164,7 @@ TEST_F(ConfigFileTest, NonStringDisabledEntriesAreSkipped) {
         "plugins": { "disabled": ["fig", 42, null, "starship"] }
     })");
 
-    auto cfg = CJHSH::config::load();
+    auto cfg = XTFSH::config::load();
     ASSERT_EQ(cfg.disabled_plugins.size(), 2u);
     EXPECT_EQ(cfg.disabled_plugins[0], "fig");
     EXPECT_EQ(cfg.disabled_plugins[1], "starship");
@@ -173,15 +173,15 @@ TEST_F(ConfigFileTest, NonStringDisabledEntriesAreSkipped) {
 // ── loaded() reflects set_loaded() ─────────────────────────────
 
 TEST_F(ConfigFileTest, LoadedAccessorMirrorsSetLoaded) {
-    CJHSH::config::UserConfig cfg;
+    XTFSH::config::UserConfig cfg;
     cfg.disabled_plugins = {"fish"};
     cfg.log_level = "debug";
-    CJHSH::config::set_loaded(cfg);
+    XTFSH::config::set_loaded(cfg);
 
-    EXPECT_EQ(CJHSH::config::loaded().log_level, "debug");
-    ASSERT_EQ(CJHSH::config::loaded().disabled_plugins.size(), 1u);
-    EXPECT_EQ(CJHSH::config::loaded().disabled_plugins[0], "fish");
+    EXPECT_EQ(XTFSH::config::loaded().log_level, "debug");
+    ASSERT_EQ(XTFSH::config::loaded().disabled_plugins.size(), 1u);
+    EXPECT_EQ(XTFSH::config::loaded().disabled_plugins[0], "fish");
 
     // Reset so other tests start from a clean slate.
-    CJHSH::config::set_loaded(CJHSH::config::UserConfig{});
+    XTFSH::config::set_loaded(XTFSH::config::UserConfig{});
 }

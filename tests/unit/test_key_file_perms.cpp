@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
-#include "CJHSH/ai.h"
+#include "XTFSH/ai.h"
 
 namespace {
 
@@ -19,14 +19,14 @@ struct KeyPermFixture : public ::testing::Test {
     void SetUp() override {
         const char *base = std::getenv("TMPDIR");
         std::string tbase = (base && *base) ? base : "/tmp";
-        tmp = tbase + "/CJHSH_key_perm_" + std::to_string(::getpid()) + "_" +
+        tmp = tbase + "/XTFSH_key_perm_" + std::to_string(::getpid()) + "_" +
               std::to_string(::testing::UnitTest::GetInstance()->random_seed());
         std::error_code ec;
         std::filesystem::create_directories(tmp, ec);
-        ::setenv("CJHSH_CONFIG_HOME", tmp.c_str(), 1);
+        ::setenv("XTFSH_CONFIG_HOME", tmp.c_str(), 1);
     }
     void TearDown() override {
-        ::unsetenv("CJHSH_CONFIG_HOME");
+        ::unsetenv("XTFSH_CONFIG_HOME");
         std::error_code ec;
         std::filesystem::remove_all(tmp, ec);
     }

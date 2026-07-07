@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 
-#include "CJHSH/plugins/ai_error_hook_provider.h"
-#include "CJHSH/llm_client.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/ai_error_hook_provider.h"
+#include "XTFSH/llm_client.h"
+#include "XTFSH/shell.h"
 #include <nlohmann/json.hpp>
 #include <string>
 

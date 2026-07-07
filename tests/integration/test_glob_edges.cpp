@@ -13,7 +13,7 @@ namespace {
 struct GlobSandbox {
     std::string root;
     GlobSandbox() {
-        root = "/tmp/CJHSH_glob_edge_" + std::to_string(getpid());
+        root = "/tmp/XTFSH_glob_edge_" + std::to_string(getpid());
         int rc = system(("rm -rf " + root + " && mkdir -p " + root).c_str());
         (void)rc;
     }

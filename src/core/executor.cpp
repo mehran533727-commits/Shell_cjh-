@@ -4,18 +4,18 @@
 // short-circuit. Uses only public headers so future callers (scripts,
 // embedded usage, tests) can reuse without pulling REPL machinery.
 
-#include "CJHSH/core/builtins.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/history.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/ui.h"
-#include "CJHSH/util/cwd.h"
-#include "CJHSH/util/fd.h"
-#include "CJHSH/util/io.h"
-#include "CJHSH/util/parse_error.h"
-#include "CJHSH/util/quote_state.h"
+#include "XTFSH/core/builtins.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/history.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/ui.h"
+#include "XTFSH/util/cwd.h"
+#include "XTFSH/util/fd.h"
+#include "XTFSH/util/io.h"
+#include "XTFSH/util/parse_error.h"
+#include "XTFSH/util/quote_state.h"
 #include "theme.h"
 
 #include <cerrno>
@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-#include "CJHSH/core/structured_pipe.h"
+#include "XTFSH/core/structured_pipe.h"
 
 using namespace std;
 
@@ -65,11 +65,11 @@ static void insert_color_flag(vector<string> &argv, ShellState &state) {
 static bool try_auto_cd(const string &token, ShellState &state) {
     struct stat st;
     if (stat(token.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
-        string cwd = CJHSH::util::current_working_directory();
+        string cwd = XTFSH::util::current_working_directory();
         if (cwd.empty()) return false;
         if (chdir(token.c_str()) == 0) {
             state.core.previous_directory = std::move(cwd);
-            string new_cwd = CJHSH::util::current_working_directory();
+            string new_cwd = XTFSH::util::current_working_directory();
             if (!new_cwd.empty()) {
                 z_record_directory(new_cwd);
                 write_stdout(new_cwd + "\n");
@@ -97,7 +97,7 @@ struct BuiltinRedir {
         // dup2-then-close is the classic pattern; letting the RAII guard
         // own the close keeps us from leaking on the failure paths that
         // return early (deep-review finding C3.4).
-        using CJHSH::util::FileDescriptor;
+        using XTFSH::util::FileDescriptor;
         for (const Redirection &r : redirs) {
             if (r.dup_to_stdout) {
                 if (saved_stderr == -1) saved_stderr = dup(STDERR_FILENO);
@@ -141,7 +141,7 @@ struct BuiltinRedir {
 
 private:
     void fail(const string &filename) {
-        CJHSH::io::error(filename + ": " + strerror(errno));
+        XTFSH::io::error(filename + ": " + strerror(errno));
         ok = false;
     }
 };
@@ -170,7 +170,7 @@ HookedCaptureResult run_command_with_hooks_capture(const string &raw_cmd,
 
     int pfd[2];
     if (::pipe(pfd) < 0) {
-        CJHSH::io::error("run_command_with_hooks_capture: pipe failed");
+        XTFSH::io::error("run_command_with_hooks_capture: pipe failed");
         result.exit_code = 1;
         return result;
     }
@@ -179,7 +179,7 @@ HookedCaptureResult run_command_with_hooks_capture(const string &raw_cmd,
     if (pid < 0) {
         ::close(pfd[0]);
         ::close(pfd[1]);
-        CJHSH::io::error("run_command_with_hooks_capture: fork failed");
+        XTFSH::io::error("run_command_with_hooks_capture: fork failed");
         result.exit_code = 1;
         return result;
     }
@@ -294,7 +294,7 @@ int execute_single_command(string command, ShellState &state,
         if (first != string::npos && command[first] == '(') {
             // Find matching ')' respecting quotes + nesting.
             int depth = 0;
-            CJHSH::util::QuoteState qs;
+            XTFSH::util::QuoteState qs;
             size_t close = string::npos;
             for (size_t k = first; k < command.size(); ++k) {
                 char ch = command[k];
@@ -305,8 +305,8 @@ int execute_single_command(string command, ShellState &state,
             }
             if (close == string::npos) {
                 size_t ln = 1, col = 1;
-                CJHSH::parse::offset_to_line_col(command, first, ln, col);
-                CJHSH::parse::emit_parse_error(
+                XTFSH::parse::offset_to_line_col(command, first, ln, col);
+                XTFSH::parse::emit_parse_error(
                     {"unmatched '(' in subshell", ln, col});
                 return 1;
             }
@@ -316,7 +316,7 @@ int execute_single_command(string command, ShellState &state,
             string trailing = command.substr(close + 1);
             bool has_pipe = false;
             {
-                CJHSH::util::QuoteState qs;
+                XTFSH::util::QuoteState qs;
                 for (size_t k = 0; k < trailing.size(); ++k) {
                     char ch = trailing[k];
                     if (qs.consume(ch)) continue;
@@ -333,7 +333,7 @@ int execute_single_command(string command, ShellState &state,
 
                 pid_t pid = fork();
                 if (pid < 0) {
-                    CJHSH::io::error("fork failed for subshell");
+                    XTFSH::io::error("fork failed for subshell");
                     return 1;
                 }
                 if (pid == 0) {
@@ -353,12 +353,12 @@ int execute_single_command(string command, ShellState &state,
                 }
                 // Parent-only trace. Don't debug() in the child branch —
                 // post-fork children must not touch the shared registry.
-                CJHSH::io::debug("subshell: fork pid=" + std::to_string(pid) +
+                XTFSH::io::debug("subshell: fork pid=" + std::to_string(pid) +
                                 " body='" + inner + "'");
                 int status;
                 waitpid(pid, &status, 0);
                 int rc = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
-                CJHSH::io::debug("subshell: exited pid=" + std::to_string(pid) +
+                XTFSH::io::debug("subshell: exited pid=" + std::to_string(pid) +
                                 " status=" + std::to_string(rc));
                 return rc;
             }
@@ -368,8 +368,8 @@ int execute_single_command(string command, ShellState &state,
 
     // Structured pipeline (`cmd |> where ... |> sort-by ...`) short-circuits
     // before normal parsing so the `|>` operator isn't confused with `|`.
-    if (CJHSH::structured_pipe::has_structured_pipe(command)) {
-        string out = CJHSH::structured_pipe::execute_pipeline(command, state);
+    if (XTFSH::structured_pipe::has_structured_pipe(command)) {
+        string out = XTFSH::structured_pipe::execute_pipeline(command, state);
         write_stdout(out);
         if (!out.empty() && out.back() != '\n') write_stdout("\n");
         return 0;
@@ -401,7 +401,7 @@ int execute_single_command(string command, ShellState &state,
     vector<string> pipe_segments;
     {
         string cur;
-        CJHSH::util::QuoteState qs;
+        XTFSH::util::QuoteState qs;
         int depth = 0;
         for (size_t k = 0; k < command.size(); ++k) {
             char ch = command[k];
@@ -452,8 +452,8 @@ int execute_single_command(string command, ShellState &state,
                     // the full input line. Good enough for the diagnostic
                     // to point at the right paren.
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(trimmed, lead, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(trimmed, lead, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"unmatched '(' in pipeline subshell", ln, col});
                     return 1;
                 }
@@ -504,13 +504,13 @@ int execute_single_command(string command, ShellState &state,
         if (run_in_background) {
             if ((int)state.core.background_processes.size() >=
                 state.core.max_background_processes) {
-                CJHSH::io::error("Maximum number of background processes");
+                XTFSH::io::error("Maximum number of background processes");
                 return 0;
             }
 
             pid_t pid = fork();
             if (pid < 0) {
-                CJHSH::io::error("fork failed for background pipeline");
+                XTFSH::io::error("fork failed for background pipeline");
                 return 1;
             }
             if (pid == 0) {
@@ -563,7 +563,7 @@ int execute_single_command(string command, ShellState &state,
     if (result == 127) {
         auto suggestion = suggest_command(cmd.argv[0]);
         if (suggestion) {
-            write_stderr(SUGGEST_TEXT + "CJHSH: did you mean '" CAT_RESET + SUGGEST_CMD +
+            write_stderr(SUGGEST_TEXT + "XTFSH: did you mean '" CAT_RESET + SUGGEST_CMD +
                         *suggestion + CAT_RESET + SUGGEST_TEXT + "'?" CAT_RESET "\n");
         }
     }
@@ -608,7 +608,7 @@ void execute_command_line(const vector<CommandSegment> &segments, ShellState &st
                 entry.command = segments[i].command;
                 entry.exit_code = last_exit;
                 entry.timestamp = static_cast<int64_t>(time(nullptr));
-                entry.directory = CJHSH::util::current_working_directory();
+                entry.directory = XTFSH::util::current_working_directory();
                 global_plugin_registry().record_history(entry);
             }
 
@@ -625,7 +625,7 @@ void execute_command_line(const vector<CommandSegment> &segments, ShellState &st
 int execute_script_file(const string &path, ShellState &state) {
     ifstream file(path);
     if (!file.is_open()) {
-        CJHSH::io::error("cannot open script: " + path);
+        XTFSH::io::error("cannot open script: " + path);
         return 1;
     }
     string line;
@@ -650,8 +650,8 @@ int execute_script_file(const string &path, ShellState &state) {
             if (!ok) {
                 // We don't carry a precise offset into the script's
                 // heredoc body here; column 0 tells emit_parse_error to
-                // elide the column and print just `CJHSH: error: L: ...`.
-                CJHSH::parse::emit_parse_error(
+                // elide the column and print just `XTFSH: error: L: ...`.
+                XTFSH::parse::emit_parse_error(
                     {"unexpected EOF while looking for heredoc delimiter", 1, 0});
                 return 1;
             }

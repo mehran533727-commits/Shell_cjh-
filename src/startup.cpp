@@ -1,24 +1,24 @@
 // One-time startup work: load theme, register the bundled providers,
-// parse ~/.CJHSHrc, and (optionally) handle `--benchmark` mode. Kept out
+// parse ~/.XTFSHrc, and (optionally) handle `--benchmark` mode. Kept out
 // of main.cpp so the entry point stays a thin dispatcher.
 
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/history.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/ui.h"
-#include "CJHSH/plugins/alias_suggest_provider.h"
-#include "CJHSH/plugins/fig_completion_provider.h"
-#include "CJHSH/plugins/fish_completion_provider.h"
-#include "CJHSH/plugins/manpage_completion_provider.h"
-#include "CJHSH/plugins/safety_hook_provider.h"
-#include "CJHSH/plugins/starship_prompt_provider.h"
-#include "CJHSH/util/benchmark.h"
-#include "CJHSH/util/config_file.h"
-#include "CJHSH/util/config_resolver.h"
-#include "CJHSH/util/io.h"
-#include "CJHSH/startup.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/history.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/ui.h"
+#include "XTFSH/plugins/alias_suggest_provider.h"
+#include "XTFSH/plugins/fig_completion_provider.h"
+#include "XTFSH/plugins/fish_completion_provider.h"
+#include "XTFSH/plugins/manpage_completion_provider.h"
+#include "XTFSH/plugins/safety_hook_provider.h"
+#include "XTFSH/plugins/starship_prompt_provider.h"
+#include "XTFSH/util/benchmark.h"
+#include "XTFSH/util/config_file.h"
+#include "XTFSH/util/config_resolver.h"
+#include "XTFSH/util/io.h"
+#include "XTFSH/startup.h"
 #include "theme.h"
 
 #include <cstdlib>
@@ -28,16 +28,16 @@
 #include <string>
 #include <unordered_set>
 
-#ifdef CJHSH_SQLITE_ENABLED
-#include "CJHSH/plugins/sqlite_history_provider.h"
+#ifdef XTFSH_SQLITE_ENABLED
+#include "XTFSH/plugins/sqlite_history_provider.h"
 #endif
 
-#include "CJHSH/ai.h"
-#include "CJHSH/plugins/ai_error_hook_provider.h"
+#include "XTFSH/ai.h"
+#include "XTFSH/plugins/ai_error_hook_provider.h"
 
 using std::string;
 
-namespace CJHSH {
+namespace XTFSH {
 
 // ── Env-var gating ────────────────────────────────────────────
 //
@@ -73,77 +73,77 @@ struct ConfigGate {
 
 void register_default_plugins() {
     // Configure the diagnostic log level from the environment. There isn't
-    // (yet) a config-file field for this, so CJHSH_LOG_LEVEL is the sole
+    // (yet) a config-file field for this, so XTFSH_LOG_LEVEL is the sole
     // knob; the io namespace treats unknown/missing as Info. Done here
     // rather than in main() because every early-startup code path
     // (benchmark, test harness) funnels through this function.
-    if (const char *lvl = std::getenv("CJHSH_LOG_LEVEL")) {
-        CJHSH::io::set_log_level(CJHSH::io::parse_log_level(lvl));
+    if (const char *lvl = std::getenv("XTFSH_LOG_LEVEL")) {
+        XTFSH::io::set_log_level(XTFSH::io::parse_log_level(lvl));
     }
 
     auto &reg = global_plugin_registry();
 
-    CJHSH::config::UserConfig user_cfg = CJHSH::config::load();
+    XTFSH::config::UserConfig user_cfg = XTFSH::config::load();
     ConfigGate gate;
     gate.disabled.insert(user_cfg.disabled_plugins.begin(),
                          user_cfg.disabled_plugins.end());
 
     // Hook providers ------------------------------------------------
-    if (!plugin_disabled("CJHSH_DISABLE_SAFETY_HOOK") &&
+    if (!plugin_disabled("XTFSH_DISABLE_SAFETY_HOOK") &&
         gate.enabled("safety")) {
         reg.register_hook_provider(std::make_unique<SafetyHookProvider>());
-        CJHSH::io::debug("plugin: registered safety");
+        XTFSH::io::debug("plugin: registered safety");
     }
-    if (!plugin_disabled("CJHSH_DISABLE_ALIAS_SUGGEST") &&
+    if (!plugin_disabled("XTFSH_DISABLE_ALIAS_SUGGEST") &&
         gate.enabled("alias-suggest")) {
         reg.register_hook_provider(std::make_unique<AliasSuggestProvider>());
-        CJHSH::io::debug("plugin: registered alias-suggest");
+        XTFSH::io::debug("plugin: registered alias-suggest");
     }
-    if (!plugin_disabled("CJHSH_DISABLE_AI_ERROR_HOOK") &&
+    if (!plugin_disabled("XTFSH_DISABLE_AI_ERROR_HOOK") &&
         gate.enabled("ai-error-recovery")) {
         reg.register_hook_provider(std::make_unique<AiErrorHookProvider>(
             []() -> std::unique_ptr<LLMClient> { return ai_create_client(); }));
-        CJHSH::io::debug("plugin: registered ai-error-recovery");
+        XTFSH::io::debug("plugin: registered ai-error-recovery");
     }
 
     // Completion providers -----------------------------------------
-    if (!plugin_disabled("CJHSH_DISABLE_MANPAGE_COMPLETION") &&
+    if (!plugin_disabled("XTFSH_DISABLE_MANPAGE_COMPLETION") &&
         gate.enabled("manpage")) {
         reg.register_completion_provider(
             std::make_unique<ManpageCompletionProvider>());
-        CJHSH::io::debug("plugin: registered manpage");
+        XTFSH::io::debug("plugin: registered manpage");
     }
-    if (!plugin_disabled("CJHSH_DISABLE_FISH_COMPLETION") &&
+    if (!plugin_disabled("XTFSH_DISABLE_FISH_COMPLETION") &&
         gate.enabled("fish")) {
         reg.register_completion_provider(
             std::make_unique<FishCompletionProvider>());
-        CJHSH::io::debug("plugin: registered fish");
+        XTFSH::io::debug("plugin: registered fish");
     }
-    if (!plugin_disabled("CJHSH_DISABLE_FIG_COMPLETION") &&
+    if (!plugin_disabled("XTFSH_DISABLE_FIG_COMPLETION") &&
         gate.enabled("fig")) {
         reg.register_completion_provider(
             std::make_unique<FigCompletionProvider>());
-        CJHSH::io::debug("plugin: registered fig");
+        XTFSH::io::debug("plugin: registered fig");
     }
 
     // Prompt providers ---------------------------------------------
-    if (!plugin_disabled("CJHSH_DISABLE_STARSHIP") &&
+    if (!plugin_disabled("XTFSH_DISABLE_STARSHIP") &&
         gate.enabled("starship")) {
         reg.register_prompt_provider(
             std::make_unique<StarshipPromptProvider>());
-        CJHSH::io::debug("plugin: registered starship");
+        XTFSH::io::debug("plugin: registered starship");
     }
 
     // History providers --------------------------------------------
-#ifdef CJHSH_SQLITE_ENABLED
-    if (!plugin_disabled("CJHSH_DISABLE_SQLITE_HISTORY") &&
+#ifdef XTFSH_SQLITE_ENABLED
+    if (!plugin_disabled("XTFSH_DISABLE_SQLITE_HISTORY") &&
         gate.enabled("sqlite-history")) {
         try {
             reg.register_history_provider(
                 std::make_unique<SqliteHistoryProvider>());
-            CJHSH::io::debug("plugin: registered sqlite-history");
+            XTFSH::io::debug("plugin: registered sqlite-history");
         } catch (const std::exception &e) {
-            write_stderr(string("CJHSH: sqlite history disabled: ") +
+            write_stderr(string("XTFSH: sqlite history disabled: ") +
                          e.what() + "\n");
         }
     }
@@ -154,7 +154,7 @@ void register_default_plugins() {
     // removed) and silently ignoring it hides typos.
     for (const auto &name : gate.disabled) {
         if (!gate.matched.count(name)) {
-            std::cerr << "CJHSH: warning: config.json `plugins.disabled` "
+            std::cerr << "XTFSH: warning: config.json `plugins.disabled` "
                          "contains unknown plugin \"" << name
                       << "\" (ignored)\n";
         }
@@ -162,17 +162,17 @@ void register_default_plugins() {
 
     // Hand the config to the global slot so a future log-level
     // consumer (and tests) can retrieve it.
-    CJHSH::config::set_loaded(std::move(user_cfg));
+    XTFSH::config::set_loaded(std::move(user_cfg));
 }
 
-// ── CJHSHrc load ───────────────────────────────────────────────
+// ── XTFSHrc load ───────────────────────────────────────────────
 
-void load_CJHSHrc(ShellState &state) {
-    std::string path = CJHSH::config::get_CJHSHrc_path();
-    std::ifstream CJHSHrc(path);
-    if (!CJHSHrc.is_open()) return;
+void load_XTFSHrc(ShellState &state) {
+    std::string path = XTFSH::config::get_XTFSHrc_path();
+    std::ifstream XTFSHrc(path);
+    if (!XTFSHrc.is_open()) return;
     std::string rc_line;
-    while (getline(CJHSHrc, rc_line)) {
+    while (getline(XTFSHrc, rc_line)) {
         if (rc_line.empty()) continue;
         std::vector<CommandSegment> segs = parse_command_line(rc_line);
         execute_command_line(segs, state);
@@ -181,7 +181,7 @@ void load_CJHSHrc(ShellState &state) {
 
 // ── Benchmark mode ────────────────────────────────────────────
 //
-// `CJHSH --benchmark` times every startup stage and exits with the
+// `XTFSH --benchmark` times every startup stage and exits with the
 // breakdown. Useful for regression detection on cold start.
 int run_benchmark_mode() {
     StartupBenchmark bench;
@@ -210,4 +210,4 @@ int run_benchmark_mode() {
     return 0;
 }
 
-} // namespace CJHSH
+} // namespace XTFSH

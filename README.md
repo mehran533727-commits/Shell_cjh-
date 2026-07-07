@@ -8,7 +8,7 @@
 git clone https://github.com/mehran533727-commits/Shell_cjh-
 cd Shell_cjh-
 bash cjh-setup.sh        # 装系统依赖 + 解压离线依赖 + 配置 DeepSeek + 离线编译
-./build/CJHSH.out         # 运行；进入后输入   @ai 查看隐藏文件用什么命令   可试 AI
+./build/XTFSH.out         # 运行；进入后输入   @ai 查看隐藏文件用什么命令   可试 AI
 ```
 
 - 运行环境：Linux / WSL（建议 Ubuntu 22.04+）
@@ -32,7 +32,7 @@ Shell_cjh 是一个使用 C++17 实现的 Linux Shell 项目，面向操作系�
 - 支持 Bash 风格的 `&` 后台执行，例如 `sleep 3 &`
 - 支持输入输出重定向：`<`、`>`、`>>`、`2>`、`2>&1`
 - 支持管道执行：`|`
-- 支持脚本模式：`CJHSH <script-file>`
+- 支持脚本模式：`XTFSH <script-file>`
 
 ## 环境要求
 
@@ -66,7 +66,7 @@ cmake --build build -j "$(getconf _NPROCESSORS_ONLN)"
 生成的 Shell 可执行文件位于：
 
 ```bash
-./build/CJHSH.out
+./build/XTFSH.out
 ```
 
 如果需要同时编译测试：
@@ -81,13 +81,13 @@ cmake --build build -j "$(getconf _NPROCESSORS_ONLN)"
 启动交互式 Shell：
 
 ```bash
-./build/CJHSH.out
+./build/XTFSH.out
 ```
 
 如果首次启动时出现 AI 功能配置提示：
 
 ```text
-CJHSH ai - AI features available! Set up now? [y/n]
+XTFSH ai - AI features available! Set up now? [y/n]
 ```
 
 课程实验演示时可以直接输入 `n` 并回车，跳过 AI 配置。
@@ -114,7 +114,7 @@ exit
 运行脚本文件：
 
 ```bash
-./build/CJHSH.out demo.CJHSH
+./build/XTFSH.out demo.XTFSH
 ```
 
 ## 实验功能验证
@@ -123,19 +123,19 @@ exit
 
 ```bash
 cd Shell_cjh-
-./build/CJHSH.out
+./build/XTFSH.out
 ```
 
-进入 `CJHSH` 后可以按下面顺序验证：
+进入 `XTFSH` 后可以按下面顺序验证：
 
 ```bash
 pwd
 cd /tmp
 pwd
 echo hello
-echo hello > /tmp/CJHSH_demo.txt
-cat /tmp/CJHSH_demo.txt
-cat /tmp/CJHSH_demo.txt | grep hello
+echo hello > /tmp/XTFSH_demo.txt
+cat /tmp/XTFSH_demo.txt
+cat /tmp/XTFSH_demo.txt | grep hello
 sleep 10 &
 bglist
 sleep 5 & echo done
@@ -147,8 +147,8 @@ exit
 - `pwd` 可以显示当前工作目录
 - `cd /tmp` 后再次执行 `pwd` 应显示 `/tmp`
 - `echo hello` 可以正常输出文本
-- `echo hello > /tmp/CJHSH_demo.txt` 可以把输出写入文件
-- `cat /tmp/CJHSH_demo.txt | grep hello` 可以通过管道筛选出 `hello`
+- `echo hello > /tmp/XTFSH_demo.txt` 可以把输出写入文件
+- `cat /tmp/XTFSH_demo.txt | grep hello` 可以通过管道筛选出 `hello`
 - `sleep 10 &` 会立即返回提示符，不会阻塞 Shell
 - `bglist` 可以查看仍在运行的后台任务
 - `sleep 5 & echo done` 会立即输出 `done`，说明 `sleep 5` 已在后台运行
@@ -183,7 +183,7 @@ cd build
 
 ```bash
 mkdir -p "$HOME/.local/bin"
-install -m 755 build/CJHSH.out "$HOME/.local/bin/CJHSH"
+install -m 755 build/XTFSH.out "$HOME/.local/bin/XTFSH"
 ```
 
 确认 `~/.local/bin` 已加入 `PATH`：
@@ -195,15 +195,15 @@ export PATH="$HOME/.local/bin:$PATH"
 安装到 Ubuntu 系统目录：
 
 ```bash
-sudo install -m 755 build/CJHSH.out /usr/local/bin/CJHSH
+sudo install -m 755 build/XTFSH.out /usr/local/bin/XTFSH
 ```
 
 注册为可用登录 Shell：
 
 ```bash
-command -v CJHSH
-echo /usr/local/bin/CJHSH | sudo tee -a /etc/shells
-chsh -s /usr/local/bin/CJHSH
+command -v XTFSH
+echo /usr/local/bin/XTFSH | sudo tee -a /etc/shells
+chsh -s /usr/local/bin/XTFSH
 ```
 
 切回 Bash：
@@ -220,11 +220,11 @@ chsh -s /bin/bash
 |-- README.md               # 项目说明文档
 |-- AGENTS.md               # 本项目 Git/GitHub 协作规则
 |-- install.sh              # 上游安装辅助脚本
-|-- CJHSH.1.in               # man 手册模板
+|-- XTFSH.1.in               # man 手册模板
 |-- cmake/                  # CMake 功能、插件、测试和 sanitizer 模块
 |-- data/                   # 运行时数据，例如主题和模型元数据
 |-- docs/                   # 图片和文档资源
-|-- include/CJHSH/           # 项目公共头文件
+|-- include/XTFSH/           # 项目公共头文件
 |-- src/                    # Shell 主要实现
 |   |-- core/               # 解析器、执行器、进程、信号和会话逻辑
 |   |-- builtins/           # Shell 内建命令
@@ -251,4 +251,4 @@ chsh -s /bin/bash
 
 ## 许可证
 
-本项目派生自使用 MIT License 的 CJHSH Shell 项目。重新分发或提交派生作品时，请保留原始许可证和来源说明。
+本项目派生自使用 MIT License 的 XTF'SH Shell 项目。重新分发或提交派生作品时，请保留原始许可证和来源说明。

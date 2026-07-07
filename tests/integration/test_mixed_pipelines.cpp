@@ -68,7 +68,7 @@ TEST(MixedPipelines, AliasPassedThroughPipeline) {
 }
 
 TEST(MixedPipelines, RedirectionAtEndOfMixedPipe) {
-    std::string out = "/tmp/CJHSH_mixed_pipe_" + std::to_string(getpid());
+    std::string out = "/tmp/XTFSH_mixed_pipe_" + std::to_string(getpid());
     run_shell(
         "alias marker='echo redir_pipe_payload'\n"
         "marker | cat > " + out + "\n"

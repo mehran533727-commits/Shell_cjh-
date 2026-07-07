@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CJHSH/plugin.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/shell.h"
 
 // ── Mock providers for testing ────────────────────────────────
 
@@ -213,8 +213,8 @@ TEST_F(PluginRegistryTest, PromptFallbackOnEmpty) {
 
 TEST_F(PluginRegistryTest, PromptSingleProvider) {
     registry.register_prompt_provider(std::unique_ptr<IPromptProvider>(
-        new MockPromptProvider("only", 10, "CJHSH> ")));
-    EXPECT_EQ(registry.render_prompt(state), "CJHSH> ");
+        new MockPromptProvider("only", 10, "XTFSH> ")));
+    EXPECT_EQ(registry.render_prompt(state), "XTFSH> ");
 }
 
 // ── History provider tests ────────────────────────────────────

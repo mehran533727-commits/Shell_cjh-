@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CJHSH/plugins/manpage_completion_provider.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/manpage_completion_provider.h"
+#include "XTFSH/shell.h"
 
 // ── Sample help text used across tests ───────────────────────
 
@@ -102,8 +102,8 @@ TEST(ManpageCompletion, PriorityIs5) {
 // `ls --help`. Bypasses the normal registry by using the provider's
 // cache setter so the test doesn't depend on popen/system ls behaviour.
 
-#include "CJHSH/plugin.h"
-#include "CJHSH/ui.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/ui.h"
 
 TEST(Manpage, CompletionCallbackOffersLongFlag) {
     // Pre-seed the registry's provider with a fake help parse result.

@@ -1,5 +1,5 @@
 # Feature detection: compilers' build-type default, system libraries,
-# and the derived CJHSH_*_ENABLED flags the main target keys off.
+# and the derived XTFSH_*_ENABLED flags the main target keys off.
 #
 # After this include, the following are defined/available:
 #   CMAKE_BUILD_TYPE             — defaulted to Release on single-config gens
@@ -8,8 +8,8 @@
 #   nlohmann_json_FOUND (+SDIR)  — system package if present; fetched in
 #                                  fetch_deps.cmake otherwise
 #   (AI features are always on; libcurl is a hard dependency)
-#   CJHSH_SQLITE_ENABLED          — ON iff SQLite3 was found
-#   CJHSH_NEED_FETCH_JSON         — internal: true iff system package missing
+#   XTFSH_SQLITE_ENABLED          — ON iff SQLite3 was found
+#   XTFSH_NEED_FETCH_JSON         — internal: true iff system package missing
 
 # Default to Release build if not specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -30,10 +30,10 @@ if(nlohmann_json_FOUND)
     # Normalize the include-dir variable used by the main target.
     get_target_property(nlohmann_json_SOURCE_DIR nlohmann_json::nlohmann_json
                         INTERFACE_INCLUDE_DIRECTORIES)
-    set(CJHSH_NEED_FETCH_JSON FALSE)
+    set(XTFSH_NEED_FETCH_JSON FALSE)
 else()
     message(STATUS "nlohmann_json not found — will fetch from upstream")
-    set(CJHSH_NEED_FETCH_JSON TRUE)
+    set(XTFSH_NEED_FETCH_JSON TRUE)
 endif()
 
 # ── AI features (libcurl hard dependency) ────────────────────
@@ -49,9 +49,9 @@ message(STATUS "AI features enabled (libcurl ${CURL_VERSION_STRING})")
 # ── SQLite history (optional) ─────────────────────────────────
 find_package(SQLite3 QUIET)
 if(SQLite3_FOUND)
-    set(CJHSH_SQLITE_ENABLED ON)
+    set(XTFSH_SQLITE_ENABLED ON)
     message(STATUS "SQLite history enabled (SQLite3 found)")
 else()
-    set(CJHSH_SQLITE_ENABLED OFF)
+    set(XTFSH_SQLITE_ENABLED OFF)
     message(STATUS "SQLite history disabled (SQLite3 not found)")
 endif()

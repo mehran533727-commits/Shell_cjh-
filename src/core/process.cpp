@@ -1,11 +1,11 @@
-#include "CJHSH/core/builtins.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/ui/rich_output.h"
-#include "CJHSH/util/io.h"
-#include "CJHSH/util/limits.h"
-#include "CJHSH/util/safe_tmpdir.h"
+#include "XTFSH/core/builtins.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/ui/rich_output.h"
+#include "XTFSH/util/io.h"
+#include "XTFSH/util/limits.h"
+#include "XTFSH/util/safe_tmpdir.h"
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
@@ -37,21 +37,21 @@ using namespace std;
 // they also controlled.
 //
 // Security (deep-review finding #4): body size is capped at
-// CJHSH_MAX_HEREDOC_BYTES -- a runaway redirection can't fill /tmp.
+// XTFSH_MAX_HEREDOC_BYTES -- a runaway redirection can't fill /tmp.
 int open_heredoc_fd(const std::string &body) {
-    if (body.size() > CJHSH::util::CJHSH_MAX_HEREDOC_BYTES) {
-        write_stderr("CJHSH: heredoc body exceeds maximum size (100 MiB)\n");
+    if (body.size() > XTFSH::util::XTFSH_MAX_HEREDOC_BYTES) {
+        write_stderr("XTFSH: heredoc body exceeds maximum size (100 MiB)\n");
         return -1;
     }
 
-    std::string base = CJHSH::util::resolve_safe_tmpdir();
-    std::string pattern = base + "/CJHSH-hd-XXXXXX";
+    std::string base = XTFSH::util::resolve_safe_tmpdir();
+    std::string pattern = base + "/XTFSH-hd-XXXXXX";
     std::vector<char> buf(pattern.begin(), pattern.end());
     buf.push_back('\0');
     int fd = ::mkstemp(buf.data());
     if (fd < 0 && errno == ENOENT && base != "/tmp") {
         // Fallback: resolved tmp dir is invalid for some reason, try /tmp.
-        std::string fallback = "/tmp/CJHSH-hd-XXXXXX";
+        std::string fallback = "/tmp/XTFSH-hd-XXXXXX";
         std::vector<char> fb(fallback.begin(), fallback.end());
         fb.push_back('\0');
         fd = ::mkstemp(fb.data());
@@ -114,13 +114,13 @@ void setup_child_io(const vector<Redirection> &redirections) {
             if (r.is_heredoc) {
                 in = open_heredoc_fd(r.heredoc_body);
                 if (in < 0) {
-                    write_stderr("CJHSH: heredoc: tmpfile failed\n");
+                    write_stderr("XTFSH: heredoc: tmpfile failed\n");
                     _exit(1);
                 }
             } else {
                 in = open(r.filename.c_str(), O_RDONLY);
                 if (in < 0) {
-                    write_stderr("CJHSH: " + r.filename + ": No such file or directory\n");
+                    write_stderr("XTFSH: " + r.filename + ": No such file or directory\n");
                     _exit(1);
                 }
             }
@@ -134,7 +134,7 @@ void setup_child_io(const vector<Redirection> &redirections) {
                 out = open(r.filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
             }
             if (out < 0) {
-                write_stderr("CJHSH: " + r.filename + ": Cannot open file\n");
+                write_stderr("XTFSH: " + r.filename + ": Cannot open file\n");
                 _exit(1);
             }
             dup2(out, STDOUT_FILENO);
@@ -142,7 +142,7 @@ void setup_child_io(const vector<Redirection> &redirections) {
         } else if (r.fd == 2) {
             int err = open(r.filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (err < 0) {
-                write_stderr("CJHSH: " + r.filename + ": Cannot open file\n");
+                write_stderr("XTFSH: " + r.filename + ": Cannot open file\n");
                 _exit(1);
             }
             dup2(err, STDERR_FILENO);
@@ -167,7 +167,7 @@ static bool is_interactive_cmd(const std::string &cmd) {
 }
 
 static bool auto_linkify_enabled() {
-    const char *v = getenv("CJHSH_AUTO_LINKIFY");
+    const char *v = getenv("XTFSH_AUTO_LINKIFY");
     return v && *v && string(v) != "0";
 }
 
@@ -214,7 +214,7 @@ int foreground_process(const vector<string> &argv,
     if (captured_stderr) {
         captured_stderr->clear();
         if (pipe_cloexec(stderr_pipe) < 0) {
-            CJHSH::io::warning("could not capture stderr");
+            XTFSH::io::warning("could not capture stderr");
             captured_stderr = nullptr; // fall back to no capture
         }
     }
@@ -255,7 +255,7 @@ int foreground_process(const vector<string> &argv,
         // _exit, not exit: the forked child must not run C++ global
         // destructors (replxx, sqlite, curl, plugin registry) — those
         // hold resources the parent still owns, and tearing them down
-        // in the child occasionally segfaults (CJHSH issue: $? = 139
+        // in the child occasionally segfaults (XTFSH issue: $? = 139
         // instead of 127 on command-not-found, ~1 in 5 on macOS).
         _exit(127);
     } else {
@@ -288,7 +288,7 @@ int foreground_process(const vector<string> &argv,
                         size_t nl = stdout_carry.find('\n', start);
                         if (nl == std::string::npos) break;
                         std::string line = stdout_carry.substr(start, nl - start + 1);
-                        std::string linked = CJHSH::ui::linkify_urls(line);
+                        std::string linked = XTFSH::ui::linkify_urls(line);
                         if (write(STDOUT_FILENO, linked.data(), linked.size())) {}
                         start = nl + 1;
                     }
@@ -357,7 +357,7 @@ int foreground_process(const vector<string> &argv,
         }
 
         if (!stdout_carry.empty()) {
-            std::string linked = CJHSH::ui::linkify_urls(stdout_carry);
+            std::string linked = XTFSH::ui::linkify_urls(stdout_carry);
             if (write(STDOUT_FILENO, linked.data(), linked.size())) {}
         }
 
@@ -376,7 +376,7 @@ void background_process(const vector<string> &argv,
                         ShellState &state,
                         const vector<Redirection> &redirections) {
     if (argv.size() < 2) {
-        CJHSH::io::error("bg: usage: bg <command> [args...]");
+        XTFSH::io::error("bg: usage: bg <command> [args...]");
         return;
     }
     vector<string> command(argv.begin() + 1, argv.end());
@@ -387,11 +387,11 @@ void background_command(const vector<string> &argv,
                         ShellState &state,
                         const vector<Redirection> &redirections) {
     if (argv.empty()) {
-        CJHSH::io::error("background: missing command");
+        XTFSH::io::error("background: missing command");
         return;
     }
     if ((int)state.core.background_processes.size() >= state.core.max_background_processes) {
-        CJHSH::io::error("Maximum number of background processes");
+        XTFSH::io::error("Maximum number of background processes");
         return;
     }
 
@@ -412,7 +412,7 @@ void background_command(const vector<string> &argv,
     } else {
         string display = join_command(argv);
         register_background_job(pid, display, state);
-        CJHSH::io::debug("bg: spawned pid=" + to_string(pid) +
+        XTFSH::io::debug("bg: spawned pid=" + to_string(pid) +
                         " cmd='" + display + "'");
     }
 }
@@ -449,7 +449,7 @@ void check_background_process_finished(
             msg << "[JOB " << job.job_id << "] finished | pid="
                 << pid_finished << " | exit=" << exit_code
                 << " | time=" << elapsed << "s\n";
-            CJHSH::io::debug("bg: reaped pid=" + to_string(pid_finished) +
+            XTFSH::io::debug("bg: reaped pid=" + to_string(pid_finished) +
                             " exit=" + to_string(exit_code));
             background_processes.erase(it);
             write_stdout(msg.str());
@@ -465,7 +465,7 @@ void reap_background_processes(
         check_background_process_finished(background_processes);
         size_t reaped = before - background_processes.size();
         if (reaped > 0) {
-            CJHSH::io::debug("SIGCHLD: reaping " + to_string(reaped) + " children");
+            XTFSH::io::debug("SIGCHLD: reaping " + to_string(reaped) + " children");
         }
     }
 }

@@ -20,7 +20,7 @@ TEST(Operators, OrRunsOnFailure) {
 
 TEST(Operators, OrSkipsOnSuccess) {
     // Use file side-effect: if || correctly skips, the file won't be created
-    std::string marker = "/tmp/CJHSH_or_skip_" + std::to_string(getpid());
+    std::string marker = "/tmp/XTFSH_or_skip_" + std::to_string(getpid());
     unlink(marker.c_str());
     run_shell("true || echo proof > " + marker + "\nexit\n");
     struct stat st;
@@ -30,7 +30,7 @@ TEST(Operators, OrSkipsOnSuccess) {
 
 TEST(Operators, AndSkipsOnFailure) {
     // Use file side-effect: if && correctly skips, the file won't be created
-    std::string marker = "/tmp/CJHSH_and_skip_" + std::to_string(getpid());
+    std::string marker = "/tmp/XTFSH_and_skip_" + std::to_string(getpid());
     unlink(marker.c_str());
     run_shell("false && echo proof > " + marker + "\nexit\n");
     struct stat st;

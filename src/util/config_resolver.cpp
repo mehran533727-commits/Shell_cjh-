@@ -1,4 +1,4 @@
-#include "CJHSH/util/config_resolver.h"
+#include "XTFSH/util/config_resolver.h"
 
 #include <cerrno>
 #include <cstdlib>
@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace CJHSH::config {
+namespace XTFSH::config {
 namespace {
 
 std::string env_or_empty(const char *name) {
@@ -24,24 +24,24 @@ std::string home() {
 } // namespace
 
 std::string get_config_dir() {
-    std::string t = env_or_empty("CJHSH_CONFIG_HOME");
+    std::string t = env_or_empty("XTFSH_CONFIG_HOME");
     if (!t.empty()) return t;
     std::string xdg = env_or_empty("XDG_CONFIG_HOME");
-    if (!xdg.empty()) return xdg + "/CJHSH";
-    return home() + "/.config/CJHSH";
+    if (!xdg.empty()) return xdg + "/XTFSH";
+    return home() + "/.config/XTFSH";
 }
 
 std::string get_data_dir() {
-    std::string t = env_or_empty("CJHSH_DATA_HOME");
+    std::string t = env_or_empty("XTFSH_DATA_HOME");
     if (!t.empty()) return t;
     std::string xdg = env_or_empty("XDG_DATA_HOME");
-    if (!xdg.empty()) return xdg + "/CJHSH";
-    return home() + "/.CJHSH";
+    if (!xdg.empty()) return xdg + "/XTFSH";
+    return home() + "/.XTFSH";
 }
 
-std::string get_CJHSHrc_path()          { return home() + "/.CJHSHrc"; }
-std::string get_history_file_path()    { return home() + "/.CJHSH_history"; }
-std::string get_frecency_path()        { return home() + "/.CJHSH_z"; }
+std::string get_XTFSHrc_path()          { return home() + "/.XTFSHrc"; }
+std::string get_history_file_path()    { return home() + "/.XTFSH_history"; }
+std::string get_frecency_path()        { return home() + "/.XTFSH_z"; }
 
 std::string get_theme_toml_path()      { return get_config_dir() + "/theme.toml"; }
 std::string get_theme_name_path()      { return get_config_dir() + "/theme.name"; }
@@ -68,4 +68,4 @@ bool ensure_dir(const std::string &path) {
     return created_or_exists;
 }
 
-} // namespace CJHSH::config
+} // namespace XTFSH::config

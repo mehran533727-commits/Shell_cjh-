@@ -9,7 +9,7 @@
 
 namespace {
 std::string unique_tmp(const std::string &prefix) {
-    return "/tmp/CJHSH_subshell_" + prefix + "_" + std::to_string(getpid());
+    return "/tmp/XTFSH_subshell_" + prefix + "_" + std::to_string(getpid());
 }
 } // namespace
 

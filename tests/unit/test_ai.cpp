@@ -3,10 +3,10 @@
 #include <thread>
 
 
-#include "CJHSH/ai.h"
-#include "CJHSH/ai/llm_registry.h"
-#include "CJHSH/ai/model_defaults.h"
-#include "CJHSH/llm_client.h"
+#include "XTFSH/ai.h"
+#include "XTFSH/ai/llm_registry.h"
+#include "XTFSH/ai/model_defaults.h"
+#include "XTFSH/llm_client.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
@@ -17,7 +17,7 @@ using namespace std;
 
 // ═══════════════════════════════════════════════════════════════
 // Test fixture that redirects key/usage paths to /tmp
-// so tests never touch the real ~/.CJHSH_ai_key
+// so tests never touch the real ~/.XTFSH_ai_key
 // ═══════════════════════════════════════════════════════════════
 
 class AiTestFixture : public ::testing::Test {
@@ -46,19 +46,19 @@ protected:
             old_xdg_config_home = env;
         }
 
-        // Route CJHSH::config::get_config_dir() to a per-process tmpdir so
-        // keys and model overrides don't touch the real ~/.CJHSH.
-        config_dir = "/tmp/CJHSH_test_ai_cfg_" + to_string(getpid());
+        // Route XTFSH::config::get_config_dir() to a per-process tmpdir so
+        // keys and model overrides don't touch the real ~/.XTFSH.
+        config_dir = "/tmp/XTFSH_test_ai_cfg_" + to_string(getpid());
         mkdir(config_dir.c_str(), 0700);
         isolated_home = config_dir + "/home";
         mkdir(isolated_home.c_str(), 0700);
         setenv("HOME", isolated_home.c_str(), 1);
         unsetenv("TASH_CONFIG_HOME");
         unsetenv("XDG_CONFIG_HOME");
-        setenv("CJHSH_CONFIG_HOME", config_dir.c_str(), 1);
-        setenv("CJHSH_DEFAULT_SETUP_SCRIPT", "/nonexistent/CJHSH-default-setup.sh", 1);
-        test_usage_path = "/tmp/CJHSH_test_ai_usage_" + to_string(getpid());
-        setenv("CJHSH_AI_USAGE_PATH", test_usage_path.c_str(), 1);
+        setenv("XTFSH_CONFIG_HOME", config_dir.c_str(), 1);
+        setenv("XTFSH_DEFAULT_SETUP_SCRIPT", "/nonexistent/XTFSH-default-setup.sh", 1);
+        test_usage_path = "/tmp/XTFSH_test_ai_usage_" + to_string(getpid());
+        setenv("XTFSH_AI_USAGE_PATH", test_usage_path.c_str(), 1);
     }
 
     void TearDown() override {
@@ -66,9 +66,9 @@ protected:
         std::string rm = "rm -rf " + config_dir;
         (void)system(rm.c_str());
         unlink(test_usage_path.c_str());
-        unsetenv("CJHSH_CONFIG_HOME");
-        unsetenv("CJHSH_DEFAULT_SETUP_SCRIPT");
-        unsetenv("CJHSH_AI_USAGE_PATH");
+        unsetenv("XTFSH_CONFIG_HOME");
+        unsetenv("XTFSH_DEFAULT_SETUP_SCRIPT");
+        unsetenv("XTFSH_AI_USAGE_PATH");
         if (had_home) {
             setenv("HOME", old_home.c_str(), 1);
         } else {
@@ -142,13 +142,13 @@ class AiModelOverrideHealTest : public ::testing::Test {
 protected:
     std::string tmp_config_dir;
     void SetUp() override {
-        tmp_config_dir = "/tmp/CJHSH_ai_heal_" + std::to_string(getpid());
+        tmp_config_dir = "/tmp/XTFSH_ai_heal_" + std::to_string(getpid());
         mkdir(tmp_config_dir.c_str(), 0700);
-        setenv("CJHSH_CONFIG_HOME", tmp_config_dir.c_str(), 1);
+        setenv("XTFSH_CONFIG_HOME", tmp_config_dir.c_str(), 1);
     }
     void TearDown() override {
         std::filesystem::remove_all(tmp_config_dir);
-        unsetenv("CJHSH_CONFIG_HOME");
+        unsetenv("XTFSH_CONFIG_HOME");
     }
 };
 
@@ -280,9 +280,9 @@ TEST_F(AiTestFixture, LoadsBundledDefaultOpenAIKeyWhenConfiguredKeyMissing) {
     {
         ofstream f(script_path);
         f << "printf '%s' '" << fake_key
-          << "' > ~/.config/CJHSH/openai_key\n";
+          << "' > ~/.config/XTFSH/openai_key\n";
     }
-    setenv("CJHSH_DEFAULT_SETUP_SCRIPT", script_path.c_str(), 1);
+    setenv("XTFSH_DEFAULT_SETUP_SCRIPT", script_path.c_str(), 1);
 
     auto loaded = ai_load_provider_key_ex("openai");
     EXPECT_EQ(loaded.status, KeyStatus::Ok);
@@ -320,7 +320,7 @@ TEST_F(AiTestFixture, IncrementAndGetUsage) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(ContextSuggest, BuildsTransitionsFromHistory) {
-    string hist_path = "/tmp/CJHSH_test_hist_" + to_string(getpid());
+    string hist_path = "/tmp/XTFSH_test_hist_" + to_string(getpid());
     {
         ofstream f(hist_path);
         for (int i = 0; i < 5; i++) {
@@ -362,7 +362,7 @@ TEST(ContextSuggest, NoSuggestionForUnknownCommand) {
 }
 
 TEST(ContextSuggest, EmptyHistoryNoTransitions) {
-    string hist_path = "/tmp/CJHSH_test_empty_hist_" + to_string(getpid());
+    string hist_path = "/tmp/XTFSH_test_empty_hist_" + to_string(getpid());
     {
         ofstream f(hist_path);
     }
@@ -466,29 +466,29 @@ TEST(OllamaClient, HandlesEmptyResponse) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(LLMFactory, CreateGemini) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("gemini", "key");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("gemini", "key");
     ASSERT_NE(c, nullptr);
     EXPECT_EQ(c->get_provider_name(), "gemini");
 }
 
 TEST(LLMFactory, CreateOpenAI) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("openai", "key");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("openai", "key");
     ASSERT_NE(c, nullptr);
     EXPECT_EQ(c->get_provider_name(), "openai");
 }
 
 TEST(LLMFactory, CreateOllama) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("ollama", "http://localhost:11434");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("ollama", "http://localhost:11434");
     ASSERT_NE(c, nullptr);
     EXPECT_EQ(c->get_provider_name(), "ollama");
 }
 
 TEST(LLMFactory, UnknownReturnsNull) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("unknown", "");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("unknown", "");
     EXPECT_EQ(c, nullptr);
 }
 
@@ -533,11 +533,11 @@ private:
 } // namespace
 
 TEST(LLMRegistry, RegisterAndCreateMockProvider) {
-    CJHSH::ai::register_llm_provider("mock", [](const std::string &key) {
+    XTFSH::ai::register_llm_provider("mock", [](const std::string &key) {
         return std::make_unique<MockLLMClient>(key);
     });
 
-    auto c = CJHSH::ai::create_llm_client("mock", "secret-key");
+    auto c = XTFSH::ai::create_llm_client("mock", "secret-key");
     ASSERT_NE(c, nullptr);
     EXPECT_EQ(c->get_provider_name(), "mock");
     auto *mc = dynamic_cast<MockLLMClient *>(c.get());
@@ -546,13 +546,13 @@ TEST(LLMRegistry, RegisterAndCreateMockProvider) {
 }
 
 TEST(LLMRegistry, UnknownProviderReturnsNull) {
-    auto c = CJHSH::ai::create_llm_client("no-such-provider-xyz", "");
+    auto c = XTFSH::ai::create_llm_client("no-such-provider-xyz", "");
     EXPECT_EQ(c, nullptr);
 }
 
 TEST(LLMRegistry, BuiltinsAreRegistered) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto names = CJHSH::ai::registered_llm_providers();
+    XTFSH::ai::register_builtin_llm_providers();
+    auto names = XTFSH::ai::registered_llm_providers();
     EXPECT_NE(std::find(names.begin(), names.end(), "gemini"), names.end());
     EXPECT_NE(std::find(names.begin(), names.end(), "openai"), names.end());
     EXPECT_NE(std::find(names.begin(), names.end(), "ollama"), names.end());
@@ -636,18 +636,18 @@ TEST(RateLimiter, ThreadSafeUnderContention) {
 // ═══════════════════════════════════════════════════════════════
 
 TEST(ConfigPath, RespectsXdgOverride) {
-    unsetenv("CJHSH_CONFIG_HOME");
-    setenv("XDG_CONFIG_HOME", "/tmp/CJHSH_test_xdg", 1);
+    unsetenv("XTFSH_CONFIG_HOME");
+    setenv("XDG_CONFIG_HOME", "/tmp/XTFSH_test_xdg", 1);
     std::string dir = ai_get_config_dir();
-    EXPECT_NE(dir.find("/tmp/CJHSH_test_xdg/CJHSH"), std::string::npos);
+    EXPECT_NE(dir.find("/tmp/XTFSH_test_xdg/XTFSH"), std::string::npos);
     unsetenv("XDG_CONFIG_HOME");
 }
 
 TEST(ConfigPath, FallsBackToHomeDotConfig) {
-    unsetenv("CJHSH_CONFIG_HOME");
+    unsetenv("XTFSH_CONFIG_HOME");
     unsetenv("XDG_CONFIG_HOME");
     std::string dir = ai_get_config_dir();
-    EXPECT_NE(dir.find(".config/CJHSH"), std::string::npos);
+    EXPECT_NE(dir.find(".config/XTFSH"), std::string::npos);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -702,34 +702,34 @@ TEST(RetryLogic, NotRetryableOnNotFound) {
 
 TEST(LLMFactory, GeminiDefaultModel) {
     // Default model now comes from data/ai_models.json (see
-    // CJHSH::ai::default_model_for). Assert the registry-backed value
+    // XTFSH::ai::default_model_for). Assert the registry-backed value
     // rather than hardcoding — otherwise this test fights the whole
     // point of extracting defaults to data.
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("gemini", "key");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("gemini", "key");
     ASSERT_NE(c, nullptr);
-    EXPECT_EQ(c->get_model(), CJHSH::ai::default_model_for("gemini"));
+    EXPECT_EQ(c->get_model(), XTFSH::ai::default_model_for("gemini"));
     EXPECT_FALSE(c->get_model().empty());
 }
 
 TEST(LLMFactory, OpenAIDefaultModel) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("openai", "key");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("openai", "key");
     ASSERT_NE(c, nullptr);
-    EXPECT_EQ(c->get_model(), CJHSH::ai::default_model_for("openai"));
+    EXPECT_EQ(c->get_model(), XTFSH::ai::default_model_for("openai"));
     EXPECT_FALSE(c->get_model().empty());
 }
 
 TEST(LLMFactory, OllamaDefaultModel) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("ollama", "");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("ollama", "");
     ASSERT_NE(c, nullptr);
     EXPECT_EQ(c->get_model(), "qwen3.5:0.8b");
 }
 
 TEST(LLMFactory, SetModelOverride) {
-    CJHSH::ai::register_builtin_llm_providers();
-    auto c = CJHSH::ai::create_llm_client("gemini", "key");
+    XTFSH::ai::register_builtin_llm_providers();
+    auto c = XTFSH::ai::create_llm_client("gemini", "key");
     ASSERT_NE(c, nullptr);
     c->set_model("gemini-2.0-flash");
     EXPECT_EQ(c->get_model(), "gemini-2.0-flash");
@@ -954,8 +954,8 @@ TEST(JsonContentStreamer, EmptyContent) {
 
 TEST_F(AiTestFixture, SendStderrDefaultsOn) {
     // Fresh config dir — never toggled. Should default on.
-    std::string tmpdir = "/tmp/CJHSH_ai_cfg_" + std::to_string(getpid()) + "_pr";
-    setenv("CJHSH_CONFIG_HOME", tmpdir.c_str(), 1);
+    std::string tmpdir = "/tmp/XTFSH_ai_cfg_" + std::to_string(getpid()) + "_pr";
+    setenv("XTFSH_CONFIG_HOME", tmpdir.c_str(), 1);
     ::mkdir(tmpdir.c_str(), 0700);
     EXPECT_TRUE(ai_get_send_stderr());
     ai_set_send_stderr(false);
@@ -965,12 +965,12 @@ TEST_F(AiTestFixture, SendStderrDefaultsOn) {
     // Cleanup
     std::string rm = "rm -rf " + tmpdir;
     (void)system(rm.c_str());
-    unsetenv("CJHSH_CONFIG_HOME");
+    unsetenv("XTFSH_CONFIG_HOME");
 }
 
 TEST_F(AiTestFixture, KeyStatusDistinguishesAbsentFromUnreadable) {
-    std::string tmpdir = "/tmp/CJHSH_ai_cfg_" + std::to_string(getpid()) + "_ks";
-    setenv("CJHSH_CONFIG_HOME", tmpdir.c_str(), 1);
+    std::string tmpdir = "/tmp/XTFSH_ai_cfg_" + std::to_string(getpid()) + "_ks";
+    setenv("XTFSH_CONFIG_HOME", tmpdir.c_str(), 1);
     ::mkdir(tmpdir.c_str(), 0700);
 
     // Absent
@@ -1002,7 +1002,7 @@ TEST_F(AiTestFixture, KeyStatusDistinguishesAbsentFromUnreadable) {
 
     std::string rm = "rm -rf " + tmpdir;
     (void)system(rm.c_str());
-    unsetenv("CJHSH_CONFIG_HOME");
+    unsetenv("XTFSH_CONFIG_HOME");
 }
 
 TEST(ModelNameValidation, RejectsPathSeparatorsAndDotDot) {

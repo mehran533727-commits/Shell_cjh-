@@ -9,7 +9,7 @@
 // Hand-rolled, no rapidcheck dep. Each property uses a deterministic
 // seeded RNG so failures reproduce.
 
-#include "CJHSH/core/parser.h"
+#include "XTFSH/core/parser.h"
 #include <gtest/gtest.h>
 #include <random>
 #include <string>

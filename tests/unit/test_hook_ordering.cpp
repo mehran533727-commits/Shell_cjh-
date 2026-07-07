@@ -10,11 +10,11 @@
 #include <string>
 #include <memory>
 
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/shell.h"
-#include "CJHSH/core/structured_pipe.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/shell.h"
+#include "XTFSH/core/structured_pipe.h"
 
 namespace {
 
@@ -131,7 +131,7 @@ TEST(HookOrdering, CommandSubstitutionRespectsSkip) {
 TEST(HookOrdering, StructuredPipeFirstSegmentInvokesBeforeHook) {
     auto *rec = install_recorder();
     ShellState state;
-    std::string out = CJHSH::structured_pipe::execute_pipeline(
+    std::string out = XTFSH::structured_pipe::execute_pipeline(
         "echo hello |> to-json", state);
     // Hook must have seen the first segment as a before_command.
     bool saw_first_segment = false;
@@ -151,7 +151,7 @@ TEST(HookOrdering, StructuredPipeRespectsSkip) {
     auto *rec = install_recorder();
     rec->force_skip = true;
     ShellState state;
-    std::string out = CJHSH::structured_pipe::execute_pipeline(
+    std::string out = XTFSH::structured_pipe::execute_pipeline(
         "rm -rf /fake |> to-json", state);
     EXPECT_TRUE(out.empty());
     rec->force_skip = false;

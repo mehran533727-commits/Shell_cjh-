@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="tavakkoliamirmohammad/CJHSH-shell"
+REPO="tavakkoliamirmohammad/XTFSH-shell"
 INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
-BINARY_NAME="CJHSH"
+BINARY_NAME="XTFSH"
 
-echo "Installing CJHSH shell..."
+echo "Installing XTFSH shell..."
 
 # Detect platform
 OS="$(uname -s)"
@@ -14,8 +14,8 @@ ARCH="$(uname -m)"
 case "${OS}" in
     Linux)
         case "${ARCH}" in
-            x86_64|amd64)   ARTIFACT="CJHSH-linux-amd64" ;;
-            aarch64|arm64)  ARTIFACT="CJHSH-linux-arm64" ;;
+            x86_64|amd64)   ARTIFACT="XTFSH-linux-amd64" ;;
+            aarch64|arm64)  ARTIFACT="XTFSH-linux-arm64" ;;
             *)
                 echo "Unsupported Linux arch: ${ARCH}"
                 echo "Will try to build from source."
@@ -25,12 +25,12 @@ case "${OS}" in
         ;;
     Darwin)
         if [ "${ARCH}" = "arm64" ]; then
-            ARTIFACT="CJHSH-macos-arm64"
+            ARTIFACT="XTFSH-macos-arm64"
         elif [ "${ARCH}" = "x86_64" ]; then
             echo "Note: Intel Macs are no longer a first-class target."
             echo "Installing the arm64 build — it will run under Rosetta 2."
             echo "If Rosetta 2 is not installed, run: softwareupdate --install-rosetta"
-            ARTIFACT="CJHSH-macos-arm64"
+            ARTIFACT="XTFSH-macos-arm64"
         else
             echo "Unsupported macOS arch: ${ARCH}"
             echo "Please build from source: cmake -B build && cmake --build build"
@@ -90,14 +90,14 @@ mkdir -p "${INSTALL_DIR}"
 
 # Channel selection:
 #   default        → newest tagged release (stable)
-#   CJHSH_USE_MASTER=1 → rolling master-latest pre-release (bleeding edge)
-USE_MASTER="${CJHSH_USE_MASTER:-0}"
+#   XTFSH_USE_MASTER=1 → rolling master-latest pre-release (bleeding edge)
+USE_MASTER="${XTFSH_USE_MASTER:-0}"
 
 if [ "${USE_MASTER}" = "1" ]; then
     # master-latest is a pre-release, so `releases/latest` skips it.
     # Pin to the known tag name published by .github/workflows/publish-master.yml.
     LATEST="master-latest"
-    echo "Using rolling master build (CJHSH_USE_MASTER=1)"
+    echo "Using rolling master build (XTFSH_USE_MASTER=1)"
 else
     # Newest tagged release; GitHub's endpoint already skips pre-releases.
     LATEST=$(curl -sL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -123,16 +123,16 @@ build_from_source() {
     cd "${TMPDIR}"
     if [ "${channel}" = "master" ]; then
         curl -sL "https://github.com/${REPO}/archive/refs/heads/master.tar.gz" | tar xz
-        cd CJHSH-shell-master
+        cd XTFSH-shell-master
     else
         curl -sL "https://github.com/${REPO}/archive/refs/tags/${channel}.tar.gz" | tar xz
-        cd CJHSH-shell-*
+        cd XTFSH-shell-*
     fi
     cmake -B build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
     cmake --build build -j "$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
 
     echo "Installing to ${INSTALL_DIR}..."
-    install -m 755 build/CJHSH.out "${INSTALL_DIR}/${BINARY_NAME}"
+    install -m 755 build/XTFSH.out "${INSTALL_DIR}/${BINARY_NAME}"
     cd - >/dev/null
     rm -rf "${TMPDIR}"
 }
@@ -168,9 +168,9 @@ else
     fi
 fi
 
-# Install man page. The repo ships CJHSH.1.in (a template with
+# Install man page. The repo ships XTFSH.1.in (a template with
 # @PROJECT_VERSION@); CMake renders it at build time, so raw master has
-# no CJHSH.1 — fetch the template and substitute the version ourselves.
+# no XTFSH.1 — fetch the template and substitute the version ourselves.
 # -fsSL so 4xx actually errors (default -sL writes the 404 body silently).
 MAN_DIR="${HOME}/.local/share/man/man1"
 mkdir -p "${MAN_DIR}"
@@ -181,12 +181,12 @@ else
     MAN_REF="${LATEST}"
     MAN_VERSION="${LATEST#v}"
 fi
-MANPAGE_URL="https://raw.githubusercontent.com/${REPO}/${MAN_REF}/CJHSH.1.in"
+MANPAGE_URL="https://raw.githubusercontent.com/${REPO}/${MAN_REF}/XTFSH.1.in"
 MAN_TMP=$(mktemp)
 if curl -fsSL -o "${MAN_TMP}" "${MANPAGE_URL}"; then
-    sed "s|@PROJECT_VERSION@|${MAN_VERSION}|g" "${MAN_TMP}" > "${MAN_DIR}/CJHSH.1"
+    sed "s|@PROJECT_VERSION@|${MAN_VERSION}|g" "${MAN_TMP}" > "${MAN_DIR}/XTFSH.1"
     rm -f "${MAN_TMP}"
-    echo "Installed man page (man CJHSH)."
+    echo "Installed man page (man XTFSH)."
 else
     rm -f "${MAN_TMP}"
     echo "Warning: Could not download man page from ${MANPAGE_URL}."
@@ -253,7 +253,7 @@ case ":${PATH}:" in
         PATH_LINE="export PATH=\"${INSTALL_DIR}:\$PATH\""
         if ! grep -qF "${INSTALL_DIR}" "${PROFILE}" 2>/dev/null; then
             echo "" >> "${PROFILE}"
-            echo "# Added by CJHSH shell installer" >> "${PROFILE}"
+            echo "# Added by XTFSH shell installer" >> "${PROFILE}"
             echo "${PATH_LINE}" >> "${PROFILE}"
             echo "Added ${INSTALL_DIR} to PATH in ${PROFILE}"
         fi
@@ -268,8 +268,8 @@ case ":${PATH}:" in
 esac
 
 echo ""
-echo "CJHSH shell installed successfully!"
-echo "Run 'CJHSH' to start the shell, or restart your shell to pick up PATH changes."
+echo "XTFSH shell installed successfully!"
+echo "Run 'XTFSH' to start the shell, or restart your shell to pick up PATH changes."
 
 # Show which optional features are compiled into the installed binary.
 # SQLite history auto-disables when its headers are missing, so this
@@ -281,7 +281,7 @@ if INSTALLED_INFO=$("${INSTALL_DIR}/${BINARY_NAME}" --version 2>/dev/null); then
     echo "${INSTALLED_INFO}"
     if echo "${INSTALLED_INFO}" | grep -q '\-sqlite-history'; then
         echo ""
-        echo "NOTE: SQLite history is not compiled in — falling back to plain ~/.CJHSH_history."
+        echo "NOTE: SQLite history is not compiled in — falling back to plain ~/.XTFSH_history."
         echo "Install libsqlite3-dev and reinstall to enable history --here / --failed / stats."
     fi
 fi

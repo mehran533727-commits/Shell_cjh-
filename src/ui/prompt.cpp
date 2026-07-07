@@ -1,8 +1,8 @@
-#include "CJHSH/core/signals.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/ui.h"
-#include "CJHSH/util/cwd.h"
-#include "CJHSH/util/safe_exec.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/ui.h"
+#include "XTFSH/util/cwd.h"
+#include "XTFSH/util/safe_exec.h"
 #include "theme.h"
 
 #include <sstream>
@@ -17,7 +17,7 @@ string get_git_branch() {
     // suppress_stderr=true: in a non-repo cwd git writes
     // "fatal: not a git repository" to stderr — we must not leak that
     // to the terminal on every prompt render.
-    auto r = CJHSH::util::safe_exec(
+    auto r = XTFSH::util::safe_exec(
         {"git", "rev-parse", "--abbrev-ref", "HEAD"}, 500,
         /*suppress_stderr=*/true);
     if (r.exit_code != 0) return "";
@@ -29,7 +29,7 @@ string get_git_branch() {
 }
 
 string get_git_status_indicators() {
-    auto r = CJHSH::util::safe_exec(
+    auto r = XTFSH::util::safe_exec(
         {"git", "status", "--porcelain"}, 500,
         /*suppress_stderr=*/true);
     if (r.exit_code < 0) return "";
@@ -108,12 +108,12 @@ string write_shell_prefix(const ShellState &state) {
     {
         std::string custom = global_plugin_registry().render_prompt(state);
         if (!custom.empty()) {
-            set_terminal_title("CJHSH");
+            set_terminal_title("XTFSH");
             return custom;
         }
     }
 
-    string cwd = CJHSH::util::current_working_directory();
+    string cwd = XTFSH::util::current_working_directory();
     const char *env_user = getenv("USER");
     const char *login = getlogin();
     string user = env_user && *env_user ? string(env_user)
@@ -126,13 +126,13 @@ string write_shell_prefix(const ShellState &state) {
     size_t running_jobs = running_background_jobs(state);
     string branch = get_git_branch();
 
-    set_terminal_title("CJHSH Shell: " + cwd);
+    set_terminal_title("XTF'SH Shell: " + cwd);
 
     if (isatty(STDOUT_FILENO)) {
         // Catppuccin Mocha colored prompt — first line written to stdout
         string prefix;
         prefix += PROMPT_SEPARATOR + "\u250c\u2500" CAT_RESET;
-        prefix += PROMPT_TEXT + "[CJHSH Shell] " CAT_RESET;
+        prefix += PROMPT_TEXT + "[XTF'SH Shell] " CAT_RESET;
         prefix += PROMPT_USER + user + "@" + host + CAT_RESET;
         if (!branch.empty()) {
             string git_indicators = get_git_status_indicators();
@@ -166,7 +166,7 @@ string write_shell_prefix(const ShellState &state) {
                + arrow_color + "\u27a4 " CAT_RESET;
     } else {
         stringstream ss;
-        ss << "\u250c\u2500[CJHSH Shell] " << user << "@" << host << "\n";
+        ss << "\u250c\u2500[XTF'SH Shell] " << user << "@" << host << "\n";
         ss << "\u251c\u2500 cwd: " << cwd << "\n";
         ss << "\u251c\u2500 jobs: " << running_jobs
            << " running | last: exit " << state.core.last_exit_status << "\n";

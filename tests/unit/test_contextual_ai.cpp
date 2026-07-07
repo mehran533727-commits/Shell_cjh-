@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 
-#include "CJHSH/ai/contextual_ai.h"
+#include "XTFSH/ai/contextual_ai.h"
 #include <filesystem>
 #include <fstream>
 #include <cstdlib>
@@ -59,7 +59,7 @@ protected:
     string test_dir;
 
     void SetUp() override {
-        test_dir = "/tmp/CJHSH_test_project_" + to_string(getpid());
+        test_dir = "/tmp/XTFSH_test_project_" + to_string(getpid());
         std::filesystem::create_directories(test_dir);
     }
 
@@ -117,7 +117,7 @@ protected:
     string head_path;
 
     void SetUp() override {
-        test_dir = "/tmp/CJHSH_test_git_" + to_string(getpid());
+        test_dir = "/tmp/XTFSH_test_git_" + to_string(getpid());
         git_dir = test_dir + "/.git";
         head_path = git_dir + "/HEAD";
         std::filesystem::create_directories(git_dir);
@@ -139,7 +139,7 @@ TEST_F(GitBranchFixture, GitBranchFromHead) {
 
 TEST_F(GitBranchFixture, GitBranchNoRepo) {
     // Point at a non-existent path
-    string nonexistent = "/tmp/CJHSH_test_no_repo_" + to_string(getpid()) + "/.git/HEAD";
+    string nonexistent = "/tmp/XTFSH_test_no_repo_" + to_string(getpid()) + "/.git/HEAD";
     EXPECT_EQ(ai_get_git_branch(nonexistent), "");
 }
 

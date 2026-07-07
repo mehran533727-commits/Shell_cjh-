@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "CJHSH/plugins/sqlite_history_provider.h"
+#include "XTFSH/plugins/sqlite_history_provider.h"
 
 #include <chrono>
 #include <cstdio>
@@ -19,7 +19,7 @@ protected:
         // mktemp. The created placeholder file is immediately unlinked
         // — sqlite_open will create its own db at the same path.
         db_path_ = std::string(std::getenv("TMPDIR") ? std::getenv("TMPDIR") : "/tmp")
-                  + "/CJHSH_test_history_XXXXXX";
+                  + "/XTFSH_test_history_XXXXXX";
         int fd = mkstemp(&db_path_[0]);
         if (fd >= 0) {
             close(fd);

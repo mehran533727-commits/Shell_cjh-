@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "CJHSH/ui/rich_output.h"
+#include "XTFSH/ui/rich_output.h"
 
-using namespace CJHSH::ui;
+using namespace XTFSH::ui;
 
 // ── URL detection tests ──────────────────────────────────────
 
@@ -36,12 +36,12 @@ TEST(RichOutput, IgnoresPartialUrl) {
 }
 
 TEST(RichOutput, Osc8WrapCorrect) {
-    std::string text = "see https://github.com/CJHSH end";
+    std::string text = "see https://github.com/XTFSH end";
     std::string result = linkify_urls(text);
     // Expected: "see " + OSC8_START + URL + ST + URL + OSC8_END + " end"
     std::string expected = "see "
-        "\033]8;;https://github.com/CJHSH\033\\"
-        "https://github.com/CJHSH"
+        "\033]8;;https://github.com/XTFSH\033\\"
+        "https://github.com/XTFSH"
         "\033]8;;\033\\"
         " end";
     EXPECT_EQ(result, expected);

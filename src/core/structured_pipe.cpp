@@ -1,9 +1,9 @@
 
-#include "CJHSH/core/structured_pipe.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/shell.h"
-#include "CJHSH/util/quote_state.h"
+#include "XTFSH/core/structured_pipe.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/shell.h"
+#include "XTFSH/util/quote_state.h"
 
 #include <algorithm>
 #include <sstream>
@@ -12,7 +12,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace CJHSH::structured_pipe {
+namespace XTFSH::structured_pipe {
 
 // ═══════════════════════════════════════════════════════════════
 // Helpers
@@ -106,7 +106,7 @@ static int compare_json(const JsonValue &a, const JsonValue &b) {
 static std::vector<std::string> tokenize_args(const std::string &input) {
     std::vector<std::string> tokens;
     std::string current;
-    CJHSH::util::QuoteState qs;
+    XTFSH::util::QuoteState qs;
     size_t i = 0;
     size_t len = input.size();
 
@@ -135,7 +135,7 @@ static std::vector<std::string> tokenize_args(const std::string &input) {
 // ═══════════════════════════════════════════════════════════════
 
 bool has_structured_pipe(const std::string &line) {
-    CJHSH::util::QuoteState qs;
+    XTFSH::util::QuoteState qs;
     size_t len = line.size();
     for (size_t i = 0; i < len; ++i) {
         char c = line[i];
@@ -150,7 +150,7 @@ bool has_structured_pipe(const std::string &line) {
 std::vector<PipelineSegment> split_pipeline(const std::string &line) {
     std::vector<PipelineSegment> segments;
     std::string current;
-    CJHSH::util::QuoteState qs;
+    XTFSH::util::QuoteState qs;
     size_t len = line.size();
 
     for (size_t i = 0; i < len; ++i) {
@@ -690,5 +690,5 @@ std::string execute_pipeline(const std::string &command_line, ::ShellState &stat
     return table;
 }
 
-} // namespace CJHSH::structured_pipe
+} // namespace XTFSH::structured_pipe
 

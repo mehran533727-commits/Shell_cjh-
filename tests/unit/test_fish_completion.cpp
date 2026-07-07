@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CJHSH/plugins/fish_completion_provider.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/fish_completion_provider.h"
+#include "XTFSH/shell.h"
 
 #include <fstream>
 #include <cstdlib>
@@ -9,7 +9,7 @@
 // ── Helper: create a temporary directory ─────────────────────
 
 static std::string make_temp_dir(const std::string &suffix) {
-    std::string base = "/tmp/CJHSH_test_fish_" + suffix + "_XXXXXX";
+    std::string base = "/tmp/XTFSH_test_fish_" + suffix + "_XXXXXX";
     std::vector<char> buf(base.begin(), base.end());
     buf.push_back('\0');
     char *result = mkdtemp(buf.data());

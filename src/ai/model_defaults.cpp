@@ -1,6 +1,6 @@
-#include "CJHSH/ai/model_defaults.h"
+#include "XTFSH/ai/model_defaults.h"
 
-#include "CJHSH/util/io.h"
+#include "XTFSH/util/io.h"
 
 #include <nlohmann/json.hpp>
 
@@ -10,7 +10,7 @@
 #include <sstream>
 #include <unordered_map>
 
-namespace CJHSH::ai {
+namespace XTFSH::ai {
 
 // The embedded JSON lives in a build-time-generated TU produced by
 // configure_file() from cmake/ai_models_embedded.cpp.in. Its sole
@@ -30,7 +30,7 @@ struct ProviderDefaults {
 };
 
 std::string read_env_file() {
-    const char* p = std::getenv("CJHSH_AI_MODELS_JSON");
+    const char* p = std::getenv("XTFSH_AI_MODELS_JSON");
     if (!p || !*p) return {};
     std::ifstream in(p);
     if (!in.good()) return {};
@@ -74,10 +74,10 @@ const std::unordered_map<std::string, ProviderDefaults>& registry() {
         if (!env_text.empty()) {
             try {
                 parse_into(env_text, r);
-                io::debug("ai_models: loaded from CJHSH_AI_MODELS_JSON");
+                io::debug("ai_models: loaded from XTFSH_AI_MODELS_JSON");
                 return;
             } catch (const std::exception& e) {
-                io::warning(std::string("ai_models: CJHSH_AI_MODELS_JSON "
+                io::warning(std::string("ai_models: XTFSH_AI_MODELS_JSON "
                                           "parse failed — ") + e.what() +
                              ". Falling back to embedded defaults.");
                 r.clear();
@@ -131,4 +131,4 @@ const std::vector<std::string>& id_prefixes_for(const std::string& provider) {
     return pd ? pd->prefixes : empty_vec();
 }
 
-} // namespace CJHSH::ai
+} // namespace XTFSH::ai

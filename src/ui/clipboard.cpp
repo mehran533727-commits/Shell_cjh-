@@ -1,5 +1,5 @@
-#include "CJHSH/ui/clipboard.h"
-#include "CJHSH/util/safe_exec.h"
+#include "XTFSH/ui/clipboard.h"
+#include "XTFSH/util/safe_exec.h"
 
 #include <cerrno>
 #include <csignal>
@@ -65,7 +65,7 @@ std::string osc52_encode(const std::string &text) {
 // ═══════════════════════════════════════════════════════════════
 
 static std::string argv_read(const std::vector<std::string> &argv) {
-    auto r = CJHSH::util::safe_exec(argv);
+    auto r = XTFSH::util::safe_exec(argv);
     return (r.exit_code == 0) ? r.stdout_text : std::string();
 }
 

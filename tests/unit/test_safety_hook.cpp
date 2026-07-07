@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CJHSH/plugins/safety_hook_provider.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/safety_hook_provider.h"
+#include "XTFSH/shell.h"
 
 // ── classify_command() tests ─────────────────────────────────
 

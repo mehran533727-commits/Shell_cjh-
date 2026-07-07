@@ -9,24 +9,24 @@
 
 std::string shell_binary;
 
-// Integration tests spawn real CJHSH subprocesses that write to
-// $HOME/.CJHSH/ (AI model override, usage counter, history DB,
+// Integration tests spawn real XTFSH subprocesses that write to
+// $HOME/.XTFSH/ (AI model override, usage counter, history DB,
 // config.json, etc.). Without isolation that means running `ctest`
 // on a dev machine overwrites the maintainer's real config — the
 // test suite used to happily set the AI model override to "gpt-4o"
-// against the user's live ~/.CJHSH/ai/ directory, which is how
+// against the user's live ~/.XTFSH/ai/ directory, which is how
 // "clean install" could show a nonsense Provider=gemini/Model=gpt-4o
 // mismatch.
 //
-// Redirect HOME, and the XDG/CJHSH overrides that the config resolver
+// Redirect HOME, and the XDG/XTFSH overrides that the config resolver
 // honors, to a per-process temp dir before any test runs. The
-// spawned CJHSH inherits these via popen() so every file it touches
+// spawned XTFSH inherits these via popen() so every file it touches
 // lives under the sandbox.
 namespace {
 std::string g_tmp_home;
 
 void isolate_home_once() {
-    char tmpl[] = "/tmp/CJHSH-test-home-XXXXXX";
+    char tmpl[] = "/tmp/XTFSH-test-home-XXXXXX";
     const char *dir = mkdtemp(tmpl);
     if (!dir) {
         std::perror("mkdtemp");
@@ -37,8 +37,8 @@ void isolate_home_once() {
     // Also unset the *_HOME overrides that the config resolver checks
     // first — otherwise a developer shell with e.g. XDG_DATA_HOME set
     // would defeat the isolation.
-    unsetenv("CJHSH_DATA_HOME");
-    unsetenv("CJHSH_CONFIG_HOME");
+    unsetenv("XTFSH_DATA_HOME");
+    unsetenv("XTFSH_CONFIG_HOME");
     unsetenv("XDG_DATA_HOME");
     unsetenv("XDG_CONFIG_HOME");
     unsetenv("XDG_CACHE_HOME");
@@ -59,11 +59,11 @@ int main(int argc, char **argv) {
     isolate_home_once();
     std::atexit(cleanup_home);
 
-    const char *bin = getenv("CJHSH_SHELL_BIN");
+    const char *bin = getenv("XTFSH_SHELL_BIN");
     if (bin) {
         shell_binary = bin;
     } else {
-        shell_binary = "./CJHSH.out";
+        shell_binary = "./XTFSH.out";
     }
 
     return RUN_ALL_TESTS();

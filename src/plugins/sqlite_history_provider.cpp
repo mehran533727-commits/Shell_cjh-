@@ -1,7 +1,7 @@
-#include "CJHSH/plugins/sqlite_history_provider.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/util/config_resolver.h"
-#include "CJHSH/util/io.h"
+#include "XTFSH/plugins/sqlite_history_provider.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/util/config_resolver.h"
+#include "XTFSH/util/io.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -16,7 +16,7 @@
 // ── Helpers ───────────────────────────────────────────────────
 
 static std::string default_db_path() {
-    return CJHSH::config::get_history_db_path();
+    return XTFSH::config::get_history_db_path();
 }
 
 static void ensure_directory(const std::string &path) {
@@ -25,7 +25,7 @@ static void ensure_directory(const std::string &path) {
     std::filesystem::create_directories(path, ec);
     // Silent on failure — historical behavior. Callers that open the
     // DB will surface any real error via sqlite3_open.
-    // Tighten the private data dir to owner-only. ~/.CJHSH often lives
+    // Tighten the private data dir to owner-only. ~/.XTFSH often lives
     // inside a world-readable home; enforce 0700 here so the history
     // database isn't browsable by other local users.
     (void)::chmod(path.c_str(), 0700);
@@ -88,7 +88,7 @@ SqliteHistoryProvider::SqliteHistoryProvider(const std::string &db_path)
 
     int rc = sqlite3_open(db_path_.c_str(), &db_);
     if (rc != SQLITE_OK) {
-        write_stderr(std::string("CJHSH: failed to open history database: ") +
+        write_stderr(std::string("XTFSH: failed to open history database: ") +
                      sqlite3_errmsg(db_) + "\n");
         if (db_) {
             sqlite3_close_v2(db_);
@@ -120,7 +120,7 @@ SqliteHistoryProvider::SqliteHistoryProvider(const std::string &db_path)
             }
             sqlite3_finalize(cnt_stmt);
         }
-        CJHSH::io::debug("history: opened " + db_path_ + ", " +
+        XTFSH::io::debug("history: opened " + db_path_ + ", " +
                         std::to_string(row_count) + " rows");
     }
 }
@@ -195,7 +195,7 @@ void SqliteHistoryProvider::record(const HistoryEntry &entry) {
     if (rc == SQLITE_DONE) {
         last_recorded_command_ = entry.command;
         last_recorded_session_ = entry.session_id;
-        CJHSH::io::debug("history: recorded '" + entry.command +
+        XTFSH::io::debug("history: recorded '" + entry.command +
                         "' (exit=" + std::to_string(entry.exit_code) +
                         ") into " + db_path_);
     }
@@ -369,7 +369,7 @@ void SqliteHistoryProvider::init_schema() {
     char *err = nullptr;
     int rc = sqlite3_exec(db_, schema_sql, nullptr, nullptr, &err);
     if (rc != SQLITE_OK) {
-        write_stderr(std::string("CJHSH: failed to create history schema: ") +
+        write_stderr(std::string("XTFSH: failed to create history schema: ") +
                      (err ? err : "unknown error") + "\n");
         sqlite3_free(err);
     }

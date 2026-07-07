@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CJHSH/plugins/starship_prompt_provider.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/starship_prompt_provider.h"
+#include "XTFSH/shell.h"
 #include <algorithm>
 #include <cstdlib>
 #include <string>

@@ -1,10 +1,10 @@
-#include "CJHSH/ui/rich_output.h"
+#include "XTFSH/ui/rich_output.h"
 
 #include <algorithm>
 #include <sstream>
 #include <cctype>
 
-namespace CJHSH::ui {
+namespace XTFSH::ui {
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -367,4 +367,4 @@ std::string export_as_markdown(const std::string &command,
     return md;
 }
 
-} // namespace CJHSH::ui
+} // namespace XTFSH::ui

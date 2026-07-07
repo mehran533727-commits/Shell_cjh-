@@ -1,7 +1,7 @@
 #include "test_helpers.h"
 
 // The `|>` operator routes structured pipelines through
-// CJHSH::structured_pipe::execute_pipeline. Each test runs a small
+// XTFSH::structured_pipe::execute_pipeline. Each test runs a small
 // shell-command-producing-JSON-or-text and verifies the operator chain
 // produced the expected rendering.
 

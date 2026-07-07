@@ -60,7 +60,7 @@ TEST(Heredoc, DashStripsLeadingTabs) {
 }
 
 TEST(Heredoc, InScriptFile) {
-    std::string script = "/tmp/CJHSH_heredoc_script_" +
+    std::string script = "/tmp/XTFSH_heredoc_script_" +
                          std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script);

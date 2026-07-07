@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in CJHSH
+about: Report a bug in XTFSH
 title: ''
 labels: bug
 assignees: ''
@@ -24,5 +24,5 @@ What actually happened. Include any error output.
 **Environment**
 - OS: [e.g. macOS 15, Ubuntu 24.04]
 - Architecture: [e.g. arm64, x86_64]
-- CJHSH version: [e.g. v1.0.0]
+- XTFSH version: [e.g. v1.0.0]
 - Terminal: [e.g. iTerm2, Terminal.app, Alacritty]

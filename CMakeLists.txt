@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(CJHSH VERSION 2.2.0 LANGUAGES CXX)
+project(XTFSH VERSION 2.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,13 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #   features      — default build type + find_package() for system deps.
 #   fetch_deps    — FetchContent for replxx (always) + nlohmann_json
 #                   fallback when features.cmake didn't find a system copy.
-#   sanitizers    — CJHSH_SANITIZERS / CJHSH_COVERAGE / CJHSH_STATIC toggles.
+#   sanitizers    — XTFSH_SANITIZERS / XTFSH_COVERAGE / XTFSH_STATIC toggles.
 include(cmake/features.cmake)
 include(cmake/fetch_deps.cmake)
 include(cmake/sanitizers.cmake)
 
 # ── Common include directories ────────────────────────────────
-set(CJHSH_INCLUDE_DIRS
+set(XTFSH_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/util
     ${replxx_SOURCE_DIR}/include
@@ -59,44 +59,44 @@ set(SHELL_SOURCES
 
 # ── Plugin registry + list ────────────────────────────────────
 # Each plugin registers itself in cmake/plugin_list.cmake. Adding a new
-# plugin means appending one CJHSH_register_plugin(...) call at the bottom
+# plugin means appending one XTFSH_register_plugin(...) call at the bottom
 # of that file, which avoids per-PR merge conflicts.
 include(${CMAKE_SOURCE_DIR}/cmake/plugins.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/plugin_list.cmake)
 
 # ── Generate man page with version ────────────────────────────
-configure_file(CJHSH.1.in CJHSH.1 @ONLY)
+configure_file(XTFSH.1.in XTFSH.1 @ONLY)
 
 # ── Main shell binary ─────────────────────────────────────────
-add_executable(CJHSH.out ${SHELL_SOURCES})
-target_link_libraries(CJHSH.out PRIVATE replxx)
-target_include_directories(CJHSH.out PRIVATE
-    ${CJHSH_INCLUDE_DIRS}
+add_executable(XTFSH.out ${SHELL_SOURCES})
+target_link_libraries(XTFSH.out PRIVATE replxx)
+target_include_directories(XTFSH.out PRIVATE
+    ${XTFSH_INCLUDE_DIRS}
     ${nlohmann_json_SOURCE_DIR}/include)
-target_compile_options(CJHSH.out PRIVATE -Wall -Wextra)
-target_compile_definitions(CJHSH.out PRIVATE
-    CJHSH_VERSION_STRING="${PROJECT_VERSION}"
-    CJHSH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    CJHSH_THEMES_DIR="${CMAKE_SOURCE_DIR}/data/themes")
+target_compile_options(XTFSH.out PRIVATE -Wall -Wextra)
+target_compile_definitions(XTFSH.out PRIVATE
+    XTFSH_VERSION_STRING="${PROJECT_VERSION}"
+    XTFSH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    XTFSH_THEMES_DIR="${CMAKE_SOURCE_DIR}/data/themes")
 
 # Embed data/ai_models.json into the binary as a raw string literal.
 # Single source of truth — bumping the JSON regenerates the embedded
-# copy at build time. The env-var CJHSH_AI_MODELS_JSON still takes
+# copy at build time. The env-var XTFSH_AI_MODELS_JSON still takes
 # precedence for runtime overrides (tests, ops).
-file(READ "${CMAKE_SOURCE_DIR}/data/ai_models.json" CJHSH_AI_MODELS_JSON_CONTENT)
+file(READ "${CMAKE_SOURCE_DIR}/data/ai_models.json" XTFSH_AI_MODELS_JSON_CONTENT)
 configure_file(
     "${CMAKE_SOURCE_DIR}/cmake/ai_models_embedded.cpp.in"
     "${CMAKE_BINARY_DIR}/generated/ai_models_embedded.cpp"
     @ONLY)
-target_sources(CJHSH.out PRIVATE "${CMAKE_BINARY_DIR}/generated/ai_models_embedded.cpp")
-target_include_directories(CJHSH.out PRIVATE "${CMAKE_BINARY_DIR}/generated")
+target_sources(XTFSH.out PRIVATE "${CMAKE_BINARY_DIR}/generated/ai_models_embedded.cpp")
+target_include_directories(XTFSH.out PRIVATE "${CMAKE_BINARY_DIR}/generated")
 
-target_link_libraries(CJHSH.out PRIVATE CURL::libcurl Threads::Threads)
+target_link_libraries(XTFSH.out PRIVATE CURL::libcurl Threads::Threads)
 
-if(CJHSH_SQLITE_ENABLED)
-    target_compile_definitions(CJHSH.out PRIVATE CJHSH_SQLITE_ENABLED)
-    target_include_directories(CJHSH.out PRIVATE ${SQLite3_INCLUDE_DIRS})
-    target_link_libraries(CJHSH.out PRIVATE ${SQLite3_LIBRARIES})
+if(XTFSH_SQLITE_ENABLED)
+    target_compile_definitions(XTFSH.out PRIVATE XTFSH_SQLITE_ENABLED)
+    target_include_directories(XTFSH.out PRIVATE ${SQLite3_INCLUDE_DIRS})
+    target_link_libraries(XTFSH.out PRIVATE ${SQLite3_LIBRARIES})
 endif()
 
 include(cmake/tests.cmake)

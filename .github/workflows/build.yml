@@ -35,10 +35,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -57,22 +57,22 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build and test
         run: |
           JOBS=$(getconf _NPROCESSORS_ONLN)
-          cmake -B build -DBUILD_TESTS=ON ${CJHSH_FC_ARGS:-}
+          cmake -B build -DBUILD_TESTS=ON ${XTFSH_FC_ARGS:-}
           cmake --build build -j "$JOBS"
           ctest --test-dir build --output-on-failure -j "$JOBS"
       - name: Smoke test
-        run: echo -e "pwd\nls\necho hello\nexit" | ./build/CJHSH.out
+        run: echo -e "pwd\nls\necho hello\nexit" | ./build/XTFSH.out
       - name: Assert full feature set
         # Every lane with OpenSSL + libcurl + SQLite installed should
         # produce a binary that reports +ai and +sqlite-history. Catches
         # the class of bug where a well-meaning refactor silently drops
         # a feature because CMake couldn't find a header.
         run: |
-          FEATURES=$(./build/CJHSH.out --version)
+          FEATURES=$(./build/XTFSH.out --version)
           echo "$FEATURES"
           echo "$FEATURES" | grep -q '+ai' \
             || { echo "FAIL: AI not compiled in on full-deps lane"; exit 1; }
@@ -80,17 +80,17 @@ jobs:
             || { echo "FAIL: SQLite history not compiled in on full-deps lane"; exit 1; }
       - name: Test install script (from-source path)
         run: |
-          INSTALL_DIR=${{ runner.temp }}/CJHSH-install
+          INSTALL_DIR=${{ runner.temp }}/XTFSH-install
           mkdir -p "$INSTALL_DIR"
-          cmake -B install-build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ${CJHSH_FC_ARGS:-}
+          cmake -B install-build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ${XTFSH_FC_ARGS:-}
           cmake --build install-build -j "$(getconf _NPROCESSORS_ONLN)"
-          install -m 755 install-build/CJHSH.out "$INSTALL_DIR/CJHSH"
-          echo -e "echo install_test\nexit" | "$INSTALL_DIR/CJHSH"
+          install -m 755 install-build/XTFSH.out "$INSTALL_DIR/XTFSH"
+          echo -e "echo install_test\nexit" | "$INSTALL_DIR/XTFSH"
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: CJHSH-${{ matrix.os }}
-          path: build/CJHSH.out
+          name: XTFSH-${{ matrix.os }}
+          path: build/XTFSH.out
 
   build-fedora:
     runs-on: ubuntu-latest
@@ -107,10 +107,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -129,21 +129,21 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build and test
         run: |
           JOBS=$(getconf _NPROCESSORS_ONLN)
-          cmake -B build -DBUILD_TESTS=ON ${CJHSH_FC_ARGS:-}
+          cmake -B build -DBUILD_TESTS=ON ${XTFSH_FC_ARGS:-}
           cmake --build build -j "$JOBS"
           ctest --test-dir build --output-on-failure -j "$JOBS"
       - name: Smoke test
-        run: echo -e "pwd\nls\necho hello\nexit" | ./build/CJHSH.out
+        run: echo -e "pwd\nls\necho hello\nexit" | ./build/XTFSH.out
       - name: Test install workflow
         run: |
-          cmake -B install-build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ${CJHSH_FC_ARGS:-}
+          cmake -B install-build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ${XTFSH_FC_ARGS:-}
           cmake --build install-build -j "$(getconf _NPROCESSORS_ONLN)"
-          install -m 755 install-build/CJHSH.out /usr/local/bin/CJHSH
-          echo -e "echo install_test\nexit" | /usr/local/bin/CJHSH
+          install -m 755 install-build/XTFSH.out /usr/local/bin/XTFSH
+          echo -e "echo install_test\nexit" | /usr/local/bin/XTFSH
 
   build-alpine:
     runs-on: ubuntu-latest
@@ -160,10 +160,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -182,21 +182,21 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build and test
         run: |
           JOBS=$(getconf _NPROCESSORS_ONLN)
-          cmake -B build -DBUILD_TESTS=ON ${CJHSH_FC_ARGS:-}
+          cmake -B build -DBUILD_TESTS=ON ${XTFSH_FC_ARGS:-}
           cmake --build build -j "$JOBS"
           ctest --test-dir build --output-on-failure -j "$JOBS"
       - name: Smoke test
-        run: echo -e "pwd\nls\necho hello\nexit" | ./build/CJHSH.out
+        run: echo -e "pwd\nls\necho hello\nexit" | ./build/XTFSH.out
       - name: Test install workflow
         run: |
-          cmake -B install-build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ${CJHSH_FC_ARGS:-}
+          cmake -B install-build -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ${XTFSH_FC_ARGS:-}
           cmake --build install-build -j "$(getconf _NPROCESSORS_ONLN)"
-          install -m 755 install-build/CJHSH.out /usr/local/bin/CJHSH
-          echo -e "echo install_test\nexit" | /usr/local/bin/CJHSH
+          install -m 755 install-build/XTFSH.out /usr/local/bin/XTFSH
+          echo -e "echo install_test\nexit" | /usr/local/bin/XTFSH
 
   # Artifact-build dry run — exercises the exact same manylinux_2_28
   # toolchain and build recipe that publish-master.yml uses, on every
@@ -219,10 +219,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -241,20 +241,20 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build Release
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF ${CJHSH_FC_ARGS:-}
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF ${XTFSH_FC_ARGS:-}
           cmake --build build -j "$(getconf _NPROCESSORS_ONLN)"
       - name: Assert full feature set + smoke test
         run: |
-          FEATURES=$(./build/CJHSH.out --version)
+          FEATURES=$(./build/XTFSH.out --version)
           echo "$FEATURES"
           echo "$FEATURES" | grep -q '+ai' \
             || { echo "FAIL: AI not compiled in on manylinux lane"; exit 1; }
           echo "$FEATURES" | grep -q '+sqlite-history' \
             || { echo "FAIL: SQLite history not compiled in on manylinux lane"; exit 1; }
-          echo -e "echo manylinux_ok\nexit" | ./build/CJHSH.out
+          echo -e "echo manylinux_ok\nexit" | ./build/XTFSH.out
 
   sanitizer:
     strategy:
@@ -275,10 +275,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -297,11 +297,11 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build with AddressSanitizer + UndefinedBehaviorSanitizer
         run: |
           JOBS=$(getconf _NPROCESSORS_ONLN)
-          cmake -B build -DBUILD_TESTS=ON -DCJHSH_SANITIZERS=ON ${CJHSH_FC_ARGS:-} \
+          cmake -B build -DBUILD_TESTS=ON -DXTFSH_SANITIZERS=ON ${XTFSH_FC_ARGS:-} \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo
           cmake --build build -j "$JOBS"
       - name: Run unit tests with sanitizer
@@ -318,7 +318,7 @@ jobs:
         env:
           ASAN_OPTIONS: detect_leaks=0
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
-        run: echo -e "pwd\nls\necho hello\nexit" | ./build/CJHSH.out
+        run: echo -e "pwd\nls\necho hello\nexit" | ./build/XTFSH.out
 
   coverage:
     runs-on: ubuntu-24.04
@@ -334,10 +334,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -356,11 +356,11 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build with coverage
         run: |
           JOBS=$(getconf _NPROCESSORS_ONLN)
-          cmake -B build -DBUILD_TESTS=ON -DCJHSH_COVERAGE=ON ${CJHSH_FC_ARGS:-} \
+          cmake -B build -DBUILD_TESTS=ON -DXTFSH_COVERAGE=ON ${XTFSH_FC_ARGS:-} \
             -DCMAKE_BUILD_TYPE=Debug
           cmake --build build -j "$JOBS"
       - name: Run tests
@@ -421,10 +421,10 @@ jobs:
         # it via FETCHCONTENT_SOURCE_DIR_<NAME>, which makes FetchContent
         # skip the download entirely. (FETCHCONTENT_SOURCE_DIR_* is a
         # CMake cache variable, not an env var — so we export the -D
-        # flags as $CJHSH_FC_ARGS and splice that into every cmake -B.)
+        # flags as $XTFSH_FC_ARGS and splice that into every cmake -B.)
         run: |
           set -e
-          DEPS_DIR="${RUNNER_TEMP:-/tmp}/CJHSH-deps"
+          DEPS_DIR="${RUNNER_TEMP:-/tmp}/XTFSH-deps"
           mkdir -p "${DEPS_DIR}"
           fetch() {
             local name="$1" url="$2"
@@ -443,15 +443,15 @@ jobs:
           FC_ARGS="-DFETCHCONTENT_SOURCE_DIR_REPLXX=${DEPS_DIR}/replxx"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST=${DEPS_DIR}/googletest"
           FC_ARGS="${FC_ARGS} -DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=${DEPS_DIR}/nlohmann_json"
-          echo "CJHSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
+          echo "XTFSH_FC_ARGS=${FC_ARGS}" >> "$GITHUB_ENV"
       - name: Build fuzzer
         run: |
-          cmake -B build-fuzz -DCJHSH_ENABLE_FUZZER=ON ${CJHSH_FC_ARGS:-} \
+          cmake -B build-fuzz -DXTFSH_ENABLE_FUZZER=ON ${XTFSH_FC_ARGS:-} \
             -DCMAKE_CXX_COMPILER=clang++ -DBUILD_TESTS=OFF
-          cmake --build build-fuzz --target CJHSH_parser_fuzzer -j "$(getconf _NPROCESSORS_ONLN)"
+          cmake --build build-fuzz --target XTFSH_parser_fuzzer -j "$(getconf _NPROCESSORS_ONLN)"
       - name: Run fuzzer (60s)
         run: |
-          ./build-fuzz/CJHSH_parser_fuzzer fuzz/corpus \
+          ./build-fuzz/XTFSH_parser_fuzzer fuzz/corpus \
             -max_total_time=60 -print_final_stats=1
       - name: Upload any crash artifacts
         if: failure()

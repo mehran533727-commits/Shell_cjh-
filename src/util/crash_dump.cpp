@@ -1,9 +1,9 @@
-// Async-signal-safe crash-dump handler. See include/CJHSH/util/crash_dump.h
+// Async-signal-safe crash-dump handler. See include/XTFSH/util/crash_dump.h
 // for the rationale. Deep-review finding O7.4.
 //
 // Everything inside crash_handler() runs in signal context. That means:
 //   * no malloc / free (rules out std::string, std::cerr, printf family,
-//     CJHSH::io::error — they all allocate or lock);
+//     XTFSH::io::error — they all allocate or lock);
 //   * no mutexes / condvars;
 //   * only calls from the POSIX async-signal-safe list.
 // We restrict ourselves to write(2), getcwd(3), strlen(3), raise(3),
@@ -17,7 +17,7 @@
 // SIG_DFL on the second delivery — no infinite loop even if the
 // backtrace path itself faults.
 
-#include "CJHSH/util/crash_dump.h"
+#include "XTFSH/util/crash_dump.h"
 
 #include <csignal>
 #include <cstring>
@@ -29,17 +29,17 @@
 #if defined(__has_include)
 #  if __has_include(<execinfo.h>)
 #    include <execinfo.h>
-#    define CJHSH_HAVE_EXECINFO 1
+#    define XTFSH_HAVE_EXECINFO 1
 #  endif
 #endif
 
-namespace CJHSH::util {
+namespace XTFSH::util {
 
 // Single process-wide pointer, set once by install_crash_handler().
 // Reading a const ShellState* is async-signal-safe; reading a const
 // std::string& and calling .c_str() is safe as long as the string is
 // not being concurrently mutated — ShellState lives on the main
-// thread's stack and CJHSH is single-threaded for command execution,
+// thread's stack and XTFSH is single-threaded for command execution,
 // so by the time we SEGV we either have a stable string or garbage we
 // can't print safely anyway. In the latter case we'd SEGV inside the
 // handler, SA_RESETHAND kicks us into SIG_DFL, and a core dump is
@@ -108,14 +108,14 @@ static void crash_handler(int sig) {
         default:      signame = "?";       break;
     }
 
-    write_cstr("\n=== CJHSH crash (signal ");
+    write_cstr("\n=== XTFSH crash (signal ");
     write_int(sig);
     write_cstr(" ");
     write_cstr(signame);
     write_cstr(") ===\n");
 
     if (g_crash_state) {
-        // Direct field on ShellState (verified against include/CJHSH/shell.h).
+        // Direct field on ShellState (verified against include/XTFSH/shell.h).
         // Copying the pointer is cheap and avoids dereferencing twice.
         const char *cmd = g_crash_state->ai.last_executed_cmd.c_str();
         write_cstr("last command: ");
@@ -139,7 +139,7 @@ static void crash_handler(int sig) {
         write_cstr("cwd: (unavailable)\n");
     }
 
-#ifdef CJHSH_HAVE_EXECINFO
+#ifdef XTFSH_HAVE_EXECINFO
     write_cstr("backtrace:\n");
     void *frames[64];
     int n = ::backtrace(frames, 64);
@@ -154,9 +154,9 @@ static void crash_handler(int sig) {
     write_cstr("backtrace: (not available on this platform)\n");
 #endif
 
-    write_cstr("=== run 'CJHSH --debug' for more info, "
+    write_cstr("=== run 'XTFSH --debug' for more info, "
                "or report at https://github.com/tavakkoliamirmohammad/"
-               "CJHSH-shell/issues ===\n");
+               "XTFSH-shell/issues ===\n");
 
     // SA_RESETHAND restored SIG_DFL before entry; raise() now terminates
     // the process with the default disposition (core dump / signal exit).
@@ -191,4 +191,4 @@ void install_crash_handler(const ShellState &state) {
     // by install_signal_handlers() in src/core/signals.cpp.
 }
 
-} // namespace CJHSH::util
+} // namespace XTFSH::util

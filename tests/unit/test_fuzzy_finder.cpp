@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
-#include "CJHSH/ui/fuzzy_finder.h"
+#include "XTFSH/ui/fuzzy_finder.h"
 
 #include <algorithm>
 #include <chrono>
 #include <string>
 #include <vector>
 
-using namespace CJHSH;
+using namespace XTFSH;
 
 // ── Individual scoring tests ─────────────────────────────────────
 
@@ -139,7 +139,7 @@ TEST(FuzzyFinder, LargeCandidateSet) {
 
 // ── Completion callback wiring ───────────────────────────────────
 
-#include "CJHSH/ui.h"
+#include "XTFSH/ui.h"
 // Fuzzy fallback triggers only when the user typed a prefix that yields no
 // direct prefix match and is at least 2 chars. Built-ins like `cd`, `pwd`,
 // `history` must still show up fuzzily for made-up prefixes.

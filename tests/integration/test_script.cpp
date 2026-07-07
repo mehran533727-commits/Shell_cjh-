@@ -2,7 +2,7 @@
 
 TEST(Script, ExecuteScriptFile) {
     // Create a temporary script file
-    std::string script_path = "/tmp/CJHSH_test_script_" + std::to_string(getpid()) + ".sh";
+    std::string script_path = "/tmp/XTFSH_test_script_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script_path);
         f << "echo script_works" << std::endl;
@@ -17,7 +17,7 @@ TEST(Script, ExecuteScriptFile) {
 }
 
 TEST(Script, MultipleCommandsInScript) {
-    std::string script_path = "/tmp/CJHSH_test_multi_" + std::to_string(getpid()) + ".sh";
+    std::string script_path = "/tmp/XTFSH_test_multi_" + std::to_string(getpid()) + ".sh";
     {
         std::ofstream f(script_path);
         f << "echo line_one" << std::endl;
@@ -32,21 +32,21 @@ TEST(Script, MultipleCommandsInScript) {
 }
 
 TEST(Script, NonexistentScriptFile) {
-    auto r = run_shell_script("/tmp/CJHSH_no_such_file_ever.sh");
+    auto r = run_shell_script("/tmp/XTFSH_no_such_file_ever.sh");
     EXPECT_NE(r.exit_code, 0);
 }
 
 TEST(Script, SourceCommand) {
     // Create a script that uses source to load a file, then reads the exported variable
-    std::string source_file = "/tmp/CJHSH_test_source_" + std::to_string(getpid()) + ".sh";
-    std::string marker_file = "/tmp/CJHSH_test_source_marker_" + std::to_string(getpid());
+    std::string source_file = "/tmp/XTFSH_test_source_" + std::to_string(getpid()) + ".sh";
+    std::string marker_file = "/tmp/XTFSH_test_source_marker_" + std::to_string(getpid());
     {
         std::ofstream f(source_file);
-        f << "export CJHSH_SOURCE_VAR=source_value_ok" << std::endl;
+        f << "export XTFSH_SOURCE_VAR=source_value_ok" << std::endl;
     }
 
     // Run the shell interactively: source the file, then echo the variable to a marker file
-    auto r = run_shell("source " + source_file + "\necho $CJHSH_SOURCE_VAR > " + marker_file + "\nexit\n");
+    auto r = run_shell("source " + source_file + "\necho $XTFSH_SOURCE_VAR > " + marker_file + "\nexit\n");
 
     std::string content = read_file(marker_file);
     EXPECT_NE(content.find("source_value_ok"), std::string::npos)

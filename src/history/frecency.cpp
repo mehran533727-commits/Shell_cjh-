@@ -1,5 +1,5 @@
-#include "CJHSH/history.h"
-#include "CJHSH/util/config_resolver.h"
+#include "XTFSH/history.h"
+#include "XTFSH/util/config_resolver.h"
 #include <cmath>
 #include <ctime>
 #include <algorithm>
@@ -16,7 +16,7 @@ struct DirEntry {
 };
 
 static string z_data_path() {
-    return CJHSH::config::get_frecency_path();
+    return XTFSH::config::get_frecency_path();
 }
 
 static vector<DirEntry> load_z_data() {

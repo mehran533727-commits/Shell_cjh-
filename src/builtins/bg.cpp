@@ -1,8 +1,8 @@
 // Background-job builtins: bglist, bgkill, bgstop, bgstart, fg.
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/signals.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/signals.h"
 #include <atomic>
 #include <algorithm>
 #include <cstring>

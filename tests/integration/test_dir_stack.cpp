@@ -11,7 +11,7 @@ namespace {
 struct TempDirs {
     std::string a, b, c;
     TempDirs() {
-        std::string root = "/tmp/CJHSH_dstack_" + std::to_string(getpid());
+        std::string root = "/tmp/XTFSH_dstack_" + std::to_string(getpid());
         a = root + "/a";
         b = root + "/b";
         c = root + "/c";
@@ -20,7 +20,7 @@ struct TempDirs {
         (void)rc;
     }
     ~TempDirs() {
-        int rc = system(("rm -rf /tmp/CJHSH_dstack_" +
+        int rc = system(("rm -rf /tmp/XTFSH_dstack_" +
                          std::to_string(getpid())).c_str());
         (void)rc;
     }

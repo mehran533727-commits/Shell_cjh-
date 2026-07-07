@@ -1,6 +1,6 @@
-#include "CJHSH/core/session.h"
-#include "CJHSH/shell.h"
-#include "CJHSH/util/config_resolver.h"
+#include "XTFSH/core/session.h"
+#include "XTFSH/shell.h"
+#include "XTFSH/util/config_resolver.h"
 
 #include <fstream>
 #include <sstream>
@@ -179,7 +179,7 @@ SessionInfo load_session(const std::string &path) {
 // ── Session directory management ──────────────────────────────
 
 std::string get_sessions_dir() {
-    std::string base = CJHSH::config::get_sessions_dir();
+    std::string base = XTFSH::config::get_sessions_dir();
     if (base.empty()) return "";
     mkdir_p(base);
     return base + "/";

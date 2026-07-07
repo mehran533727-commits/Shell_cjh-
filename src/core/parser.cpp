@@ -1,9 +1,9 @@
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/parser.h"
-#include "CJHSH/util/io.h"
-#include "CJHSH/util/limits.h"
-#include "CJHSH/util/parse_error.h"
-#include "CJHSH/util/quote_state.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/util/io.h"
+#include "XTFSH/util/limits.h"
+#include "XTFSH/util/parse_error.h"
+#include "XTFSH/util/quote_state.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -18,12 +18,12 @@ using namespace std;
 static void expansion_cap_error(const char *what) {
     std::string msg = what;
     msg += " exceeds maximum size; aborting expansion";
-    CJHSH::io::error(msg);
+    XTFSH::io::error(msg);
 }
 
 // ── Parse-error helpers ───────────────────────────────────────
 
-namespace CJHSH::parse {
+namespace XTFSH::parse {
 
 void offset_to_line_col(std::string_view input, size_t offset,
                         size_t &line_out, size_t &column_out) {
@@ -43,9 +43,9 @@ void offset_to_line_col(std::string_view input, size_t offset,
 }
 
 void emit_parse_error(const ParseError &err) {
-    // io::error already prefixes "CJHSH: error: "; we append the compiler-
+    // io::error already prefixes "XTFSH: error: "; we append the compiler-
     // style position suffix "LINE:COL: MSG" so the final line reads like
-    //   CJHSH: error: 1:7: unmatched '(' in subshell
+    //   XTFSH: error: 1:7: unmatched '(' in subshell
     // which is close enough to the bash/zsh convention for editor tools
     // to parse. Column 0 is elided when we don't have a precise offset.
     std::string body;
@@ -59,10 +59,10 @@ void emit_parse_error(const ParseError &err) {
         body += ' ';
     }
     body += err.message;
-    CJHSH::io::error(body);
+    XTFSH::io::error(body);
 }
 
-} // namespace CJHSH::parse
+} // namespace XTFSH::parse
 
 string &rtrim(string &s, const char *t) {
     return s.erase(s.find_last_not_of(t) + 1);
@@ -79,7 +79,7 @@ string &trim(string &s, const char *t) {
 vector<string> tokenize_string(string line, const string &delimiter) {
     vector<string> tokens;
     string current;
-    CJHSH::util::QuoteState qs;
+    XTFSH::util::QuoteState qs;
     size_t i = 0;
     size_t len = line.size();
     size_t dlen = delimiter.size();
@@ -136,7 +136,7 @@ string expand_variables(const string &input, int last_exit_status) {
     // Cap check helper: if appending `add` would push us past the
     // limit, emit the diagnostic and bail out with an empty string.
     auto cap_exceeded = [&](size_t add) {
-        if (result.size() + add > CJHSH::util::CJHSH_MAX_EXPANSION_BYTES) {
+        if (result.size() + add > XTFSH::util::XTFSH_MAX_EXPANSION_BYTES) {
             expansion_cap_error("variable expansion");
             result.clear();
             return true;
@@ -208,8 +208,8 @@ string expand_variables(const string &input, int last_exit_status) {
                     // `${FOO` with no close. Emit a parse error pointing
                     // at the opening `$`.
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(input, brace_off, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(input, brace_off, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"unmatched '${' in variable expansion", ln, col});
                 }
                 const char *val = getenv(var_name.c_str());
@@ -266,7 +266,7 @@ string expand_command_substitution(const string &input, ShellState &state) {
             if (depth == 0) {
                 string cmd = input.substr(start, j - start);
                 // Recurse first so any nested $(...) inside this body is
-                // expanded by CJHSH (firing the safety hook at every level)
+                // expanded by XTFSH (firing the safety hook at every level)
                 // before the resulting text is handed to /bin/sh. Without
                 // this, `ls $(echo $(rm -rf .))` would let /bin/sh evaluate
                 // the inner $(rm -rf .) unseen by our classifier.
@@ -280,7 +280,7 @@ string expand_command_substitution(const string &input, ShellState &state) {
                     output.pop_back();
                 }
                 if (!hooked.skipped) {
-                    if (result.size() + output.size() > CJHSH::util::CJHSH_MAX_EXPANSION_BYTES) {
+                    if (result.size() + output.size() > XTFSH::util::XTFSH_MAX_EXPANSION_BYTES) {
                         expansion_cap_error("command substitution");
                         return std::string();
                     }
@@ -298,8 +298,8 @@ string expand_command_substitution(const string &input, ShellState &state) {
                 // and keep scanning) so downstream callers still get a
                 // usable string.
                 size_t ln = 1, col = 1;
-                CJHSH::parse::offset_to_line_col(input, i, ln, col);
-                CJHSH::parse::emit_parse_error(
+                XTFSH::parse::offset_to_line_col(input, i, ln, col);
+                XTFSH::parse::emit_parse_error(
                     {"unmatched '$(' in command substitution", ln, col});
                 result += input[i];
                 i++;
@@ -323,7 +323,7 @@ vector<string> expand_globs(const vector<string> &args,
             int ret = glob(arg.c_str(), GLOB_NOCHECK | GLOB_TILDE, nullptr, &glob_result);
             if (ret == 0) {
                 for (size_t i = 0; i < glob_result.gl_pathc; i++) {
-                    if (expanded.size() >= CJHSH::util::CJHSH_MAX_GLOB_RESULTS) {
+                    if (expanded.size() >= XTFSH::util::XTFSH_MAX_GLOB_RESULTS) {
                         expansion_cap_error("glob expansion");
                         globfree(&glob_result);
                         return std::vector<std::string>();
@@ -331,7 +331,7 @@ vector<string> expand_globs(const vector<string> &args,
                     expanded.push_back(glob_result.gl_pathv[i]);
                 }
             } else {
-                if (expanded.size() >= CJHSH::util::CJHSH_MAX_GLOB_RESULTS) {
+                if (expanded.size() >= XTFSH::util::XTFSH_MAX_GLOB_RESULTS) {
                     expansion_cap_error("glob expansion");
                     globfree(&glob_result);
                     return std::vector<std::string>();
@@ -340,7 +340,7 @@ vector<string> expand_globs(const vector<string> &args,
             }
             globfree(&glob_result);
         } else {
-            if (expanded.size() >= CJHSH::util::CJHSH_MAX_GLOB_RESULTS) {
+            if (expanded.size() >= XTFSH::util::XTFSH_MAX_GLOB_RESULTS) {
                 expansion_cap_error("glob expansion");
                 return std::vector<std::string>();
             }
@@ -391,7 +391,7 @@ Command parse_redirections(const string &command_str,
                            vector<PendingHeredoc> *bodies) {
     Command cmd;
     string remaining;
-    CJHSH::util::QuoteState qs;
+    XTFSH::util::QuoteState qs;
     size_t i = 0;
     size_t body_index = 0;
 
@@ -422,8 +422,8 @@ Command parse_redirections(const string &command_str,
                     cmd.redirections.push_back(make_redir(2, fname, false, false));
                 } else {
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(command_str, op_off, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"missing filename for '2>'", ln, col});
                 }
             }
@@ -442,8 +442,8 @@ Command parse_redirections(const string &command_str,
                     cmd.redirections.push_back(make_redir(1, fname, true, false));
                 } else {
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(command_str, op_off, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"missing filename for '>>'", ln, col});
                 }
             }
@@ -462,8 +462,8 @@ Command parse_redirections(const string &command_str,
                     cmd.redirections.push_back(make_redir(1, fname, false, false));
                 } else {
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(command_str, op_off, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"missing filename for '>'", ln, col});
                 }
             }
@@ -502,8 +502,8 @@ Command parse_redirections(const string &command_str,
 
                 if (delim.empty()) {
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(command_str, op_off, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"missing delimiter for '<<' heredoc", ln, col});
                 }
 
@@ -539,8 +539,8 @@ Command parse_redirections(const string &command_str,
                     cmd.redirections.push_back(make_redir(0, fname, false, false));
                 } else {
                     size_t ln = 1, col = 1;
-                    CJHSH::parse::offset_to_line_col(command_str, op_off, ln, col);
-                    CJHSH::parse::emit_parse_error(
+                    XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
+                    XTFSH::parse::emit_parse_error(
                         {"missing filename for '<'", ln, col});
                 }
             }
@@ -707,11 +707,11 @@ vector<CommandSegment> parse_command_line(const string &line) {
         // `&&` / `||` before we get here (is_input_complete returns
         // false), but scripts and `-c` strings can land in this branch.
         size_t ln = 1, col = 1;
-        CJHSH::parse::offset_to_line_col(stripped, stripped.size(), ln, col);
+        XTFSH::parse::offset_to_line_col(stripped, stripped.size(), ln, col);
         const char *what = (next_op == OP_AND)
             ? "empty command after '&&'"
             : "empty command after '||'";
-        CJHSH::parse::emit_parse_error({what, ln, col});
+        XTFSH::parse::emit_parse_error({what, ln, col});
     }
 
     // Unmatched quotes / parens: flag at EOL. These guards fire after
@@ -719,14 +719,14 @@ vector<CommandSegment> parse_command_line(const string &line) {
     // caller still sees whatever segments we managed to build.
     if (in_single_quotes) {
         size_t ln = 1, col = 1;
-        CJHSH::parse::offset_to_line_col(stripped, single_quote_open, ln, col);
-        CJHSH::parse::emit_parse_error(
+        XTFSH::parse::offset_to_line_col(stripped, single_quote_open, ln, col);
+        XTFSH::parse::emit_parse_error(
             {"unmatched '\\''", ln, col});
     }
     if (in_double_quotes) {
         size_t ln = 1, col = 1;
-        CJHSH::parse::offset_to_line_col(stripped, double_quote_open, ln, col);
-        CJHSH::parse::emit_parse_error(
+        XTFSH::parse::offset_to_line_col(stripped, double_quote_open, ln, col);
+        XTFSH::parse::emit_parse_error(
             {"unmatched '\"'", ln, col});
     }
     // Note: we deliberately do NOT emit for unmatched `(` here — the

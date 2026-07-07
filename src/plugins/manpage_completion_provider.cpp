@@ -1,6 +1,6 @@
-#include "CJHSH/plugins/manpage_completion_provider.h"
-#include "CJHSH/shell.h"
-#include "CJHSH/util/safe_exec.h"
+#include "XTFSH/plugins/manpage_completion_provider.h"
+#include "XTFSH/shell.h"
+#include "XTFSH/util/safe_exec.h"
 
 #include <cstdio>
 #include <cstring>
@@ -160,7 +160,7 @@ std::vector<HelpOption> ManpageCompletionProvider::get_help_options(
     std::string output;
 
 #ifndef TESTING_BUILD
-    auto r = CJHSH::util::safe_exec({command, "--help"}, 2000);
+    auto r = XTFSH::util::safe_exec({command, "--help"}, 2000);
     output = r.stdout_text;
     if (output.size() > 65536) output.resize(65536);
 #endif

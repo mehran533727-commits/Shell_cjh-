@@ -1,6 +1,6 @@
-#include "CJHSH/plugins/starship_prompt_provider.h"
-#include "CJHSH/util/config_resolver.h"
-#include "CJHSH/util/safe_exec.h"
+#include "XTFSH/plugins/starship_prompt_provider.h"
+#include "XTFSH/util/config_resolver.h"
+#include "XTFSH/util/safe_exec.h"
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
@@ -22,7 +22,7 @@ bool StarshipPromptProvider::available_ = false;
 // was pure overhead. Route through safe_exec instead.
 
 std::string argv_read(const std::vector<std::string> &argv) {
-    auto r = CJHSH::util::safe_exec(argv, 500);
+    auto r = XTFSH::util::safe_exec(argv, 500);
     return r.stdout_text;
 }
 
@@ -82,7 +82,7 @@ bool StarshipPromptProvider::is_available() {
         return true;
     }
 
-    if (file_exists(CJHSH::config::get_starship_config_path())) {
+    if (file_exists(XTFSH::config::get_starship_config_path())) {
         available_ = true;
         return true;
     }

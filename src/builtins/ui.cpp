@@ -1,11 +1,11 @@
 // UI + terminal-output builtins: clear, copy, paste, linkify, block, table.
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/ui/block_renderer.h"
-#include "CJHSH/ui/clipboard.h"
-#include "CJHSH/ui/rich_output.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/ui/block_renderer.h"
+#include "XTFSH/ui/clipboard.h"
+#include "XTFSH/ui/rich_output.h"
 
 #include <chrono>
 #include <unistd.h>
@@ -79,7 +79,7 @@ int builtin_linkify(const vector<string> &argv, ShellState &) {
     } else {
         text = read_stdin_to_string();
     }
-    write_stdout(CJHSH::ui::linkify_urls(text));
+    write_stdout(XTFSH::ui::linkify_urls(text));
     return 0;
 }
 
@@ -125,7 +125,7 @@ int builtin_table(const vector<string> &argv, ShellState &) {
         write_stderr("table: no input on stdin\n");
         return 1;
     }
-    auto data = CJHSH::ui::parse_table_output(text);
+    auto data = XTFSH::ui::parse_table_output(text);
     if (data.headers.empty() || data.rows.empty()) {
         write_stdout(text);
         return 0;
@@ -141,6 +141,6 @@ int builtin_table(const vector<string> &argv, ShellState &) {
     for (auto &row : data.rows)
         for (auto &c : row) truncate(c);
 
-    write_stdout(CJHSH::ui::render_table(data));
+    write_stdout(XTFSH::ui::render_table(data));
     return 0;
 }

@@ -1,6 +1,6 @@
-#include "CJHSH/plugins/alias_suggest_provider.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/shell.h"
+#include "XTFSH/plugins/alias_suggest_provider.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/shell.h"
 
 // ── Helper: find the alias whose value best matches the command ──
 

@@ -1,11 +1,11 @@
 // Unit tests for positional parse-error diagnostics (deep-review O7.3).
 //
 // Each test exercises a parser path that used to silently accept
-// malformed input (or emit a bare "CJHSH: <msg>" with no location) and
+// malformed input (or emit a bare "XTFSH: <msg>" with no location) and
 // checks the new emit_parse_error path produces
-//   CJHSH: error: <line>:<col>: <msg>
+//   XTFSH: error: <line>:<col>: <msg>
 // pointing at the offending byte. We capture stderr by dup2'ing a temp
-// file over STDERR_FILENO because CJHSH::io::emit writes directly with
+// file over STDERR_FILENO because XTFSH::io::emit writes directly with
 // write(2) — gtest's CaptureStderr only hooks std::cerr.
 
 #include <gtest/gtest.h>
@@ -15,8 +15,8 @@
 #include <string>
 #include <unistd.h>
 
-#include "CJHSH/core/parser.h"
-#include "CJHSH/util/parse_error.h"
+#include "XTFSH/core/parser.h"
+#include "XTFSH/util/parse_error.h"
 
 namespace {
 
@@ -25,7 +25,7 @@ namespace {
 class StderrCapture {
 public:
     StderrCapture() {
-        char tmpl[] = "/tmp/CJHSH_parse_err_XXXXXX";
+        char tmpl[] = "/tmp/XTFSH_parse_err_XXXXXX";
         fd_ = ::mkstemp(tmpl);
         if (fd_ < 0) std::abort();
         path_ = tmpl;
@@ -67,9 +67,9 @@ template <class F> std::string capture(F &&fn) {
 
 TEST(ParseErrorFormat, IncludesLineAndColumn) {
     std::string out = capture([] {
-        CJHSH::parse::emit_parse_error({"test message", 3, 7});
+        XTFSH::parse::emit_parse_error({"test message", 3, 7});
     });
-    EXPECT_NE(out.find("CJHSH:"), std::string::npos);
+    EXPECT_NE(out.find("XTFSH:"), std::string::npos);
     EXPECT_NE(out.find("error"), std::string::npos);
     EXPECT_NE(out.find("3:7: test message"), std::string::npos) << out;
 }
@@ -78,7 +78,7 @@ TEST(ParseErrorFormat, Column0IsElided) {
     // column == 0 is the convention for "unknown column"; the output
     // should still carry the line number but omit the column.
     std::string out = capture([] {
-        CJHSH::parse::emit_parse_error({"eof message", 1, 0});
+        XTFSH::parse::emit_parse_error({"eof message", 1, 0});
     });
     EXPECT_NE(out.find("1: eof message"), std::string::npos) << out;
     // Must NOT contain "1:0:" — that would imply a real column-zero.
@@ -89,7 +89,7 @@ TEST(ParseErrorFormat, Column0IsElided) {
 
 TEST(OffsetToLineCol, SingleLineIsColumnOneBased) {
     size_t ln = 0, col = 0;
-    CJHSH::parse::offset_to_line_col("echo hi", 5, ln, col);
+    XTFSH::parse::offset_to_line_col("echo hi", 5, ln, col);
     EXPECT_EQ(ln, 1u);
     EXPECT_EQ(col, 6u); // 1-based: 'h' sits at column 6
 }
@@ -97,14 +97,14 @@ TEST(OffsetToLineCol, SingleLineIsColumnOneBased) {
 TEST(OffsetToLineCol, NewlineAdvancesLineResetsColumn) {
     size_t ln = 0, col = 0;
     // "a\nbc" → offset 3 points at 'c', which is line 2 column 2.
-    CJHSH::parse::offset_to_line_col("a\nbc", 3, ln, col);
+    XTFSH::parse::offset_to_line_col("a\nbc", 3, ln, col);
     EXPECT_EQ(ln, 2u);
     EXPECT_EQ(col, 2u);
 }
 
 TEST(OffsetToLineCol, OffsetPastEndClampsToEnd) {
     size_t ln = 0, col = 0;
-    CJHSH::parse::offset_to_line_col("abc", 999, ln, col);
+    XTFSH::parse::offset_to_line_col("abc", 999, ln, col);
     EXPECT_EQ(ln, 1u);
     EXPECT_EQ(col, 4u); // 1-based column just past last char
 }
@@ -236,11 +236,11 @@ TEST(ParserErrors, WellFormedRedirectIsSilent) {
 }
 
 TEST(ParserErrors, WellFormedVariableExpansionIsSilent) {
-    ::setenv("CJHSH_PARSE_ERR_PROBE", "x", 1);
+    ::setenv("XTFSH_PARSE_ERR_PROBE", "x", 1);
     std::string out = capture([] {
-        (void)expand_variables("${CJHSH_PARSE_ERR_PROBE}", 0);
+        (void)expand_variables("${XTFSH_PARSE_ERR_PROBE}", 0);
     });
-    ::unsetenv("CJHSH_PARSE_ERR_PROBE");
+    ::unsetenv("XTFSH_PARSE_ERR_PROBE");
     EXPECT_TRUE(out.empty()) << "unexpected diagnostic: " << out;
 }
 

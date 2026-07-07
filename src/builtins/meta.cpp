@@ -2,15 +2,15 @@
 //
 // These are the thin glue builtins that every POSIX shell carries. Split
 // out of the old src/builtins/shell.cpp blob so signal/trap logic and
-// CJHSH-specific config/theme/session live in their own files (see
+// XTFSH-specific config/theme/session live in their own files (see
 // trap.cpp and config.cpp).
 
-#include "CJHSH/builtins.h"
-#include "CJHSH/core/builtins.h"
-#include "CJHSH/core/executor.h"
-#include "CJHSH/core/signals.h"
-#include "CJHSH/plugin.h"
-#include "CJHSH/ui/inline_docs.h"
+#include "XTFSH/builtins.h"
+#include "XTFSH/core/builtins.h"
+#include "XTFSH/core/executor.h"
+#include "XTFSH/core/signals.h"
+#include "XTFSH/plugin.h"
+#include "XTFSH/ui/inline_docs.h"
 
 #include <unistd.h>
 
