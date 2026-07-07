@@ -1,5 +1,23 @@
 # Shell_cjh
 
+## 🚀 本组快速开始（组员必读）
+
+拉下来后**一条脚本**即可得到与作者一致的环境（自动安装依赖、解压离线依赖、配置 DeepSeek、编译）：
+
+```bash
+git clone https://github.com/mehran533727-commits/Shell_cjh-
+cd Shell_cjh-
+bash cjh-setup.sh        # 装系统依赖 + 解压离线依赖 + 配置 DeepSeek + 离线编译
+./build/tash.out         # 运行；进入后输入   @ai 查看隐藏文件用什么命令   可试 AI
+```
+
+- 运行环境：Linux / WSL（建议 Ubuntu 22.04+）
+- 课设文档（缺陷清单 / 功能说明 / 修复策略）见 [`junhong-docs/`](junhong-docs/)
+- 依赖已内置于 [`vendor/`](vendor/)，无需联网 GitHub 即可编译
+- 以下为上游 tash 项目的原始英文文档，供深入参考。
+
+---
+
 Shell_cjh is a C++17 Linux shell project adapted for an operating systems course design. It demonstrates core shell mechanisms such as command parsing, process creation, foreground and background execution, I/O redirection, pipelines, history, aliases, completion, and signal handling.
 
 The project is based on a modern Unix shell codebase and is intended to run on Ubuntu or another Linux distribution. For course presentation, focus on the basic shell workflow: read a command, parse it, dispatch builtins, or run external programs through Linux process APIs.
