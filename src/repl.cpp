@@ -124,16 +124,11 @@ static void print_banner() {
         if (bf) ss << bf.rdbuf();
         std::string art = ss.str();
         if (!art.empty()) {
+            // banner 图已内嵌蓝色双线框 + XTF'SH 像素字 + 猫狗 + 版本/功能文字，
+            // 直接整幅输出即可（透明底：图内空白处不着色，露出终端底色）。
             write_stdout("\n");
             write_stdout(art);
-            write_stdout(std::string("\n   ") + BANNER_TITLE + "XTF'SH Shell" CAT_RESET
-                         " " CAT_DIM "───" CAT_RESET " " + BANNER_VERSION + "v" +
-                         XTFSH_VERSION_STRING CAT_RESET "\n");
-            write_stdout(std::string("   ") + BANNER_FEATURE + "jobs" CAT_RESET " " CAT_DIM
-                         "·" CAT_RESET " " + BANNER_FEATURE + "bglist" CAT_RESET " " CAT_DIM
-                         "·" CAT_RESET " " + BANNER_FEATURE + "help" CAT_RESET "\n");
-            write_stdout(std::string("   ") + BANNER_FEATURE + "@ai <question>" CAT_RESET
-                         " or " + BANNER_FEATURE + "question?" CAT_RESET " for AI help\n\n");
+            write_stdout("\n");
             XTFSH::ai::offer_setup_wizard();
             return;
         }
