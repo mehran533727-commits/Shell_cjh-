@@ -2,3 +2,6 @@
 # 这样即使在 Windows 侧 clone，拿到 Linux/WSL 里也能正常 bash 运行
 # （否则 CRLF 会让 bash 报 '\r': command not found）。
 *.sh text eol=lf
+
+# ANSI banner art：保持字节原样，不转 CRLF（防 Windows checkout 后 banner 错位）
+*.ans -text
