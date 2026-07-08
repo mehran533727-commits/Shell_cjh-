@@ -15,6 +15,8 @@
 
 #include <cctype>
 #include <cstring>
+#include <fstream>
+#include <sstream>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
@@ -112,6 +114,30 @@ static void write_banner_line(const string &rendered, size_t visible_width,
 
 static void print_banner() {
     if (!isatty(STDIN_FILENO)) return;
+
+    // 优先显示彩色融猫 XTF'SH logo（图片转 ANSI，见 data/xtfsh_banner.ans）。
+    // 读不到该文件就回退到下面的 box + block 字符 banner，保证不会崩。
+    {
+        std::string bp = std::string(XTFSH_SOURCE_DIR) + "/data/xtfsh_banner.ans";
+        std::ifstream bf(bp, std::ios::binary);
+        std::stringstream ss;
+        if (bf) ss << bf.rdbuf();
+        std::string art = ss.str();
+        if (!art.empty()) {
+            write_stdout("\n");
+            write_stdout(art);
+            write_stdout(std::string("\n   ") + BANNER_TITLE + "XTF'SH Shell" CAT_RESET
+                         " " CAT_DIM "───" CAT_RESET " " + BANNER_VERSION + "v" +
+                         XTFSH_VERSION_STRING CAT_RESET "\n");
+            write_stdout(std::string("   ") + BANNER_FEATURE + "jobs" CAT_RESET " " CAT_DIM
+                         "·" CAT_RESET " " + BANNER_FEATURE + "bglist" CAT_RESET " " CAT_DIM
+                         "·" CAT_RESET " " + BANNER_FEATURE + "help" CAT_RESET "\n");
+            write_stdout(std::string("   ") + BANNER_FEATURE + "@ai <question>" CAT_RESET
+                         " or " + BANNER_FEATURE + "question?" CAT_RESET " for AI help\n\n");
+            XTFSH::ai::offer_setup_wizard();
+            return;
+        }
+    }
 
     const size_t inner_width = 59;
     const vector<string> logo = {
