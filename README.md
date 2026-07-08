@@ -15,6 +15,49 @@ bash cjh-setup.sh        # 装系统依赖 + 解压离线依赖 + 配置 DeepSee
 - 课设文档（缺陷清单 / 功能说明 / 修复策略）见 [`junhong-docs/`](junhong-docs/)
 - 依赖已内置于 [`vendor/`](vendor/)，无需联网 GitHub 即可编译
 
+## 🖥️ 把 XTFSH 当系统 shell 用（注册 + 终端入口 + 随意切换）
+
+上面 `./build/XTFSH.out` 只是"从 bash 里启动一个程序"。想让它像 bash / PowerShell 那样成为**系统认可、可直接选择**的 shell，按下面做（编译完成后执行一次即可）：
+
+### 1. 注册到系统（Linux / WSL 通用）
+
+```bash
+sudo install -m755 build/XTFSH.out /usr/local/bin/xtfsh              # 装到稳定路径
+grep -qxF /usr/local/bin/xtfsh /etc/shells \
+  || echo /usr/local/bin/xtfsh | sudo tee -a /etc/shells            # 登记为合法登录 shell
+```
+
+做完后 `cat /etc/shells` 里就有它、和 bash 并列；任何 bash 里直接敲 `xtfsh` 即可进入。
+
+### 2. 随意切换 shell（不用 exit）
+
+- 在 **bash** 里敲 `xtfsh` → 进入 XTFSH；
+- 在 **XTFSH** 里敲 `bash` / `sh` / `zsh` / `fish` / `dash` → 进入对应 shell（都是**正常交互 shell**：有提示符、加载 `~/.bashrc`）。
+- 只要敲名字就切过去，**无需 `exit`**。它们是**嵌套**关系，想往上退一层时再用 `exit`。
+
+### 3.（WSL 用户）在 Windows Terminal 里加一个 XTFSH 入口
+
+让 Windows Terminal 顶部下拉里出现 “XTFSH”，与 PowerShell / CMD / Ubuntu 并排，点一下即进：
+
+**图形方式**：Windows Terminal → 设置 → 左下角“新建配置文件” → 填：
+
+- 名称：`XTFSH`
+- 命令行：`wsl.exe -d Ubuntu --cd ~ -- /usr/local/bin/xtfsh`
+- 图标（可选）：`🐱`
+
+**或**直接编辑 `settings.json`（路径 `%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json`），在 `profiles.list` 数组里加一段（`guid` 换成你自己生成的；命令行里的 `Ubuntu` 换成你的发行版名，用 `wsl -l -q` 查）：
+
+```json
+{
+  "name": "XTFSH",
+  "commandline": "wsl.exe -d Ubuntu --cd ~ -- /usr/local/bin/xtfsh",
+  "icon": "🐱",
+  "guid": "{在此填一个新生成的 GUID}"
+}
+```
+
+> ⚠️ 不建议用 `chsh` 把 XTFSH 设成默认登录 shell——它目前不认 `-c`，会破坏 `wsl <命令>`、VS Code Remote-WSL、git hook 等非交互调用。想“打开就进 XTFSH”，用上面的终端入口来**选择**更安全（也可在 Windows Terminal 设置里把默认配置文件设为 XTFSH）。
+
 ---
 Shell_cjh 是一个使用 C++17 实现的 Linux Shell 项目，面向操作系统课程设计整理。项目用于演示 Shell 的核心机制，包括命令解析、进程创建、前台/后台执行、输入输出重定向、管道、历史记录、别名、自动补全和信号处理等。
 
