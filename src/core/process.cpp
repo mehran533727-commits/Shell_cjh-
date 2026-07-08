@@ -159,6 +159,11 @@ static bool is_interactive_cmd(const std::string &cmd) {
         "vim", "vi", "nvim", "emacs", "nano", "less", "more",
         "man", "top", "htop", "btop", "tmux", "screen", "ssh",
         "fzf", "watch", "mc", "ranger", "tig",
+        // 嵌套 shell / REPL：需要真 TTY 才能交互式运行。否则 bash 之类
+        // 看到 stderr 不是终端会认定自己"非交互"，既不出提示符也不读
+        // ~/.bashrc。收录后，在 XTFSH 里直接敲 bash/sh/… 即可进入子 shell，
+        // 无需先 exit——两个 shell 之间随意切换。
+        "bash", "sh", "zsh", "fish", "dash", "xtfsh",
     };
     // Basename only (strip path).
     size_t slash = cmd.find_last_of('/');
@@ -209,6 +214,11 @@ int foreground_process(const vector<string> &argv,
     vector<const char *> c_args;
     for (const string &a : argv) c_args.push_back(a.c_str());
     c_args.push_back(nullptr);
+
+    // 交互式程序（编辑器/分页器/嵌套 shell/REPL）必须保留真 TTY：一旦
+    // 捕获它们的 stderr，bash 之类就会判定自己非交互，起来后没有提示符、
+    // 不加载 rc。对这些命令跳过 stderr 捕获（stdout 加工由下面同一判定一并跳过）。
+    if (!argv.empty() && is_interactive_cmd(argv[0])) captured_stderr = nullptr;
 
     int stderr_pipe[2] = {-1, -1};
     if (captured_stderr) {
