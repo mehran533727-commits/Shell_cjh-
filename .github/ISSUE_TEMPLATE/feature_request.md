@@ -1,19 +1,23 @@
 ---
-name: Feature Request
-about: Suggest a new feature for XTFSH
+name: 功能建议
+about: 为 XTFSH 提出新功能建议
 title: ''
 labels: enhancement
 assignees: ''
 ---
 
-**What problem does this solve?**
-A clear description of the problem or use case.
+**此功能要解决什么问题？**
 
-**Describe the solution you'd like**
-What you want to happen.
+请清晰描述问题或使用场景。
 
-**Alternatives considered**
-Any alternative solutions or workarounds you've thought about.
+**请描述你期望的解决方案**
 
-**Additional context**
-Any other context, examples from other shells, or screenshots.
+说明你希望实现的效果。
+
+**考虑过的替代方案**
+
+请说明你考虑过的其他解决方案或临时绕过方式。
+
+**补充上下文**
+
+请提供其他相关背景、其他 Shell 的示例或截图。

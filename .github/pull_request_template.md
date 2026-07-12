@@ -1,17 +1,17 @@
-## What does this PR do?
+## 此拉取请求做了什么？
 
-<!-- A brief description of the change -->
+<!-- 简要说明本次修改 -->
 
-## Why?
+## 为什么要这样做？
 
-<!-- Motivation, context, or link to a related issue (e.g. Fixes #123) -->
+<!-- 修改动机、上下文，或相关议题的链接（例如：Fixes #123） -->
 
-## How to test
+## 如何测试
 
-<!-- Steps to verify the change works -->
+<!-- 验证修改生效的步骤 -->
 
-## Checklist
+## 检查清单
 
-- [ ] Tests pass (`ctest --test-dir build --output-on-failure`)
-- [ ] New tests added (if applicable)
-- [ ] No compiler warnings
+- [ ] 测试通过（`ctest --test-dir build --output-on-failure`）
+- [ ] 已添加新测试（如适用）
+- [ ] 无编译器警告

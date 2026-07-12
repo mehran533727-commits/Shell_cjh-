@@ -1,56 +1,62 @@
-# Contributing to XTFSH
+# 为 XTFSH 贡献代码
 
-Thanks for your interest in contributing to XTFSH! Here's how to get started.
+感谢你有兴趣参与 XTFSH！以下说明可帮助你快速开始。
 
-## Getting Started
+## 开始参与
 
-1. Fork the repo and clone it locally
-2. Build the project:
+1. 派生仓库（Fork）并克隆到本地
+2. 构建项目：
+
    ```sh
    cmake -B build && cmake --build build
    ```
-3. Run tests:
+
+3. 运行测试：
+
    ```sh
    cmake -B build -DBUILD_TESTS=ON && cmake --build build
    ctest --test-dir build --output-on-failure
    ```
-4. Run the shell:
+
+4. 运行 Shell：
+
    ```sh
    ./build/XTFSH.out
    ```
 
-## Making Changes
+## 提交修改
 
-1. Create a branch from `master`: `git checkout -b my-feature`
-2. Make your changes
-3. Add tests if applicable
-4. Make sure all tests pass
-5. Commit with a clear message describing what and why
-6. Push and open a pull request
+1. 从 `master` 创建分支：`git checkout -b my-feature`
+2. 完成修改
+3. 视情况补充测试
+4. 确认所有测试均通过
+5. 使用清晰的提交信息说明修改内容与原因
+6. 推送分支并创建拉取请求（Pull Request）
 
-## What to Work On
+## 可参与的方向
 
-- Check [open issues](https://github.com/tavakkoliamirmohammad/XTFSH-shell/issues) — look for `good first issue` labels
-- Bug fixes are always welcome
-- New builtins, completions, or shell features
-- Documentation improvements
-- Performance improvements
+- 查看[开放议题](https://github.com/tavakkoliamirmohammad/XTFSH-shell/issues)，可优先寻找带有 `good first issue` 标签的议题
+- 始终欢迎修复缺陷
+- 新的内建命令、补全功能或 Shell 特性
+- 文档改进
+- 性能优化
 
-## Code Style
+## 代码风格
 
-- C++17
-- 4-space indentation
-- Keep functions short and focused
-- Follow existing patterns in the codebase
+- 使用 C++17
+- 使用 4 个空格缩进
+- 保持函数简短且职责明确
+- 遵循代码库已有的实现模式
 
-## Reporting Bugs
+## 报告缺陷
 
-Open an issue with:
-- What you expected to happen
-- What actually happened
-- Steps to reproduce
-- Your OS and architecture
+请创建议题，并提供：
 
-## Questions?
+- 你预期发生的情况
+- 实际发生的情况
+- 复现步骤
+- 所用操作系统与系统架构
 
-Open a [discussion](https://github.com/tavakkoliamirmohammad/XTFSH-shell/discussions) or an issue — happy to help.
+## 有疑问？
+
+请创建[讨论](https://github.com/tavakkoliamirmohammad/XTFSH-shell/discussions)或议题，我们很乐意提供帮助。

@@ -1,28 +1,34 @@
 ---
-name: Bug Report
-about: Report a bug in XTFSH
+name: 缺陷报告
+about: 报告 XTFSH 中的缺陷
 title: ''
 labels: bug
 assignees: ''
 ---
 
-**Describe the bug**
-A clear description of what the bug is.
+**请描述缺陷**
 
-**To reproduce**
-Steps to reproduce the behavior:
-1. Run `...`
-2. Type `...`
-3. See error
+请清晰说明缺陷的具体表现。
 
-**Expected behavior**
-What you expected to happen.
+**复现步骤**
 
-**Actual behavior**
-What actually happened. Include any error output.
+复现此行为的步骤：
 
-**Environment**
-- OS: [e.g. macOS 15, Ubuntu 24.04]
-- Architecture: [e.g. arm64, x86_64]
-- XTFSH version: [e.g. v1.0.0]
-- Terminal: [e.g. iTerm2, Terminal.app, Alacritty]
+1. 运行 `...`
+2. 输入 `...`
+3. 查看错误
+
+**预期行为**
+
+说明你预期发生的情况。
+
+**实际行为**
+
+说明实际发生的情况，并附上所有错误输出。
+
+**运行环境**
+
+- 操作系统：[例如 macOS 15、Ubuntu 24.04]
+- 系统架构：[例如 arm64、x86_64]
+- XTFSH 版本：[例如 v1.0.0]
+- 终端：[例如 iTerm2、Terminal.app、Alacritty]
