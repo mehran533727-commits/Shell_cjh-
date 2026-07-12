@@ -40,7 +40,7 @@ using namespace std;
 // XTFSH_MAX_HEREDOC_BYTES -- a runaway redirection can't fill /tmp.
 int open_heredoc_fd(const std::string &body) {
     if (body.size() > XTFSH::util::XTFSH_MAX_HEREDOC_BYTES) {
-        write_stderr("XTFSH: heredoc body exceeds maximum size (100 MiB)\n");
+        write_stderr("XTFSH: 内嵌文档内容超过最大大小（100 MiB）\n");
         return -1;
     }
 
@@ -114,13 +114,13 @@ void setup_child_io(const vector<Redirection> &redirections) {
             if (r.is_heredoc) {
                 in = open_heredoc_fd(r.heredoc_body);
                 if (in < 0) {
-                    write_stderr("XTFSH: heredoc: tmpfile failed\n");
+        write_stderr("XTFSH: 内嵌文档：创建临时文件失败\n");
                     _exit(1);
                 }
             } else {
                 in = open(r.filename.c_str(), O_RDONLY);
                 if (in < 0) {
-                    write_stderr("XTFSH: " + r.filename + ": No such file or directory\n");
+                    write_stderr("XTFSH: " + r.filename + "：没有此文件或目录\n");
                     _exit(1);
                 }
             }
@@ -134,7 +134,7 @@ void setup_child_io(const vector<Redirection> &redirections) {
                 out = open(r.filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
             }
             if (out < 0) {
-                write_stderr("XTFSH: " + r.filename + ": Cannot open file\n");
+                write_stderr("XTFSH: " + r.filename + "：无法打开文件\n");
                 _exit(1);
             }
             dup2(out, STDOUT_FILENO);
@@ -142,7 +142,7 @@ void setup_child_io(const vector<Redirection> &redirections) {
         } else if (r.fd == 2) {
             int err = open(r.filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (err < 0) {
-                write_stderr("XTFSH: " + r.filename + ": Cannot open file\n");
+                write_stderr("XTFSH: " + r.filename + "：无法打开文件\n");
                 _exit(1);
             }
             dup2(err, STDERR_FILENO);
@@ -201,9 +201,9 @@ int register_background_job(pid_t pid, const string &command,
     job.running = true;
     state.core.background_processes[pid] = job;
 
-    write_stdout("[JOB " + to_string(job.job_id) + "] started | pid=" +
-                 to_string(pid) + " | cmd=\"" + command +
-                 "\" | mode=background\n");
+    write_stdout("[任务 " + to_string(job.job_id) + "] 已启动 | 进程号=" +
+                 to_string(pid) + " | 命令=\"" + command +
+                 "\" | 模式=后台\n");
     return job.job_id;
 }
 
@@ -224,7 +224,7 @@ int foreground_process(const vector<string> &argv,
     if (captured_stderr) {
         captured_stderr->clear();
         if (pipe_cloexec(stderr_pipe) < 0) {
-            XTFSH::io::warning("could not capture stderr");
+            XTFSH::io::warning("无法捕获标准错误输出");
             captured_stderr = nullptr; // fall back to no capture
         }
     }
@@ -386,7 +386,7 @@ void background_process(const vector<string> &argv,
                         ShellState &state,
                         const vector<Redirection> &redirections) {
     if (argv.size() < 2) {
-        XTFSH::io::error("bg: usage: bg <command> [args...]");
+        XTFSH::io::error("bg: 用法：bg <command> [args...]");
         return;
     }
     vector<string> command(argv.begin() + 1, argv.end());
@@ -397,11 +397,11 @@ void background_command(const vector<string> &argv,
                         ShellState &state,
                         const vector<Redirection> &redirections) {
     if (argv.empty()) {
-        XTFSH::io::error("background: missing command");
+        XTFSH::io::error("background: 缺少命令");
         return;
     }
     if ((int)state.core.background_processes.size() >= state.core.max_background_processes) {
-        XTFSH::io::error("Maximum number of background processes");
+        XTFSH::io::error("后台进程数量已达到上限");
         return;
     }
 
@@ -422,8 +422,8 @@ void background_command(const vector<string> &argv,
     } else {
         string display = join_command(argv);
         register_background_job(pid, display, state);
-        XTFSH::io::debug("bg: spawned pid=" + to_string(pid) +
-                        " cmd='" + display + "'");
+        XTFSH::io::debug("后台任务：已创建进程，进程号=" + to_string(pid) +
+                        "，命令='" + display + "'");
     }
 }
 
@@ -444,11 +444,11 @@ void check_background_process_finished(
         CoreState::BackgroundJob &job = it->second;
         if (WIFCONTINUED(status)) {
             job.running = true;
-            write_stdout("[JOB " + to_string(job.job_id) + "] continued | pid=" +
+            write_stdout("[任务 " + to_string(job.job_id) + "] 已继续 | 进程号=" +
                          to_string(pid_finished) + "\n");
         } else if (WIFSTOPPED(status)) {
             job.running = false;
-            write_stdout("[JOB " + to_string(job.job_id) + "] stopped | pid=" +
+            write_stdout("[任务 " + to_string(job.job_id) + "] 已停止 | 进程号=" +
                          to_string(pid_finished) + "\n");
         } else if (WIFEXITED(status) || WIFSIGNALED(status)) {
             int exit_code = WIFEXITED(status) ? WEXITSTATUS(status)
@@ -456,11 +456,11 @@ void check_background_process_finished(
             double elapsed = now_seconds() - job.start_time;
             stringstream msg;
             msg << fixed << setprecision(2);
-            msg << "[JOB " << job.job_id << "] finished | pid="
-                << pid_finished << " | exit=" << exit_code
-                << " | time=" << elapsed << "s\n";
-            XTFSH::io::debug("bg: reaped pid=" + to_string(pid_finished) +
-                            " exit=" + to_string(exit_code));
+            msg << "[任务 " << job.job_id << "] 已完成 | 进程号="
+                << pid_finished << " | 退出码=" << exit_code
+                << " | 耗时=" << elapsed << " 秒\n";
+            XTFSH::io::debug("后台任务：已回收进程，进程号=" + to_string(pid_finished) +
+                            "，退出码=" + to_string(exit_code));
             background_processes.erase(it);
             write_stdout(msg.str());
         }
@@ -475,7 +475,7 @@ void reap_background_processes(
         check_background_process_finished(background_processes);
         size_t reaped = before - background_processes.size();
         if (reaped > 0) {
-            XTFSH::io::debug("SIGCHLD: reaping " + to_string(reaped) + " children");
+            XTFSH::io::debug("SIGCHLD：正在回收 " + to_string(reaped) + " 个子进程");
         }
     }
 }
@@ -565,4 +565,3 @@ int execute_pipeline(vector<PipelineSegment> &segments, ShellState *state) {
     }
     return last_status;
 }
-

@@ -86,7 +86,7 @@ int builtin_trap(const vector<string> &argv, ShellState &state) {
 
     // Need at least one signal after the command.
     if (argv.size() < 3) {
-        write_stderr("trap: usage: trap [cmd] signal [signal...]\n");
+        write_stderr("trap: 用法：trap [cmd] signal [signal...]\n");
         return 1;
     }
 
@@ -97,7 +97,7 @@ int builtin_trap(const vector<string> &argv, ShellState &state) {
     for (size_t i = 2; i < argv.size(); ++i) {
         int s = signal_from_name(argv[i]);
         if (s < 0) {
-            write_stderr("trap: invalid signal: " + argv[i] + "\n");
+            write_stderr("trap: 信号无效：" + argv[i] + "\n");
             return 1;
         }
         signums.push_back(s);

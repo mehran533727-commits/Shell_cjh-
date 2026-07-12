@@ -400,15 +400,15 @@ static unique_ptr<LLMClient> create_current_client() {
             // reset buried behind --debug. Still logged through XTFSH::io
             // so scripts scraping stderr pick it up too.
             ai_print_label();
-            write_stdout(CAT_YELLOW + "resetting saved model '"
+            write_stdout(CAT_YELLOW + "正在重置已保存的模型 '"
                          + *model_override
-                         + "' — incompatible with provider '"
-                         + provider + "' (using provider default).\n" CAT_RESET);
+                         + "'：与提供商 '"
+                         + provider + "' 不兼容（将使用提供商默认模型）。\n" CAT_RESET);
             announced = true;
         }
-        XTFSH::io::warning("ignoring saved model '" + *model_override +
-                           "' — incompatible with provider '" + provider +
-                           "'. Using provider default.");
+        XTFSH::io::warning("忽略已保存的模型 '" + *model_override +
+                           "'：与提供商 '" + provider +
+                           "' 不兼容。将使用提供商默认模型。");
         ai_set_model_override("");
         model_override.reset();  // so the apply-step below doesn't use it
     }
@@ -443,9 +443,9 @@ std::unique_ptr<LLMClient> ai_create_client() {
         static std::atomic<bool> logged{false};
         bool expected = false;
         if (logged.compare_exchange_strong(expected, true)) {
-            XTFSH::io::debug("ai: client built for provider=" +
+            XTFSH::io::debug("AI：已创建客户端，提供商=" +
                             ai_get_provider() +
-                            " model=" + client->get_model());
+                            "，模型=" + client->get_model());
         }
     }
     return client;
@@ -453,7 +453,7 @@ std::unique_ptr<LLMClient> ai_create_client() {
 
 static unique_ptr<LLMClient> ensure_client(ShellState &state) {
     if (!state.ai.ai_enabled) {
-        ai_print_error("AI is disabled. Run @ai on to enable.");
+        ai_print_error("AI 已禁用。请运行 @ai on 启用。");
         return unique_ptr<LLMClient>();
     }
 
@@ -462,13 +462,13 @@ static unique_ptr<LLMClient> ensure_client(ShellState &state) {
     // Ollama doesn't need a key
     if (provider == "ollama") {
         auto client = create_current_client();
-        if (!client) ai_print_error("failed to create Ollama client.");
+        if (!client) ai_print_error("无法创建 Ollama 客户端。");
         return client;
     }
 
     // Validate provider
     if (!is_supported_ai_provider(provider)) {
-        ai_print_error("unknown provider '" + provider + "'. Run @ai config.");
+        ai_print_error("未知提供商 '" + provider + "'。请运行 @ai config。");
         return unique_ptr<LLMClient>();
     }
 
@@ -558,18 +558,17 @@ static void maybe_show_privacy_banner() {
     if (!ai_privacy_banner_pending()) return;
     ai_print_label();
     write_stdout(CAT_DIM
-                 "First @ai use — note: your query, cwd, recent history, and "
-                 "(optionally) the stderr of the last failed command are sent "
-                 "to the configured provider.\n"
-                 "  Disable stderr with: @ai privacy off\n"
-                 "  Review full policy:  @ai privacy\n"
+                 "首次使用 @ai：你的请求、当前目录、近期历史记录，以及（可选的）"
+                 "上一次失败命令的标准错误输出会发送给当前提供商。\n"
+                 "  使用以下命令停止发送标准错误：@ai privacy off\n"
+                 "  查看完整隐私策略：@ai privacy\n"
                  CAT_RESET);
     ai_privacy_banner_mark_shown();
 }
 
 static int handle_ask(const string &query, ShellState &state, string *prefill_cmd) {
     if (!global_ai_rate_limiter().allow()) {
-        ai_print_error("rate limit exceeded. Please wait a moment.");
+        ai_print_error("已达到请求频率上限，请稍候再试。");
         return 1;
     }
 
@@ -657,7 +656,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
         if (resp.http_status == 401 && isatty(STDIN_FILENO)) {
             write_stdout("\n");
             ai_print_label();
-            write_stdout("Your API key appears invalid. Run setup? [y/n] ");
+            write_stdout("你的 API 密钥似乎无效。运行配置向导？ [y/n] ");
             char ch = read_single_char();
             write_stdout(string(1, ch) + "\n");
             if (ch == 'y' || ch == 'Y') {
@@ -688,7 +687,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
 
             if (!isatty(STDIN_FILENO)) return 0;
 
-            write_stdout(AI_PROMPT + "Run?" CAT_RESET " [y/n/e] ");
+            write_stdout(AI_PROMPT + "运行？" CAT_RESET " [y/n/e] ");
             char ch = read_single_char();
             write_stdout(string(1, ch) + "\n");
 
@@ -717,7 +716,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
 
             if (!isatty(STDIN_FILENO)) return 0;
 
-            write_stdout(AI_PROMPT + "Save to?" CAT_RESET " [" + parsed.script_filename + "/n] ");
+            write_stdout(AI_PROMPT + "保存到？" CAT_RESET " [" + parsed.script_filename + "/n] ");
 
             string filename;
             if (!getline(cin, filename) || filename.empty() || filename[0] == 'n' || filename[0] == 'N') {
@@ -733,21 +732,21 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
             }
 
             if (filename.find("..") != string::npos) {
-                ai_print_error("invalid path: '..' not allowed in filename.");
+                ai_print_error("路径无效：文件名中不允许使用 '..'。");
                 return 1;
             }
             if (!filename.empty() && filename[0] == '/') {
-                ai_print_error("invalid path: absolute paths not allowed.");
+                ai_print_error("路径无效：不允许使用绝对路径。");
                 return 1;
             }
             if (!filename.empty() && filename[0] == '~') {
-                ai_print_error("invalid path: use a relative filename.");
+                ai_print_error("路径无效：请使用相对文件名。");
                 return 1;
             }
 
             ofstream out(filename);
             if (!out.is_open()) {
-                ai_print_error("couldn't write to " + filename);
+                ai_print_error("无法写入 " + filename);
                 return 1;
             }
             out << parsed.content << "\n";
@@ -755,14 +754,14 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
             out.close();
 
             if (!write_ok) {
-                ai_print_error("failed to write to " + filename);
+                ai_print_error("写入失败：" + filename);
                 return 1;
             }
 
             chmod(filename.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 
             ai_print_label();
-            write_stdout(AI_CMD + "saved to " + filename + CAT_RESET "\n");
+            write_stdout(AI_CMD + "已保存到 " + filename + CAT_RESET "\n");
             return 0;
         }
 
@@ -779,7 +778,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
             }
 
             ai_print_label();
-            write_stdout(to_string(parsed.steps.size()) + " steps:\n\n");
+            write_stdout(to_string(parsed.steps.size()) + " 个步骤：\n\n");
 
             bool run_all = false;
             int last_status = 0;
@@ -792,7 +791,7 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
                 if (!isatty(STDIN_FILENO)) continue;
 
                 if (!run_all) {
-                    write_stdout(AI_PROMPT + "     Run?" CAT_RESET " [y/n/a(ll)/s(kip)] ");
+                    write_stdout(AI_PROMPT + "     运行？" CAT_RESET " [y/n/a(全部)/s(跳过)] ");
                     char ch = read_single_char();
                     write_stdout(string(1, ch) + "\n");
 
@@ -815,7 +814,8 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
                 // Regression covered by test_hook_ordering.cpp::AiStyleCommand*.
                 last_status = execute_single_command(parsed.steps[i].command, state);
                 if (last_status != 0 && !run_all) {
-                    ai_print_error("step " + to_string(i + 1) + " failed (exit " + to_string(last_status) + "). Stop? [y/n] ");
+                    ai_print_error("第 " + to_string(i + 1) + " 步失败（退出码 "
+                                   + to_string(last_status) + "）。停止？ [y/n] ");
                     char ch = read_single_char();
                     write_stdout(string(1, ch) + "\n");
                     if (ch == 'y' || ch == 'Y') return last_status;
@@ -845,18 +845,18 @@ static int handle_ask(const string &query, ShellState &state, string *prefill_cm
 // The old code collapsed Absent / Unreadable / Empty into "not configured"
 // which masked perms problems after restoring a backup.
 static string format_key_status(const KeyLoadResult &r, const string &provider) {
-    if (provider == "ollama") return string(AI_CMD) + "n/a (Ollama is local)" + CAT_RESET;
+    if (provider == "ollama") return string(AI_CMD) + "不适用（Ollama 在本地运行）" + CAT_RESET;
     switch (r.status) {
         case KeyStatus::Ok:
-            return string(AI_CMD) + "configured" + CAT_RESET;
+            return string(AI_CMD) + "已配置" + CAT_RESET;
         case KeyStatus::Empty:
-            return string(AI_ERROR) + "file exists but is empty (re-run @ai config)"
+            return string(AI_ERROR) + "文件存在但内容为空（请重新运行 @ai config）"
                  + CAT_RESET;
         case KeyStatus::Unreadable:
-            return string(AI_ERROR) + "unreadable: " + r.diagnostic + CAT_RESET;
+            return string(AI_ERROR) + "无法读取：" + r.diagnostic + CAT_RESET;
         case KeyStatus::Absent:
         default:
-            return string(AI_ERROR) + "not configured" + CAT_RESET;
+            return string(AI_ERROR) + "未配置" + CAT_RESET;
     }
 }
 
@@ -870,23 +870,23 @@ static int handle_status(ShellState &state) {
     if (model_override) current_model = *model_override;
 
     ai_print_label();
-    write_stdout("AI Status\n\n");
+    write_stdout("AI 状态\n\n");
 
     auto key_r = ai_load_provider_key_ex(provider);
 
-    write_stdout("  Provider: " + AI_CMD + provider + CAT_RESET "\n");
-    write_stdout("  Model:    " + AI_CMD + current_model + CAT_RESET "\n");
-    write_stdout("  Key:      " + format_key_status(key_r, provider) + "\n");
-    write_stdout("  Status:   " + string(state.ai.ai_enabled ? AI_CMD + "enabled" : AI_ERROR + "disabled") + CAT_RESET "\n");
-    write_stdout(string("  stderr:   ")
+    write_stdout("  提供商：" + AI_CMD + provider + CAT_RESET "\n");
+    write_stdout("  模型：  " + AI_CMD + current_model + CAT_RESET "\n");
+    write_stdout("  密钥：  " + format_key_status(key_r, provider) + "\n");
+    write_stdout("  状态：  " + string(state.ai.ai_enabled ? AI_CMD + "已启用" : AI_ERROR + "已禁用") + CAT_RESET "\n");
+    write_stdout(string("  标准错误：")
                  + (ai_get_send_stderr()
-                       ? string(AI_CMD) + "sent with error queries"
-                       : string(CAT_DIM) + "NOT sent (privacy off)")
+                       ? string(AI_CMD) + "会随错误相关请求发送"
+                       : string(CAT_DIM) + "不会发送（隐私已关闭）")
                  + CAT_RESET "\n");
 
     int usage = ai_get_today_usage();
-    write_stdout("  Today:    " + AI_CMD + to_string(usage) + " requests" CAT_RESET "\n");
-    write_stdout("  Rate:     " CAT_DIM + to_string(RPM_LIMIT) + " requests/min (enforced)" CAT_RESET "\n\n");
+    write_stdout("  今日：  " + AI_CMD + to_string(usage) + " 次请求" CAT_RESET "\n");
+    write_stdout("  速率：  " CAT_DIM + to_string(RPM_LIMIT) + " 次请求/分钟（已强制限制）" CAT_RESET "\n\n");
 
     return 0;
 }
@@ -902,32 +902,31 @@ static int handle_privacy(const string &rest) {
     if (arg == "on" || arg == "enable") {
         ai_set_send_stderr(true);
         ai_print_label();
-        write_stdout(AI_CMD + "stderr WILL be sent with @ai explain/fix queries."
+        write_stdout(AI_CMD + "标准错误输出将随 @ai explain/fix 请求发送。"
                      + CAT_RESET + "\n");
         return 0;
     }
     if (arg == "off" || arg == "disable") {
         ai_set_send_stderr(false);
         ai_print_label();
-        write_stdout(AI_CMD + "stderr will NOT be sent with @ai queries. Only "
-                     + "the command text and exit code ride along." + CAT_RESET + "\n");
+        write_stdout(AI_CMD + "标准错误输出不会随 @ai 请求发送。仅发送命令文本和退出码。"
+                     + CAT_RESET + "\n");
         return 0;
     }
 
     ai_print_label();
-    write_stdout("Privacy policy\n\n");
-    write_stdout("  Every @ai call sends these fields to the provider:\n");
-    write_stdout("    - Your prompt (the text after @ai)\n");
-    write_stdout("    - OS + kernel + XTFSH version (uname -sr)\n");
-    write_stdout("    - Current working directory\n");
-    write_stdout("    - Up to 8 recent commands in this cwd (from history)\n");
-    write_stdout("    - Conversation history for this session (up to 10 turns)\n\n");
-    write_stdout("  When you ask @ai to explain/fix/etc. a failed command, the\n");
-    write_stdout("  captured stderr of that command ALSO gets sent — unless you\n");
-    write_stdout("  opt out with  @ai privacy off.\n\n");
-    write_stdout("  Current setting: " +
-                 string(ai_get_send_stderr() ? AI_CMD + "stderr is sent"
-                                              : AI_CMD + "stderr NOT sent") +
+    write_stdout("隐私策略\n\n");
+    write_stdout("  每次 @ai 调用都会向提供商发送以下信息：\n");
+    write_stdout("    - 你的请求（@ai 后的文本）\n");
+    write_stdout("    - 操作系统、内核和 XTFSH 版本（uname -sr）\n");
+    write_stdout("    - 当前工作目录\n");
+    write_stdout("    - 当前目录最近的至多 8 条命令（来自历史记录）\n");
+    write_stdout("    - 本次会话的对话历史（至多 10 轮）\n\n");
+    write_stdout("  当你要求 @ai 解释、修复等失败命令时，该命令捕获到的\n");
+    write_stdout("  标准错误输出也会被发送；可通过 @ai privacy off 关闭。\n\n");
+    write_stdout("  当前设置：" +
+                 string(ai_get_send_stderr() ? AI_CMD + "会发送标准错误输出"
+                                              : AI_CMD + "不会发送标准错误输出") +
                  CAT_RESET + "\n\n");
     return 0;
 }
@@ -953,18 +952,18 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
 
     if (rest.empty()) {
         ai_print_label();
-        write_stdout("Usage:\n\n");
-        write_stdout("  @ai <anything>           ask the AI in natural language\n");
-        write_stdout("  @ai config               configure provider, model, and API keys\n");
-        write_stdout("  @ai status               show current config and key health\n");
-        write_stdout("  @ai privacy [on|off]     show policy / toggle stderr send\n");
-        write_stdout("  @ai clear                clear conversation history\n");
-        write_stdout("  @ai on / off             enable or disable AI\n\n");
-        write_stdout(CAT_DIM "  Examples:" CAT_RESET "\n");
-        write_stdout(CAT_DIM "    @ai find files larger than 100MB" CAT_RESET "\n");
-        write_stdout(CAT_DIM "    @ai explain this error" CAT_RESET "\n");
-        write_stdout(CAT_DIM "    @ai what does tar -xzvf archive.tar.gz" CAT_RESET "\n");
-        write_stdout(CAT_DIM "    @ai write a script to backup my home" CAT_RESET "\n");
+        write_stdout("用法：\n\n");
+        write_stdout("  @ai <内容>               使用自然语言向 AI 提问\n");
+        write_stdout("  @ai config               配置提供商、模型和 API 密钥\n");
+        write_stdout("  @ai status               显示当前配置和密钥状态\n");
+        write_stdout("  @ai privacy [on|off]     显示隐私策略或切换标准错误发送\n");
+        write_stdout("  @ai clear                清除对话历史\n");
+        write_stdout("  @ai on / off             启用或禁用 AI\n\n");
+        write_stdout(CAT_DIM "  示例：" CAT_RESET "\n");
+        write_stdout(CAT_DIM "    @ai 查找大于 100MB 的文件" CAT_RESET "\n");
+        write_stdout(CAT_DIM "    @ai 解释这个错误" CAT_RESET "\n");
+        write_stdout(CAT_DIM "    @ai tar -xzvf archive.tar.gz 的作用是什么" CAT_RESET "\n");
+        write_stdout(CAT_DIM "    @ai 编写一个备份主目录的脚本" CAT_RESET "\n");
         return 0;
     }
 
@@ -996,25 +995,25 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         BracketedPasteGuard paste_guard;
 
         ai_print_label();
-        write_stdout("Configuration\n\n");
-        write_stdout("  Provider: " + AI_CMD + provider + CAT_RESET "  Model: " + AI_CMD + current_model + CAT_RESET "\n");
-        write_stdout("  Key:      " + string(key_ok ? AI_CMD + "configured" : AI_ERROR + "not configured") + CAT_RESET);
-        write_stdout("  Status:   " + string(state.ai.ai_enabled ? AI_CMD + "enabled" : AI_ERROR + "disabled") + CAT_RESET "\n");
-        write_stdout("  Today:    " + AI_CMD + to_string(usage) + " requests" CAT_RESET
-                     "  Rate: " CAT_DIM "10/min (enforced)" CAT_RESET "\n\n");
-        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " Switch provider (gemini/openai/deepseek/ollama)\n");
-        write_stdout(AI_STEP_NUM + "  2." CAT_RESET " Change model\n");
-        write_stdout(AI_STEP_NUM + "  3." CAT_RESET " Set API key\n");
-        write_stdout(AI_STEP_NUM + "  4." CAT_RESET " Set Ollama URL\n");
-        write_stdout(AI_STEP_NUM + "  5." CAT_RESET " Test connection\n");
-        write_stdout(AI_STEP_NUM + "  q." CAT_RESET " Back\n\n");
-        write_stdout(AI_PROMPT + "  Choice" CAT_RESET " [1-5/q]: ");
+        write_stdout("配置\n\n");
+        write_stdout("  提供商：" + AI_CMD + provider + CAT_RESET "  模型：" + AI_CMD + current_model + CAT_RESET "\n");
+        write_stdout("  密钥：  " + string(key_ok ? AI_CMD + "已配置" : AI_ERROR + "未配置") + CAT_RESET);
+        write_stdout("  状态：  " + string(state.ai.ai_enabled ? AI_CMD + "已启用" : AI_ERROR + "已禁用") + CAT_RESET "\n");
+        write_stdout("  今日：  " + AI_CMD + to_string(usage) + " 次请求" CAT_RESET
+                     "  速率：" CAT_DIM "10 次/分钟（已强制限制）" CAT_RESET "\n\n");
+        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " 切换提供商（gemini/openai/deepseek/ollama）\n");
+        write_stdout(AI_STEP_NUM + "  2." CAT_RESET " 修改模型\n");
+        write_stdout(AI_STEP_NUM + "  3." CAT_RESET " 设置 API 密钥\n");
+        write_stdout(AI_STEP_NUM + "  4." CAT_RESET " 设置 Ollama URL\n");
+        write_stdout(AI_STEP_NUM + "  5." CAT_RESET " 测试连接\n");
+        write_stdout(AI_STEP_NUM + "  q." CAT_RESET " 返回\n\n");
+        write_stdout(AI_PROMPT + "  请选择" CAT_RESET " [1-5/q]：");
 
         char ch = read_single_char();
         write_stdout(string(1, ch) + "\n\n");
 
         if (ch == '1') {
-            write_stdout("  Provider (gemini/openai/deepseek/ollama): ");
+            write_stdout("  提供商（gemini/openai/deepseek/ollama）：");
             string p;
             if (getline(cin, p)) {
                 p = sanitize_menu_input(p);
@@ -1022,58 +1021,58 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
                     ai_set_provider(p);
                     ai_set_model_override("");
                     ai_print_label();
-                    write_stdout(AI_CMD + "Provider set to " + p + "." CAT_RESET "\n");
+                    write_stdout(AI_CMD + "提供商已设为 " + p + "。" CAT_RESET "\n");
                 } else {
-                    ai_print_error("unknown provider.");
+                    ai_print_error("未知提供商。");
                 }
             }
         } else if (ch == '2') {
-            write_stdout("  Model name: ");
+            write_stdout("  模型名称：");
             string m;
             if (getline(cin, m)) {
                 m = sanitize_menu_input(m);
                 if (!is_valid_model_name(m)) {
-                    ai_print_error("invalid model name (letters, digits, dots, "
-                                   "dashes, underscores only; max 128 chars).");
+                    ai_print_error("模型名称无效（仅允许字母、数字、点、"
+                                   "连字符和下划线；最长 128 个字符）。");
                 } else if (!m.empty()) {
                     ai_set_model_override(m);
                     ai_print_label();
-                    write_stdout(AI_CMD + "Model set to " + m + "." CAT_RESET "\n");
+                    write_stdout(AI_CMD + "模型已设为 " + m + "。" CAT_RESET "\n");
                 }
             }
         } else if (ch == '3') {
             ai_run_setup_wizard();
         } else if (ch == '4') {
-            write_stdout("  Ollama URL [http://localhost:11434]: ");
+            write_stdout("  Ollama URL [http://localhost:11434]：");
             string url;
             if (getline(cin, url)) {
                 url = sanitize_menu_input(url);
                 if (url.empty()) url = "http://localhost:11434";
                 ai_set_ollama_url(url);
                 ai_print_label();
-                write_stdout(AI_CMD + "Ollama URL set to " + url + "." CAT_RESET "\n");
+                write_stdout(AI_CMD + "Ollama URL 已设为 " + url + "。" CAT_RESET "\n");
             }
         } else if (ch == '5') {
             // Test connection
             if (!global_ai_rate_limiter().allow()) {
-                ai_print_error("rate limit exceeded. Please wait a moment.");
+                ai_print_error("已达到请求频率上限，请稍候再试。");
                 return 1;
             }
             unique_ptr<LLMClient> test_client = create_current_client();
             if (!test_client) {
-                ai_print_error("couldn't create client. Check your config.");
+                ai_print_error("无法创建客户端，请检查配置。");
                 return 1;
             }
             ai_print_label();
-            write_stdout("testing connection...\n");
+            write_stdout("正在测试连接……\n");
             start_spinner();
             LLMResponse test_resp = test_client->generate("Reply with exactly: ok", "test");
             stop_spinner();
             if (test_resp.success) {
                 ai_print_label();
-                write_stdout(AI_CMD + "Connection successful!" CAT_RESET "\n");
+                write_stdout(AI_CMD + "连接成功！" CAT_RESET "\n");
             } else {
-                ai_print_error("connection failed: " + test_resp.error_message);
+                ai_print_error("连接失败：" + test_resp.error_message);
             }
         }
 
@@ -1085,14 +1084,14 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
     if (rest == "on") {
         state.ai.ai_enabled = true;
         ai_print_label();
-        write_stdout(AI_CMD + "AI enabled." CAT_RESET "\n");
+        write_stdout(AI_CMD + "AI 已启用。" CAT_RESET "\n");
         return 0;
     }
 
     if (rest == "off") {
         state.ai.ai_enabled = false;
         ai_print_label();
-        write_stdout(CAT_YELLOW + "AI disabled." CAT_RESET "\n");
+        write_stdout(CAT_YELLOW + "AI 已禁用。" CAT_RESET "\n");
         return 0;
     }
 
@@ -1103,7 +1102,7 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         conversation_loaded = true;        // suppress a later lazy reload
         ai_clear_conversation_file();      // survive Ctrl+D
         ai_print_label();
-        write_stdout(AI_CMD + "Conversation cleared." CAT_RESET "\n");
+        write_stdout(AI_CMD + "对话历史已清除。" CAT_RESET "\n");
         return 0;
     }
 
@@ -1118,25 +1117,25 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
 
     if (rest == "test") {
         if (!global_ai_rate_limiter().allow()) {
-            ai_print_error("rate limit exceeded. Please wait a moment.");
+            ai_print_error("已达到请求频率上限，请稍候再试。");
             return 1;
         }
         unique_ptr<LLMClient> client = create_current_client();
         if (!client) {
-            ai_print_error("not configured. Run @ai config.");
+            ai_print_error("尚未配置。请运行 @ai config。");
             return 1;
         }
         ai_print_label();
-        write_stdout("testing connection...\n");
+        write_stdout("正在测试连接……\n");
         start_spinner();
         LLMResponse resp = client->generate("Reply with exactly: ok", "test");
         stop_spinner();
         if (resp.success) {
             ai_print_label();
-            write_stdout(AI_CMD + "Connection successful!" CAT_RESET "\n");
+            write_stdout(AI_CMD + "连接成功！" CAT_RESET "\n");
             return 0;
         }
-        ai_print_error("test failed: " + resp.error_message);
+        ai_print_error("测试失败：" + resp.error_message);
         return 1;
     }
 
@@ -1145,13 +1144,13 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         while (!provider.empty() && provider.front() == ' ') provider.erase(provider.begin());
         while (!provider.empty() && provider.back() == ' ') provider.pop_back();
         if (!is_supported_ai_provider(provider)) {
-            ai_print_error("unknown provider. Use: gemini, openai, deepseek, or ollama");
+            ai_print_error("未知提供商。可使用：gemini、openai、deepseek 或 ollama");
             return 1;
         }
         ai_set_provider(provider);
         ai_set_model_override("");
         ai_print_label();
-        write_stdout(AI_CMD + "Provider set to " + provider + "." CAT_RESET "\n");
+        write_stdout(AI_CMD + "提供商已设为 " + provider + "。" CAT_RESET "\n");
         return 0;
     }
 
@@ -1161,13 +1160,13 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
         while (!model.empty() && model.back() == ' ') model.pop_back();
         if (model.empty()) return 0;
         if (!is_valid_model_name(model)) {
-            ai_print_error("invalid model name (letters, digits, dots, "
-                           "dashes, underscores, colons; no slashes; max 128 chars).");
+            ai_print_error("模型名称无效（仅允许字母、数字、点、连字符、下划线和冒号；"
+                           "不允许斜杠；最长 128 个字符）。");
             return 1;
         }
         ai_set_model_override(model);
         ai_print_label();
-        write_stdout(AI_CMD + "Model set to " + model + "." CAT_RESET "\n");
+        write_stdout(AI_CMD + "模型已设为 " + model + "。" CAT_RESET "\n");
         return 0;
     }
 
@@ -1175,4 +1174,3 @@ int handle_ai_command(const string &input, ShellState &state, string *prefill_cm
 
     return handle_ask(rest, state, prefill_cmd);
 }
-

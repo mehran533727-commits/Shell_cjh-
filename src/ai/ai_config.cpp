@@ -38,8 +38,8 @@ static bool ensure_config_dir() {
         if (S_ISLNK(st.st_mode)) {
             static bool warned = false;
             if (!warned) {
-                XTFSH::io::error("refusing to operate on " + dir
-                                + " — it is a symbolic link; key files would be exposed");
+                XTFSH::io::error("拒绝操作 " + dir
+                                + "：它是符号链接，密钥文件可能暴露");
                 warned = true;
             }
             return false;  // Refuse to write keys through a symlink.
@@ -53,7 +53,7 @@ static bool ensure_config_dir() {
                 // Only log once per process to avoid noise on every key access.
                 static bool logged = false;
                 if (!logged) {
-                    XTFSH::io::info("tightened permissions on " + dir + " to 0700");
+                    XTFSH::io::info("已将 " + dir + " 的权限收紧为 0700");
                     logged = true;
                 }
             }
@@ -68,7 +68,7 @@ static bool write_secure_file(const string &path, const string &content) {
     if (path.empty()) return false;
     int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     if (fd < 0) {
-        XTFSH::io::error("could not open " + path + ": " + strerror(errno));
+        XTFSH::io::error("无法打开 " + path + "：" + strerror(errno));
         return false;
     }
     // If the file already existed with looser perms, tighten now.
@@ -87,7 +87,7 @@ static bool write_secure_file(const string &path, const string &content) {
     // filesystem journal flush does not leave a truncated/zero-length key.
     // fsync failure is logged but not fatal — data is already written.
     if (::fsync(fd) != 0) {
-        XTFSH::io::warning("fsync on " + path + ": " + strerror(errno));
+        XTFSH::io::warning("对 " + path + " 执行 fsync 失败：" + strerror(errno));
     }
     bool ok = (::close(fd) == 0);
     return ok;
@@ -364,33 +364,33 @@ bool ai_run_setup_wizard() {
 
     write_stdout("\n");
     write_stdout(AI_LABEL + "XTFSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
-                 "AI features configuration\n\n");
+                 "AI 功能配置\n\n");
 
     if (provider == "gemini") {
-        write_stdout("  Current provider: " + AI_CMD + "Gemini" CAT_RESET "\n\n");
-        write_stdout("  How to get a free API key:\n");
-        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " Go to: " + AI_CMD + "https://aistudio.google.com/apikey" CAT_RESET "\n");
-        write_stdout(AI_STEP_NUM + "  2." CAT_RESET " Sign in with your Google account\n");
-        write_stdout(AI_STEP_NUM + "  3." CAT_RESET " Click \"Create API Key\"\n");
-        write_stdout(AI_STEP_NUM + "  4." CAT_RESET " Copy the key\n\n");
+        write_stdout("  当前提供商：" + AI_CMD + "Gemini" CAT_RESET "\n\n");
+        write_stdout("  获取免费 API 密钥的方法：\n");
+        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " 访问：" + AI_CMD + "https://aistudio.google.com/apikey" CAT_RESET "\n");
+        write_stdout(AI_STEP_NUM + "  2." CAT_RESET " 使用 Google 账号登录\n");
+        write_stdout(AI_STEP_NUM + "  3." CAT_RESET " 点击“创建 API 密钥”\n");
+        write_stdout(AI_STEP_NUM + "  4." CAT_RESET " 复制密钥\n\n");
     } else if (provider == "openai") {
-        write_stdout("  Current provider: " + AI_CMD + "OpenAI" CAT_RESET "\n\n");
-        write_stdout("  How to get an API key:\n");
-        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " Go to: " + AI_CMD + "https://platform.openai.com/api-keys" CAT_RESET "\n");
-        write_stdout(AI_STEP_NUM + "  2." CAT_RESET " Sign in to your OpenAI account\n");
-        write_stdout(AI_STEP_NUM + "  3." CAT_RESET " Create a new API key\n");
-        write_stdout(AI_STEP_NUM + "  4." CAT_RESET " Copy the key\n\n");
+        write_stdout("  当前提供商：" + AI_CMD + "OpenAI" CAT_RESET "\n\n");
+        write_stdout("  获取 API 密钥的方法：\n");
+        write_stdout(AI_STEP_NUM + "  1." CAT_RESET " 访问：" + AI_CMD + "https://platform.openai.com/api-keys" CAT_RESET "\n");
+        write_stdout(AI_STEP_NUM + "  2." CAT_RESET " 登录 OpenAI 账号\n");
+        write_stdout(AI_STEP_NUM + "  3." CAT_RESET " 创建新的 API 密钥\n");
+        write_stdout(AI_STEP_NUM + "  4." CAT_RESET " 复制密钥\n\n");
     } else if (provider == "ollama") {
-        write_stdout("  Current provider: " + AI_CMD + "Ollama (local)" CAT_RESET "\n\n");
-        write_stdout("  Ollama runs locally — no API key needed.\n");
-        write_stdout("  Make sure Ollama is running: " + AI_CMD + "ollama serve" CAT_RESET "\n\n");
-        write_stdout(AI_CMD + "  Configuration saved." CAT_RESET "\n\n");
+        write_stdout("  当前提供商：" + AI_CMD + "Ollama（本地）" CAT_RESET "\n\n");
+        write_stdout("  Ollama 在本地运行，无需 API 密钥。\n");
+        write_stdout("  请确保 Ollama 正在运行：" + AI_CMD + "ollama serve" CAT_RESET "\n\n");
+        write_stdout(AI_CMD + "  配置已保存。" CAT_RESET "\n\n");
         return true;
     } else {
-        write_stdout("  Current provider: " + AI_CMD + provider + CAT_RESET "\n\n");
+        write_stdout("  当前提供商：" + AI_CMD + provider + CAT_RESET "\n\n");
     }
 
-    write_stdout("  Paste your API key here: ");
+    write_stdout("  请在此粘贴 API 密钥：");
 
     // Disable echo so bracketed paste sequences don't show
     struct termios old_term, new_term;
@@ -412,7 +412,7 @@ bool ai_run_setup_wizard() {
     }
 
     if (!got_input || key.empty()) {
-        write_stdout("\n" + AI_ERROR + "  Setup cancelled." CAT_RESET "\n\n");
+        write_stdout("\n" + AI_ERROR + "  已取消配置。" CAT_RESET "\n\n");
         return false;
     }
 
@@ -431,7 +431,7 @@ bool ai_run_setup_wizard() {
         key.erase(key.begin());
 
     if (key.empty()) {
-        write_stdout("\n" + AI_ERROR + "  No key provided." CAT_RESET "\n\n");
+        write_stdout("\n" + AI_ERROR + "  未提供密钥。" CAT_RESET "\n\n");
         return false;
     }
 
@@ -446,12 +446,12 @@ bool ai_run_setup_wizard() {
 
     // Save to provider-specific key file
     if (!ai_save_provider_key(provider, key)) {
-        write_stdout(AI_ERROR + "  Failed to save API key." CAT_RESET "\n\n");
+        write_stdout(AI_ERROR + "  保存 API 密钥失败。" CAT_RESET "\n\n");
         return false;
     }
 
-    write_stdout("\n" + AI_CMD + "  API key saved." CAT_RESET
-                 " Try: " + AI_LABEL + "@ai \"list all files modified today\"" CAT_RESET "\n\n");
+    write_stdout("\n" + AI_CMD + "  API 密钥已保存。" CAT_RESET
+                 " 可尝试：" + AI_LABEL + "@ai \"列出今天修改的所有文件\"" CAT_RESET "\n\n");
     return true;
 }
 
@@ -667,4 +667,3 @@ void ai_increment_usage() {
     flock(fd, LOCK_UN);
     close(fd);
 }
-

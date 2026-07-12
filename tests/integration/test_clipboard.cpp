@@ -23,7 +23,7 @@ TEST(Clipboard, PasteDoesNotCrash) {
     // Exit-status-like signal: the shell must reach the `exit` builtin
     // and print its farewell, which means `paste` returned cleanly.
     auto r = run_shell("paste\nexit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 // Piped-to-builtin: `echo foo | copy` must reach the copy builtin and

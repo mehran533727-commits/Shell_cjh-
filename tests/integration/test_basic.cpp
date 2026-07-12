@@ -14,7 +14,7 @@ TEST(Basic, PwdCommand) {
 
 TEST(Basic, ExitMessage) {
     auto r = run_shell("exit\n");
-    EXPECT_NE(r.output.find("GoodBye! See you soon!"), std::string::npos);
+    EXPECT_NE(r.output.find("再见，期待下次使用！"), std::string::npos);
 }
 
 TEST(Basic, CtrlDDoesNotCrash) {

@@ -321,7 +321,7 @@ int run_interactive(ShellState &state) {
                 break;
             }
             write_stdout("\n");
-            write_stderr("XTFSH: press Ctrl-D again or type 'exit' to quit\n");
+            write_stderr("XTFSH: 请再次按 Ctrl-D 或输入 'exit' 退出\n");
             continue;
         }
         state.core.ctrl_d_count = 0;

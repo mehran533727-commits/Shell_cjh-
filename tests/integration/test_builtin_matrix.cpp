@@ -105,7 +105,7 @@ TEST(BuiltinMatrix, ThemeFromScriptFile) {
 
 TEST(BuiltinMatrix, ExplainInPipeline) {
     auto r = run_shell("explain tar -x | head -5\nexit\n");
-    EXPECT_NE(r.output.find("Extract"), std::string::npos);
+    EXPECT_NE(r.output.find("解压归档文件"), std::string::npos);
     EXPECT_EQ(r.output.find("explain: No such file or directory"),
               std::string::npos);
 }
@@ -147,19 +147,19 @@ TEST(BuiltinMatrix, BuiltinsInScriptFile) {
 
 TEST(BuiltinMatrix, WhichPwdIsBuiltin) {
     auto r = run_shell("which pwd\nexit\n");
-    EXPECT_NE(r.output.find("shell builtin"), std::string::npos);
+    EXPECT_NE(r.output.find("Shell 内建命令"), std::string::npos);
 }
 
 TEST(BuiltinMatrix, WhichInPipeline) {
     auto r = run_shell("which pwd | head -1\nexit\n");
-    EXPECT_NE(r.output.find("shell builtin"), std::string::npos);
+    EXPECT_NE(r.output.find("Shell 内建命令"), std::string::npos);
 }
 
 TEST(BuiltinMatrix, TypeAliasForWhich) {
     // type is a registered alias for which; both should produce the
     // same output for builtins.
     auto r = run_shell("type pwd\nexit\n");
-    EXPECT_NE(r.output.find("shell builtin"), std::string::npos);
+    EXPECT_NE(r.output.find("Shell 内建命令"), std::string::npos);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -204,12 +204,12 @@ TEST(BuiltinMatrix, UnaliasRemovesAlias) {
     // for the pre-unalias listing, no hit is strictly guaranteed after
     // unalias. We do a looser check: the pre-unalias "ualprobe" line
     // appears AND the unalias succeeded.
-    EXPECT_EQ(r.output.find("not found"), std::string::npos);
+    EXPECT_EQ(r.output.find("未找到"), std::string::npos);
 }
 
 TEST(BuiltinMatrix, UnaliasMissingNameErrors) {
     auto r = run_shell("unalias nonexistent_ua_xyz\nexit\n");
-    EXPECT_NE(r.output.find("not found"), std::string::npos);
+    EXPECT_NE(r.output.find("未找到"), std::string::npos);
 }
 
 // ─────────────────────────────────────────────────────────────────────────

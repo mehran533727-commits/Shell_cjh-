@@ -16,7 +16,7 @@ int builtin_export(const vector<string> &argv, ShellState &) {
         if (eq_pos != string::npos) {
             setenv(arg.substr(0, eq_pos).c_str(), arg.substr(eq_pos + 1).c_str(), 1);
         } else {
-            write_stderr("export: invalid format. Usage: export VAR=value\n");
+            write_stderr("export: 格式无效。用法：export VAR=value\n");
             return 1;
         }
     }
@@ -27,7 +27,7 @@ int builtin_unset(const vector<string> &argv, ShellState &) {
     if (argv.size() >= 2) {
         unsetenv(argv[1].c_str());
     } else {
-        write_stderr("unset: missing variable name\n");
+        write_stderr("unset: 缺少变量名\n");
         return 1;
     }
     return 0;
@@ -54,7 +54,7 @@ int builtin_alias(const vector<string> &argv, ShellState &state) {
             if (state.core.aliases.count(arg)) {
                 write_stdout("alias " + arg + "='" + state.core.aliases[arg] + "'\n");
             } else {
-                write_stderr("alias: " + arg + ": not found\n");
+                write_stderr("alias: " + arg + "：未找到\n");
                 return 1;
             }
         }
@@ -67,11 +67,11 @@ int builtin_unalias(const vector<string> &argv, ShellState &state) {
         if (state.core.aliases.count(argv[1])) {
             state.core.aliases.erase(argv[1]);
         } else {
-            write_stderr("unalias: " + argv[1] + ": not found\n");
+            write_stderr("unalias: " + argv[1] + "：未找到\n");
             return 1;
         }
     } else {
-        write_stderr("unalias: missing alias name\n");
+        write_stderr("unalias: 缺少别名名称\n");
         return 1;
     }
     return 0;

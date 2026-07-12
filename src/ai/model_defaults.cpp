@@ -74,12 +74,12 @@ const std::unordered_map<std::string, ProviderDefaults>& registry() {
         if (!env_text.empty()) {
             try {
                 parse_into(env_text, r);
-                io::debug("ai_models: loaded from XTFSH_AI_MODELS_JSON");
+                io::debug("AI 模型：已从 XTFSH_AI_MODELS_JSON 加载");
                 return;
             } catch (const std::exception& e) {
-                io::warning(std::string("ai_models: XTFSH_AI_MODELS_JSON "
-                                          "parse failed — ") + e.what() +
-                             ". Falling back to embedded defaults.");
+                io::warning(std::string("AI 模型：XTFSH_AI_MODELS_JSON "
+                                          "解析失败：") + e.what() +
+                             "。将回退到内嵌默认配置。");
                 r.clear();
             }
         }
@@ -91,8 +91,8 @@ const std::unordered_map<std::string, ProviderDefaults>& registry() {
             parse_into(detail::kEmbeddedModelsJson, r);
         } catch (const std::exception& e) {
             // Hard error — shipped binary's own data is malformed.
-            io::error(std::string("ai_models: embedded JSON failed to "
-                                    "parse — ") + e.what());
+            io::error(std::string("AI 模型：内嵌 JSON 解析失败：")
+                      + e.what());
         }
     });
     return r;

@@ -137,8 +137,8 @@ void check_and_fire_traps(ShellState &state) {
     // itself only sets the pending flag — debug() is not async-signal-safe).
     if (pending_traps[SIGINT]) {
         pid_t fg = fg_child_pid.load(std::memory_order_acquire);
-        XTFSH::io::debug("SIGINT received (pid=" + std::to_string(::getpid()) +
-                        ", fg_child=" + std::to_string(fg) + ")");
+        XTFSH::io::debug("已收到 SIGINT（进程号=" + std::to_string(::getpid()) +
+                        "，前台子进程=" + std::to_string(fg) + "）");
     }
     for (int signum = 1; signum < XTFSH_MAX_SIGNAL; ++signum) {
         if (!pending_traps[signum]) continue;
@@ -147,7 +147,7 @@ void check_and_fire_traps(ShellState &state) {
         if (it == state.exec.traps.end()) continue;
         const std::string &cmd = it->second;
         if (cmd.empty()) continue;     // "ignore" form
-        XTFSH::io::debug("firing trap for signal " + std::to_string(signum));
+        XTFSH::io::debug("正在触发信号 " + std::to_string(signum) + " 的 trap");
         std::vector<CommandSegment> segs = parse_command_line(cmd);
         execute_command_line(segs, state);
     }

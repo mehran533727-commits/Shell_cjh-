@@ -58,5 +58,5 @@ TEST(Script, SourceCommand) {
 
 TEST(Script, SourceMissingArg) {
     auto r = run_shell("source\nexit\n");
-    EXPECT_NE(r.output.find("source: missing file argument"), std::string::npos);
+    EXPECT_NE(r.output.find("source: 缺少文件参数"), std::string::npos);
 }

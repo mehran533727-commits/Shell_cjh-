@@ -8,7 +8,7 @@
 TEST(Suggest, CommandNotFoundShowsSuggestion) {
     auto r = run_shell("ech hello\nexit\n");
     // "ech" is close to "echo", should suggest it
-    EXPECT_NE(r.output.find("did you mean"), std::string::npos)
+    EXPECT_NE(r.output.find("你是否想输入"), std::string::npos)
         << "Should show 'did you mean' suggestion, got: " << r.output;
 }
 
@@ -22,7 +22,7 @@ TEST(Suggest, TranspositionShowsSuggestion) {
     // gti is close to git (transposition). On CI without git installed,
     // it may suggest gzip or another close match. Just verify a suggestion is shown.
     auto r = run_shell("gti\nexit\n");
-    EXPECT_NE(r.output.find("did you mean"), std::string::npos)
+    EXPECT_NE(r.output.find("你是否想输入"), std::string::npos)
         << "gti should trigger a suggestion, got: " << r.output;
 }
 
@@ -35,7 +35,7 @@ TEST(Suggest, MissingCharSuggestsEcho) {
 TEST(Suggest, VeryDifferentCommandNoSuggestion) {
     auto r = run_shell("xyzzy_not_a_command_at_all_99\nexit\n");
     // Too different from any real command, should not suggest
-    EXPECT_EQ(r.output.find("did you mean"), std::string::npos)
+    EXPECT_EQ(r.output.find("你是否想输入"), std::string::npos)
         << "Should NOT suggest for very different command, got: " << r.output;
 }
 
@@ -153,13 +153,13 @@ TEST(CtrlD, SingleCtrlDShowsWarning) {
 
 TEST(ZCommand, ZNoArgShowsError) {
     auto r = run_shell("z\nexit\n");
-    EXPECT_NE(r.output.find("missing"), std::string::npos)
+    EXPECT_NE(r.output.find("缺少目录"), std::string::npos)
         << "z without args should show error, got: " << r.output;
 }
 
 TEST(ZCommand, ZNoMatchShowsError) {
     auto r = run_shell("z xyzzy_nonexistent_pattern_12345\nexit\n");
-    EXPECT_NE(r.output.find("no match"), std::string::npos)
+    EXPECT_NE(r.output.find("未找到与"), std::string::npos)
         << "z with no matching dir should show error, got: " << r.output;
 }
 
@@ -184,7 +184,7 @@ TEST(ZCommand, ZAfterCdFindsDirectory) {
 
 TEST(Prompt, ShellStartsAndExitsCleanly) {
     auto r = run_shell("exit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos)
+    EXPECT_NE(r.output.find("再见"), std::string::npos)
         << "Shell should show exit message, got: " << r.output;
 }
 
@@ -210,7 +210,7 @@ TEST(Completion, TabCompletesPathCommands) {
 
 TEST(Completion, WhichFindsBuiltins) {
     auto r = run_shell("which cd\nexit\n");
-    EXPECT_NE(r.output.find("builtin"), std::string::npos)
+    EXPECT_NE(r.output.find("内建命令"), std::string::npos)
         << "which cd should report builtin, got: " << r.output;
 }
 
@@ -233,7 +233,7 @@ TEST(Theme, BannerDoesNotCrash) {
 TEST(Theme, SuggestionDoesNotCrash) {
     auto r = run_shell("ech\nexit\n");
     // Should show "did you mean" with themed colors and not crash
-    EXPECT_NE(r.output.find("did you mean"), std::string::npos);
+    EXPECT_NE(r.output.find("你是否想输入"), std::string::npos);
 }
 
 TEST(Theme, ErrorCommandShowsNotFound) {

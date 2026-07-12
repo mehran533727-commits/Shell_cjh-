@@ -99,7 +99,7 @@ TEST(LiveProviders, CompletionRegistryHasMultipleProviders) {
     // We don't invoke interactive replxx here; instead we just verify
     // the shell boots and lists builtins without stray error output.
     auto r = run_shell("which which\nexit\n");
-    EXPECT_NE(r.output.find("shell builtin"), std::string::npos);
+    EXPECT_NE(r.output.find("Shell 内建命令"), std::string::npos);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ TEST(LiveProviders, AiErrorHookSilentWithoutClient) {
     HomeGuard home;
     auto r = run_shell("false\necho after_false\nexit\n");
     // Shell must reach `exit` — hook didn't crash on nullptr client.
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
     EXPECT_NE(r.output.find("after_false"), std::string::npos);
 }
 

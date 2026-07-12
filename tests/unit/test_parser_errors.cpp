@@ -115,7 +115,7 @@ TEST(ParserErrors, UnmatchedBraceInVariableExpansion) {
     std::string out = capture([] {
         (void)expand_variables("before ${FOO_no_close after", 0);
     });
-    EXPECT_NE(out.find("unmatched '${'"), std::string::npos) << out;
+    EXPECT_NE(out.find("变量展开中未匹配的 '${'"), std::string::npos) << out;
     // The `$` of `${` sits at offset 7 → column 8.
     EXPECT_NE(out.find("1:8:"), std::string::npos) << out;
 }
@@ -127,7 +127,7 @@ TEST(ParserErrors, UnmatchedParenInCommandSubstitution) {
     std::string out = capture([&] {
         (void)expand_command_substitution("echo $(ls", state);
     });
-    EXPECT_NE(out.find("unmatched '$('"), std::string::npos) << out;
+    EXPECT_NE(out.find("命令替换中未匹配的 '$('"), std::string::npos) << out;
     // `$` of `$(` is at offset 5 → column 6.
     EXPECT_NE(out.find("1:6:"), std::string::npos) << out;
 }
@@ -138,7 +138,7 @@ TEST(ParserErrors, MissingFilenameForRedirectStdout) {
     std::string out = capture([] {
         (void)parse_redirections("echo hi >");
     });
-    EXPECT_NE(out.find("missing filename for '>'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'>' 后缺少文件名"), std::string::npos) << out;
     // `>` sits at offset 8 → column 9.
     EXPECT_NE(out.find("1:9:"), std::string::npos) << out;
 }
@@ -147,7 +147,7 @@ TEST(ParserErrors, MissingFilenameForAppend) {
     std::string out = capture([] {
         (void)parse_redirections("echo hi >>");
     });
-    EXPECT_NE(out.find("missing filename for '>>'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'>>' 后缺少文件名"), std::string::npos) << out;
     EXPECT_NE(out.find("1:9:"), std::string::npos) << out;
 }
 
@@ -155,7 +155,7 @@ TEST(ParserErrors, MissingFilenameForStderrRedirect) {
     std::string out = capture([] {
         (void)parse_redirections("cmd 2>");
     });
-    EXPECT_NE(out.find("missing filename for '2>'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'2>' 后缺少文件名"), std::string::npos) << out;
     // `2>` starts at offset 4 → column 5.
     EXPECT_NE(out.find("1:5:"), std::string::npos) << out;
 }
@@ -164,7 +164,7 @@ TEST(ParserErrors, MissingFilenameForInputRedirect) {
     std::string out = capture([] {
         (void)parse_redirections("cat <");
     });
-    EXPECT_NE(out.find("missing filename for '<'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'<' 后缺少文件名"), std::string::npos) << out;
     // `<` sits at offset 4 → column 5.
     EXPECT_NE(out.find("1:5:"), std::string::npos) << out;
 }
@@ -175,7 +175,7 @@ TEST(ParserErrors, MissingDelimiterForHeredoc) {
     std::string out = capture([] {
         (void)parse_redirections("cat << ");
     });
-    EXPECT_NE(out.find("missing delimiter for '<<'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'<<' heredoc 缺少结束标记"), std::string::npos) << out;
     // `<<` starts at offset 4 → column 5.
     EXPECT_NE(out.find("1:5:"), std::string::npos) << out;
 }
@@ -186,7 +186,7 @@ TEST(ParserErrors, UnmatchedDoubleQuote) {
     std::string out = capture([] {
         (void)parse_command_line("echo \"unterminated");
     });
-    EXPECT_NE(out.find("unmatched '\"'"), std::string::npos) << out;
+    EXPECT_NE(out.find("未匹配的 '\"'"), std::string::npos) << out;
     // `"` is at offset 5 → column 6.
     EXPECT_NE(out.find("1:6:"), std::string::npos) << out;
 }
@@ -195,7 +195,7 @@ TEST(ParserErrors, UnmatchedSingleQuote) {
     std::string out = capture([] {
         (void)parse_command_line("echo 'unterm");
     });
-    EXPECT_NE(out.find("unmatched"), std::string::npos) << out;
+    EXPECT_NE(out.find("未匹配的"), std::string::npos) << out;
     EXPECT_NE(out.find("1:6:"), std::string::npos) << out;
 }
 
@@ -205,14 +205,14 @@ TEST(ParserErrors, EmptyCommandAfterAnd) {
     std::string out = capture([] {
         (void)parse_command_line("ls &&");
     });
-    EXPECT_NE(out.find("empty command after '&&'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'&&' 后缺少命令"), std::string::npos) << out;
 }
 
 TEST(ParserErrors, EmptyCommandAfterOr) {
     std::string out = capture([] {
         (void)parse_command_line("ls ||");
     });
-    EXPECT_NE(out.find("empty command after '||'"), std::string::npos) << out;
+    EXPECT_NE(out.find("'||' 后缺少命令"), std::string::npos) << out;
 }
 
 TEST(ParserErrors, TrailingSemicolonIsNotAnError) {
@@ -222,7 +222,7 @@ TEST(ParserErrors, TrailingSemicolonIsNotAnError) {
     std::string out = capture([] {
         (void)parse_command_line("ls ;");
     });
-    EXPECT_EQ(out.find("empty command"), std::string::npos)
+    EXPECT_EQ(out.find("缺少命令"), std::string::npos)
         << "trailing ';' should be silent, got: " << out;
 }
 

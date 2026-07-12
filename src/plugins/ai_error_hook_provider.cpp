@@ -115,9 +115,9 @@ void AiErrorHookProvider::on_after_command(
             // User hit Ctrl+C; they already know why. No noise.
             return;
         }
-        XTFSH::io::warning("ai error-recovery unavailable: "
+        XTFSH::io::warning("AI 错误恢复不可用："
                           + (resp.error_message.empty()
-                                ? "unknown error"
+                                ? "未知错误"
                                 : resp.error_message));
         return;
     }
@@ -134,7 +134,7 @@ void AiErrorHookProvider::on_after_command(
     // Display fix command in green if present
     if (!recovery.fix.empty()) {
         write_stdout(CAT_GREEN + "  $ " + recovery.fix + CAT_RESET "\n\n");
-        write_stdout(CAT_DIM "  [Enter] run fix  [Esc] dismiss" CAT_RESET "\n");
+        write_stdout(CAT_DIM "  [Enter] 运行修复命令  [Esc] 忽略" CAT_RESET "\n");
 
         if (!isatty(STDIN_FILENO)) {
             return;
@@ -247,4 +247,3 @@ ErrorRecoveryResponse AiErrorHookProvider::parse_response(
 const char *AiErrorHookProvider::system_prompt() {
     return ERROR_SYSTEM_PROMPT;
 }
-

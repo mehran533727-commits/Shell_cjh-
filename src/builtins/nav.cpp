@@ -15,7 +15,7 @@ using namespace std;
 static string cwd_or_fail(const char *builtin_name) {
     string cwd = XTFSH::util::current_working_directory();
     if (cwd.empty()) {
-        write_stderr(string(builtin_name) + ": cannot get current directory: "
+        write_stderr(string(builtin_name) + ": 无法获取当前工作目录："
                      + strerror(errno) + "\n");
     }
     return cwd;
@@ -27,7 +27,7 @@ int builtin_cd(const vector<string> &argv, ShellState &state) {
     if (argv.size() > 1) {
         if (argv[1] == "-") {
             if (state.core.previous_directory.empty()) {
-                write_stderr("cd: OLDPWD not set\n");
+                write_stderr("cd: OLDPWD 未设置\n");
                 return 1;
             }
             target = state.core.previous_directory.c_str();
@@ -37,7 +37,7 @@ int builtin_cd(const vector<string> &argv, ShellState &state) {
     } else {
         target = getenv("HOME");
         if (!target) {
-            write_stderr("cd: HOME not set\n");
+            write_stderr("cd: HOME 未设置\n");
             return 1;
         }
     }
@@ -74,7 +74,7 @@ int builtin_pwd(const vector<string> &, ShellState &) {
 
 int builtin_pushd(const vector<string> &argv, ShellState &state) {
     if (argv.size() < 2) {
-        write_stderr("pushd: no directory specified\n");
+        write_stderr("pushd: 未指定目录\n");
         return 1;
     }
     string cwd = cwd_or_fail("pushd");
@@ -96,7 +96,7 @@ int builtin_pushd(const vector<string> &argv, ShellState &state) {
 
 int builtin_popd(const vector<string> &, ShellState &state) {
     if (state.core.dir_stack.empty()) {
-        write_stderr("popd: directory stack empty\n");
+        write_stderr("popd: 目录栈为空\n");
         return 1;
     }
     string target = state.core.dir_stack.back();
@@ -128,7 +128,7 @@ int builtin_dirs(const vector<string> &, ShellState &state) {
 
 int builtin_z(const vector<string> &argv, ShellState &state) {
     if (argv.size() < 2) {
-        write_stderr("z: missing directory pattern\n");
+        write_stderr("z: 缺少目录模式\n");
         return 1;
     }
     string query;
@@ -138,7 +138,7 @@ int builtin_z(const vector<string> &argv, ShellState &state) {
     }
     string target = z_find_directory(query);
     if (target.empty()) {
-        write_stderr("z: no match for '" + query + "'\n");
+        write_stderr("z: 未找到与 '" + query + "' 匹配的目录\n");
         return 1;
     }
 

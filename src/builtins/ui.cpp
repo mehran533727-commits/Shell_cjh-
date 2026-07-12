@@ -50,8 +50,8 @@ int builtin_copy(const vector<string> &argv, ShellState &) {
         }
     }
     if (!copy_to_clipboard(text)) {
-        write_stderr("copy: failed to write to clipboard "
-                     "(on WSL/headless, install wl-clipboard or xclip)\n");
+        write_stderr("copy: 写入剪贴板失败"
+                     "（在 WSL 或无图形环境中，请安装 wl-clipboard 或 xclip）\n");
         return 1;
     }
     return 0;
@@ -60,7 +60,7 @@ int builtin_copy(const vector<string> &argv, ShellState &) {
 int builtin_paste(const vector<string> &, ShellState &) {
     string text = paste_from_clipboard();
     if (text.empty()) {
-        write_stderr("paste: clipboard is empty or unavailable\n");
+        write_stderr("paste: 剪贴板为空或不可用\n");
         return 1;
     }
     if (!text.empty() && text.back() != '\n') text += '\n';
@@ -87,7 +87,7 @@ int builtin_linkify(const vector<string> &argv, ShellState &) {
 // header line (command + duration + ✓/✗) and a footer separator.
 int builtin_block(const vector<string> &argv, ShellState &state) {
     if (argv.size() < 2) {
-        write_stderr("block: usage: block <command> [args...]\n");
+        write_stderr("block: 用法：block <command> [args...]\n");
         return 1;
     }
 
@@ -122,7 +122,7 @@ int builtin_table(const vector<string> &argv, ShellState &) {
 
     string text = read_stdin_to_string();
     if (text.empty()) {
-        write_stderr("table: no input on stdin\n");
+        write_stderr("table: 标准输入中没有内容\n");
         return 1;
     }
     auto data = XTFSH::ui::parse_table_output(text);

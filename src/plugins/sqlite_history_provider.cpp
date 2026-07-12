@@ -88,7 +88,7 @@ SqliteHistoryProvider::SqliteHistoryProvider(const std::string &db_path)
 
     int rc = sqlite3_open(db_path_.c_str(), &db_);
     if (rc != SQLITE_OK) {
-        write_stderr(std::string("XTFSH: failed to open history database: ") +
+        write_stderr(std::string("XTFSH: 无法打开历史记录数据库：") +
                      sqlite3_errmsg(db_) + "\n");
         if (db_) {
             sqlite3_close_v2(db_);
@@ -120,8 +120,8 @@ SqliteHistoryProvider::SqliteHistoryProvider(const std::string &db_path)
             }
             sqlite3_finalize(cnt_stmt);
         }
-        XTFSH::io::debug("history: opened " + db_path_ + ", " +
-                        std::to_string(row_count) + " rows");
+        XTFSH::io::debug("历史记录：已打开 " + db_path_ + "，共 " +
+                        std::to_string(row_count) + " 条记录");
     }
 }
 
@@ -195,9 +195,9 @@ void SqliteHistoryProvider::record(const HistoryEntry &entry) {
     if (rc == SQLITE_DONE) {
         last_recorded_command_ = entry.command;
         last_recorded_session_ = entry.session_id;
-        XTFSH::io::debug("history: recorded '" + entry.command +
-                        "' (exit=" + std::to_string(entry.exit_code) +
-                        ") into " + db_path_);
+        XTFSH::io::debug("历史记录：已写入 '" + entry.command +
+                        "'（退出码=" + std::to_string(entry.exit_code) +
+                        "）到 " + db_path_);
     }
 }
 
@@ -369,8 +369,8 @@ void SqliteHistoryProvider::init_schema() {
     char *err = nullptr;
     int rc = sqlite3_exec(db_, schema_sql, nullptr, nullptr, &err);
     if (rc != SQLITE_OK) {
-        write_stderr(std::string("XTFSH: failed to create history schema: ") +
-                     (err ? err : "unknown error") + "\n");
+        write_stderr(std::string("XTFSH: 无法创建历史记录数据库结构：") +
+                     (err ? err : "未知错误") + "\n");
         sqlite3_free(err);
     }
 }

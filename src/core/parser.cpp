@@ -10,6 +10,7 @@
 #include <glob.h>
 #include <regex>
 #include <sstream>
+#include <unistd.h>
 
 using namespace std;
 
@@ -17,7 +18,7 @@ using namespace std;
 // Keeping the message consistent makes the test assertions easy.
 static void expansion_cap_error(const char *what) {
     std::string msg = what;
-    msg += " exceeds maximum size; aborting expansion";
+    msg += " 超过最大大小；已中止展开";
     XTFSH::io::error(msg);
 }
 
@@ -59,7 +60,10 @@ void emit_parse_error(const ParseError &err) {
         body += ' ';
     }
     body += err.message;
-    XTFSH::io::error(body);
+    // Keep this machine-readable prefix stable for editor integrations and
+    // scripts that parse positional syntax diagnostics.
+    std::string line = "XTFSH: error: " + body + "\n";
+    if (::write(STDERR_FILENO, line.c_str(), line.size())) {}
 }
 
 } // namespace XTFSH::parse
@@ -137,7 +141,7 @@ string expand_variables(const string &input, int last_exit_status) {
     // limit, emit the diagnostic and bail out with an empty string.
     auto cap_exceeded = [&](size_t add) {
         if (result.size() + add > XTFSH::util::XTFSH_MAX_EXPANSION_BYTES) {
-            expansion_cap_error("variable expansion");
+            expansion_cap_error("变量展开");
             result.clear();
             return true;
         }
@@ -210,7 +214,7 @@ string expand_variables(const string &input, int last_exit_status) {
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(input, brace_off, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"unmatched '${' in variable expansion", ln, col});
+                        {"变量展开中未匹配的 '${'", ln, col});
                 }
                 const char *val = getenv(var_name.c_str());
                 if (val) {
@@ -281,7 +285,7 @@ string expand_command_substitution(const string &input, ShellState &state) {
                 }
                 if (!hooked.skipped) {
                     if (result.size() + output.size() > XTFSH::util::XTFSH_MAX_EXPANSION_BYTES) {
-                        expansion_cap_error("command substitution");
+                        expansion_cap_error("命令替换");
                         return std::string();
                     }
                     result += output;
@@ -300,7 +304,7 @@ string expand_command_substitution(const string &input, ShellState &state) {
                 size_t ln = 1, col = 1;
                 XTFSH::parse::offset_to_line_col(input, i, ln, col);
                 XTFSH::parse::emit_parse_error(
-                    {"unmatched '$(' in command substitution", ln, col});
+                    {"命令替换中未匹配的 '$('", ln, col});
                 result += input[i];
                 i++;
             }
@@ -324,7 +328,7 @@ vector<string> expand_globs(const vector<string> &args,
             if (ret == 0) {
                 for (size_t i = 0; i < glob_result.gl_pathc; i++) {
                     if (expanded.size() >= XTFSH::util::XTFSH_MAX_GLOB_RESULTS) {
-                        expansion_cap_error("glob expansion");
+                        expansion_cap_error("glob 展开");
                         globfree(&glob_result);
                         return std::vector<std::string>();
                     }
@@ -332,7 +336,7 @@ vector<string> expand_globs(const vector<string> &args,
                 }
             } else {
                 if (expanded.size() >= XTFSH::util::XTFSH_MAX_GLOB_RESULTS) {
-                    expansion_cap_error("glob expansion");
+                        expansion_cap_error("glob 展开");
                     globfree(&glob_result);
                     return std::vector<std::string>();
                 }
@@ -341,7 +345,7 @@ vector<string> expand_globs(const vector<string> &args,
             globfree(&glob_result);
         } else {
             if (expanded.size() >= XTFSH::util::XTFSH_MAX_GLOB_RESULTS) {
-                expansion_cap_error("glob expansion");
+                expansion_cap_error("glob 展开");
                 return std::vector<std::string>();
             }
             expanded.push_back(arg);
@@ -424,7 +428,7 @@ Command parse_redirections(const string &command_str,
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"missing filename for '2>'", ln, col});
+                        {"'2>' 后缺少文件名", ln, col});
                 }
             }
             // Check for >>
@@ -444,7 +448,7 @@ Command parse_redirections(const string &command_str,
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"missing filename for '>>'", ln, col});
+                        {"'>>' 后缺少文件名", ln, col});
                 }
             }
             // Check for > (must be after >>)
@@ -464,7 +468,7 @@ Command parse_redirections(const string &command_str,
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"missing filename for '>'", ln, col});
+                        {"'>' 后缺少文件名", ln, col});
                 }
             }
             // Check for << (heredoc). Must precede the plain `<` branch.
@@ -504,7 +508,7 @@ Command parse_redirections(const string &command_str,
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"missing delimiter for '<<' heredoc", ln, col});
+                        {"'<<' heredoc 缺少结束标记", ln, col});
                 }
 
                 Redirection r;
@@ -541,7 +545,7 @@ Command parse_redirections(const string &command_str,
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(command_str, op_off, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"missing filename for '<'", ln, col});
+                        {"'<' 后缺少文件名", ln, col});
                 }
             }
             else {
@@ -709,8 +713,8 @@ vector<CommandSegment> parse_command_line(const string &line) {
         size_t ln = 1, col = 1;
         XTFSH::parse::offset_to_line_col(stripped, stripped.size(), ln, col);
         const char *what = (next_op == OP_AND)
-            ? "empty command after '&&'"
-            : "empty command after '||'";
+            ? "'&&' 后缺少命令"
+            : "'||' 后缺少命令";
         XTFSH::parse::emit_parse_error({what, ln, col});
     }
 
@@ -721,13 +725,13 @@ vector<CommandSegment> parse_command_line(const string &line) {
         size_t ln = 1, col = 1;
         XTFSH::parse::offset_to_line_col(stripped, single_quote_open, ln, col);
         XTFSH::parse::emit_parse_error(
-            {"unmatched '\\''", ln, col});
+            {"未匹配的 '\\''", ln, col});
     }
     if (in_double_quotes) {
         size_t ln = 1, col = 1;
         XTFSH::parse::offset_to_line_col(stripped, double_quote_open, ln, col);
         XTFSH::parse::emit_parse_error(
-            {"unmatched '\"'", ln, col});
+            {"未匹配的 '\"'", ln, col});
     }
     // Note: we deliberately do NOT emit for unmatched `(` here — the
     // executor's subshell + pipeline-subshell branches already report

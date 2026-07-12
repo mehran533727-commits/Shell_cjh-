@@ -18,7 +18,7 @@ TEST(SignalHandling, BackgroundJobsReapedOnSigchld) {
         "sleep 2\n"          // give them time to finish
         "bglist\n"
         "exit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 // A rapid burst of background starts + waits shouldn't leave zombies.
@@ -33,7 +33,7 @@ TEST(SignalHandling, RapidBackgroundBurstIsStable) {
         "bg sleep 1\n"
         "sleep 2\n"
         "exit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
     EXPECT_EQ(r.output.find("Error:"),   std::string::npos);
 }
 
@@ -57,17 +57,17 @@ TEST(SignalHandling, ShellSurvivesRepeatedKillSignals) {
 // report an error, not crash.
 TEST(SignalHandling, FgWithNoJobHandledCleanly) {
     auto r = run_shell("fg\nexit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 // `bgstop` on an invalid job number must not crash.
 TEST(SignalHandling, BgstopInvalidJobHandled) {
     auto r = run_shell("bgstop 999\nexit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 // `bgstart` on an invalid job number must not crash.
 TEST(SignalHandling, BgstartInvalidJobHandled) {
     auto r = run_shell("bgstart 999\nexit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }

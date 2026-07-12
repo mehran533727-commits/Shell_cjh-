@@ -41,8 +41,8 @@ void ensure_private_perms(const std::string &path, mode_t mode) {
         // tmpfs on some CI runners silently rejects chmod. Log once per
         // path but continue -- a missing chmod is not a security
         // regression over the previous umask-only behaviour.
-        XTFSH::io::warning("could not tighten permissions on " + path +
-                          ": " + std::strerror(errno));
+        XTFSH::io::warning("无法收紧 " + path + " 的权限：" +
+                          std::strerror(errno));
     }
 }
 

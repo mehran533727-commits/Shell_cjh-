@@ -38,10 +38,10 @@ TEST(SessionBuiltin, SaveListRmRoundTrip) {
         "session rm mywork\n"
         "session list\n"
         "exit\n");
-    EXPECT_NE(r.output.find("session: saved 'mywork'"), std::string::npos);
+    EXPECT_NE(r.output.find("session: 已将 'mywork' 保存到"), std::string::npos);
     EXPECT_NE(r.output.find("mywork"), std::string::npos);
-    EXPECT_NE(r.output.find("session: removed 'mywork'"), std::string::npos);
-    EXPECT_NE(r.output.find("(no saved sessions)"), std::string::npos);
+    EXPECT_NE(r.output.find("session: 已删除 'mywork'"), std::string::npos);
+    EXPECT_NE(r.output.find("（没有已保存的会话）"), std::string::npos);
 }
 
 TEST(SessionBuiltin, LoadRestoresAliases) {
@@ -53,7 +53,7 @@ TEST(SessionBuiltin, LoadRestoresAliases) {
         "session load restoredset\n"
         "alias\n"
         "exit\n");
-    EXPECT_NE(r.output.find("session: loaded 'restoredset'"),
+    EXPECT_NE(r.output.find("session: 已加载 'restoredset'"),
               std::string::npos);
     EXPECT_NE(r.output.find("sessprobe"), std::string::npos);
 }
@@ -61,13 +61,13 @@ TEST(SessionBuiltin, LoadRestoresAliases) {
 TEST(SessionBuiltin, LoadUnknownSessionErrors) {
     HomeGuard home;
     auto r = run_shell("session load nonexistent_xyz\nexit\n");
-    EXPECT_NE(r.output.find("no such session"), std::string::npos);
+    EXPECT_NE(r.output.find("没有此会话"), std::string::npos);
 }
 
 TEST(SessionBuiltin, MissingSubcommandShowsUsage) {
     HomeGuard home;
     auto r = run_shell("session\nexit\n");
-    EXPECT_NE(r.output.find("usage"), std::string::npos);
+    EXPECT_NE(r.output.find("用法"), std::string::npos);
     EXPECT_NE(r.output.find("session list"), std::string::npos);
     EXPECT_NE(r.output.find("session save"), std::string::npos);
     EXPECT_NE(r.output.find("session load"), std::string::npos);
@@ -77,11 +77,11 @@ TEST(SessionBuiltin, MissingSubcommandShowsUsage) {
 TEST(SessionBuiltin, SaveMissingNameErrors) {
     HomeGuard home;
     auto r = run_shell("session save\nexit\n");
-    EXPECT_NE(r.output.find("save requires a name"), std::string::npos);
+    EXPECT_NE(r.output.find("save 需要名称"), std::string::npos);
 }
 
 TEST(SessionBuiltin, ListWhenEmpty) {
     HomeGuard home;
     auto r = run_shell("session list\nexit\n");
-    EXPECT_NE(r.output.find("(no saved sessions)"), std::string::npos);
+    EXPECT_NE(r.output.find("（没有已保存的会话）"), std::string::npos);
 }

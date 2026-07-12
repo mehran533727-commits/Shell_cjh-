@@ -77,7 +77,7 @@ void AliasSuggestProvider::on_before_command(const std::string &command,
     const std::string &alias_value = state.core.aliases[alias_name];
     std::string remaining = get_remaining_args(command, alias_value);
 
-    write_stderr("\xF0\x9F\x92\xA1 You have an alias for this: " +
+    write_stderr("\xF0\x9F\x92\xA1 此命令可使用别名：" +
                  alias_name + remaining + "\n");
 }
 

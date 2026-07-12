@@ -56,26 +56,26 @@ HistoryArgs parse_args(const vector<string> &argv) {
         } else if (t == "-n" || t == "--limit") {
             if (i + 1 >= argv.size()) {
                 a.ok = false;
-                a.parse_error = t + " needs a value";
+                a.parse_error = t + " 需要取值";
                 return a;
             }
             try { a.limit = stoi(argv[++i]); }
             catch (...) {
-                a.ok = false; a.parse_error = "invalid --limit value: " + argv[i];
+                a.ok = false; a.parse_error = "--limit 的值无效：" + argv[i];
                 return a;
             }
             if (a.limit <= 0) { a.limit = 100; }
         } else if (t.rfind("--limit=", 0) == 0) {
             try { a.limit = stoi(t.substr(8)); }
             catch (...) {
-                a.ok = false; a.parse_error = "invalid --limit value: " + t.substr(8);
+                a.ok = false; a.parse_error = "--limit 的值无效：" + t.substr(8);
                 return a;
             }
             if (a.limit <= 0) a.limit = 100;
         } else if (t == "--search") {
             if (i + 1 >= argv.size()) {
                 a.ok = false;
-                a.parse_error = "--search needs a pattern";
+                a.parse_error = "--search 需要搜索模式";
                 return a;
             }
             a.search = argv[++i];
@@ -86,7 +86,7 @@ HistoryArgs parse_args(const vector<string> &argv) {
             return a;
         } else if (!t.empty() && t[0] == '-') {
             a.ok = false;
-            a.parse_error = "unknown flag: " + t;
+            a.parse_error = "未知选项：" + t;
             return a;
         } else {
             // Bare positional — treated as a search pattern for ergonomic
@@ -99,13 +99,13 @@ HistoryArgs parse_args(const vector<string> &argv) {
 
 void print_usage(bool to_stderr = false) {
     string msg =
-        "usage: history [options] [pattern]\n"
-        "  -n, --limit N       show only the last N entries (default 100)\n"
-        "  --here              restrict to commands run in the current directory\n"
-        "  --failed            only show commands that exited non-zero\n"
-        "  --search PATTERN    substring match on the command text\n"
-        "  stats               print aggregate stats (top commands, success rate)\n"
-        "  -h, --help          show this message\n";
+        "用法：history [选项] [模式]\n"
+        "  -n, --limit N       仅显示最近 N 条记录（默认 100）\n"
+        "  --here              仅显示当前目录中运行的命令\n"
+        "  --failed            仅显示退出码非零的命令\n"
+        "  --search PATTERN    按命令文本进行子串匹配\n"
+        "  stats               显示汇总统计（常用命令、成功率）\n"
+        "  -h, --help          显示此说明\n";
     if (to_stderr) write_stderr(msg); else write_stdout(msg);
 }
 
@@ -124,7 +124,7 @@ string ts_to_iso(int64_t ts) {
 void render_entries(const vector<HistoryEntry> &entries,
                      bool show_meta) {
     if (entries.empty()) {
-        write_stdout("(no history entries matched)\n");
+        write_stdout("（没有匹配的历史记录）\n");
         return;
     }
     // Oldest-first display: more natural to scroll through.
@@ -147,27 +147,27 @@ void render_entries(const vector<HistoryEntry> &entries,
 
 int render_stats(const HistoryStats &s) {
     if (s.total_commands == 0) {
-        write_stdout("(no history recorded yet)\n");
+        write_stdout("（尚无历史记录）\n");
         return 0;
     }
     ostringstream out;
-    out << "history stats\n\n"
-        << "  total commands      " << s.total_commands << "\n"
-        << "  unique commands     " << s.unique_commands << "\n"
-        << "  failed commands     " << s.failed_commands << "\n"
-        << "  success rate        ";
+    out << "历史记录统计\n\n"
+        << "  命令总数            " << s.total_commands << "\n"
+        << "  不重复命令数        " << s.unique_commands << "\n"
+        << "  失败命令数          " << s.failed_commands << "\n"
+        << "  成功率              ";
     out.precision(1);
     out << std::fixed << s.success_rate_pct << "%\n";
-    out << "  earliest entry      " << ts_to_iso(s.earliest_timestamp) << "\n"
-        << "  latest entry        " << ts_to_iso(s.latest_timestamp) << "\n";
+    out << "  最早记录            " << ts_to_iso(s.earliest_timestamp) << "\n"
+        << "  最新记录            " << ts_to_iso(s.latest_timestamp) << "\n";
     if (!s.top_commands.empty()) {
-        out << "\n  top commands:\n";
+        out << "\n  常用命令：\n";
         for (const auto &kv : s.top_commands) {
             out << "    " << kv.second << "\t" << kv.first << "\n";
         }
     }
     if (!s.top_directories.empty()) {
-        out << "\n  top directories:\n";
+        out << "\n  常用目录：\n";
         for (const auto &kv : s.top_directories) {
             out << "    " << kv.second << "\t" << kv.first << "\n";
         }
@@ -181,18 +181,18 @@ int render_stats(const HistoryStats &s) {
 // lose --here/--failed/stats. Prints the replxx plain-text file.
 int render_plain_text_fallback(const HistoryArgs &args) {
     if (args.want_stats || args.cwd_only || args.failed_only) {
-        write_stderr("history: this build has no SQLite backend — "
-                     "--here/--failed/stats are unavailable.\n");
+        write_stderr("history: 当前构建未启用 SQLite 后端，"
+                     "--here/--failed/stats 不可用。\n");
         return 2;
     }
     string path = history_file_path();
     if (path.empty()) {
-        write_stderr("history: no history file\n");
+        write_stderr("history: 没有历史记录文件\n");
         return 1;
     }
     ifstream file(path);
     if (!file.is_open()) {
-        write_stderr("history: cannot read history\n");
+        write_stderr("history: 无法读取历史记录\n");
         return 1;
     }
     // Skip replxx's `### timestamp` lines; they're not user-visible.

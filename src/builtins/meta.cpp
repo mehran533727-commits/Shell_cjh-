@@ -22,23 +22,23 @@ int builtin_exit(const vector<string> &, ShellState &state) {
     // Lifecycle: let hook providers do their teardown (flush buffers,
     // persist state, close resources) while the shell is still alive.
     global_plugin_registry().fire_exit(state);
-    write_stdout("GoodBye! See you soon!\n");
+    write_stdout("再见，期待下次使用！\n");
     exit(0);
     return 0;
 }
 
 int builtin_which(const vector<string> &argv, ShellState &state) {
     if (argv.size() < 2) {
-        write_stderr(argv[0] + ": missing argument\n");
+        write_stderr(argv[0] + ": 缺少参数\n");
         return 1;
     }
     string name = argv[1];
     if (is_builtin(name)) {
-        write_stdout(name + ": shell builtin\n");
+        write_stdout(name + ": Shell 内建命令\n");
         return 0;
     }
     if (state.core.aliases.count(name)) {
-        write_stdout(name + " is aliased to '" + state.core.aliases[name] + "'\n");
+        write_stdout(name + " 是别名，实际指向 '" + state.core.aliases[name] + "'\n");
         return 0;
     }
     const char *path_env = getenv("PATH");
@@ -57,13 +57,13 @@ int builtin_which(const vector<string> &argv, ShellState &state) {
             start = end + 1;
         }
     }
-    write_stderr(name + " not found\n");
+    write_stderr(name + "：未找到\n");
     return 1;
 }
 
 int builtin_source(const vector<string> &argv, ShellState &state) {
     if (argv.size() < 2) {
-        write_stderr("source: missing file argument\n");
+        write_stderr("source: 缺少文件参数\n");
         return 1;
     }
     return execute_script_file(argv[1], state);
@@ -92,18 +92,18 @@ int builtin_help(const vector<string> &argv, ShellState &) {
     const string &query = argv[1];
     for (const auto &b : table) {
         if (query == b.name) {
-            write_stdout(string("usage: ") + b.usage + "\n");
+            write_stdout(string("用法：") + b.usage + "\n");
             write_stdout(string(b.brief) + "\n");
             return 0;
         }
     }
-    write_stderr("help: no such builtin: " + query + "\n");
+    write_stderr("help: 没有此内建命令：" + query + "\n");
     return 1;
 }
 
 int builtin_explain(const vector<string> &argv, ShellState &) {
     if (argv.size() < 2) {
-        write_stderr("explain: usage: explain <command> [args...]\n");
+        write_stderr("explain: 用法：explain <command> [args...]\n");
         return 1;
     }
     const string &cmd = argv[1];
@@ -111,7 +111,7 @@ int builtin_explain(const vector<string> &argv, ShellState &) {
 
     string hint = get_command_hint(cmd);
     if (hint.empty()) {
-        write_stderr("explain: no entry for '" + cmd + "'\n");
+        write_stderr("explain: 没有 '" + cmd + "' 的说明\n");
         return 1;
     }
     write_stdout("  " + cmd + string(cmd.size() < 6 ? 6 - cmd.size() : 0, ' ') +

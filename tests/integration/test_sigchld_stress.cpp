@@ -30,13 +30,13 @@ TEST(SigchldStress, ManyBatchesOfShortBackgroundJobs) {
 
     auto r = run_shell(script);
 
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
     EXPECT_EQ(r.output.find("Error: Fork"), std::string::npos);
     // If SIGCHLD handling were broken, later batches would hit the
     // max-bg cap as zombies accumulate in state.core.background_processes.
     EXPECT_EQ(r.output.find("Error: Maximum number"), std::string::npos);
     // Final bglist after everything finished: should be 0 background jobs.
-    EXPECT_NE(r.output.find("Total Background Jobs: 0"), std::string::npos);
+    EXPECT_NE(r.output.find("后台任务总数：0"), std::string::npos);
 }
 
 TEST(SigchldStress, FillCapAndDrainRepeatedly) {
@@ -54,10 +54,10 @@ TEST(SigchldStress, FillCapAndDrainRepeatedly) {
     script += "exit\n";
 
     auto r = run_shell(script);
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
     EXPECT_EQ(r.output.find("Error: Fork"),           std::string::npos);
     EXPECT_EQ(r.output.find("Error: Maximum number"), std::string::npos);
-    EXPECT_NE(r.output.find("Total Background Jobs: 0"), std::string::npos);
+    EXPECT_NE(r.output.find("后台任务总数：0"), std::string::npos);
 }
 
 TEST(SigchldStress, BgFollowedByForegroundDoesNotStallOnReap) {
@@ -73,5 +73,5 @@ TEST(SigchldStress, BgFollowedByForegroundDoesNotStallOnReap) {
         "bgkill 1\n"
         "exit\n");
     EXPECT_NE(r.output.find("fg_reached"), std::string::npos);
-    EXPECT_NE(r.output.find("GoodBye"),    std::string::npos);
+    EXPECT_NE(r.output.find("再见"),    std::string::npos);
 }

@@ -3,19 +3,19 @@
 TEST(Safety, BlocksRmRfRoot) {
     auto r = run_shell("rm -rf /\nexit\n");
     // The BLOCKED warning is printed to stderr by the hook.
-    EXPECT_NE(r.output.find("BLOCKED"), std::string::npos);
+    EXPECT_NE(r.output.find("已拦截"), std::string::npos);
 }
 
 TEST(Safety, BackslashBypassRunsCommand) {
     auto r = run_shell("\\echo safety_bypass_ok\nexit\n");
     EXPECT_NE(r.output.find("safety_bypass_ok"), std::string::npos);
-    EXPECT_EQ(r.output.find("BLOCKED"), std::string::npos);
+    EXPECT_EQ(r.output.find("已拦截"), std::string::npos);
 }
 
 TEST(Safety, SafeCommandNotTouched) {
     auto r = run_shell("echo ordinary_command_ok\nexit\n");
     EXPECT_NE(r.output.find("ordinary_command_ok"), std::string::npos);
-    EXPECT_EQ(r.output.find("BLOCKED"), std::string::npos);
+    EXPECT_EQ(r.output.find("已拦截"), std::string::npos);
     EXPECT_EQ(r.output.find("WARNING"), std::string::npos);
 }
 
@@ -25,7 +25,7 @@ TEST(Safety, SafeCommandNotTouched) {
 // and ran it. The hook now sees the expanded text.
 TEST(Safety, AliasedDangerousCommandStillBlocks) {
     auto r = run_shell("alias del='rm -rf'\ndel /\nexit\n");
-    EXPECT_NE(r.output.find("BLOCKED"), std::string::npos)
+    EXPECT_NE(r.output.find("已拦截"), std::string::npos)
         << "Aliased `rm -rf /` must still classify as BLOCKED. Output: "
         << r.output;
 }
@@ -36,14 +36,14 @@ TEST(Safety, AliasedDangerousCommandStillBlocks) {
 // expands each level through XTFSH's hook-aware helper first.
 TEST(Safety, NestedCommandSubstitutionHonoursHook) {
     auto r = run_shell("echo hi $(rm -rf /)\nexit\n");
-    EXPECT_NE(r.output.find("BLOCKED"), std::string::npos)
+    EXPECT_NE(r.output.find("已拦截"), std::string::npos)
         << "Inner $(rm -rf /) must classify as BLOCKED. Output: "
         << r.output;
 }
 
 TEST(Safety, DoublyNestedCommandSubstitutionHonoursHook) {
     auto r = run_shell("echo hi $(echo $(rm -rf /))\nexit\n");
-    EXPECT_NE(r.output.find("BLOCKED"), std::string::npos)
+    EXPECT_NE(r.output.find("已拦截"), std::string::npos)
         << "Deeply nested $(rm -rf /) must classify as BLOCKED. Output: "
         << r.output;
 }

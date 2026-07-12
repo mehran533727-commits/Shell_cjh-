@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc > 2) {
-        exit_with_message("An error has occurred\n", 1);
+        exit_with_message("发生错误\n", 1);
     }
 
     // Interactive or script mode — both share one-time startup.

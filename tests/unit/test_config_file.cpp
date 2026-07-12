@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,12 +20,34 @@ namespace fs = std::filesystem;
 // and we don't want it cluttering test output. Also lets us inspect it.
 class StderrCapture {
 public:
-    StderrCapture() { old_buf_ = std::cerr.rdbuf(captured_.rdbuf()); }
-    ~StderrCapture() { std::cerr.rdbuf(old_buf_); }
-    std::string str() const { return captured_.str(); }
+    StderrCapture() {
+        char tmpl[] = "/tmp/XTFSH_config_stderr_XXXXXX";
+        fd_ = ::mkstemp(tmpl);
+        path_ = tmpl;
+        saved_fd_ = ::dup(STDERR_FILENO);
+        ::dup2(fd_, STDERR_FILENO);
+    }
+    ~StderrCapture() {
+        ::dup2(saved_fd_, STDERR_FILENO);
+        ::close(saved_fd_);
+        ::close(fd_);
+        ::unlink(path_.c_str());
+    }
+    std::string str() const {
+        ::fsync(fd_);
+        ::lseek(fd_, 0, SEEK_SET);
+        std::string output;
+        char buffer[4096];
+        ssize_t count = 0;
+        while ((count = ::read(fd_, buffer, sizeof(buffer))) > 0) {
+            output.append(buffer, static_cast<size_t>(count));
+        }
+        return output;
+    }
 private:
-    std::stringstream captured_;
-    std::streambuf *old_buf_;
+    int fd_ = -1;
+    int saved_fd_ = -1;
+    std::string path_;
 };
 
 // Each test gets its own temporary $HOME so `get_data_dir()` resolves
@@ -133,7 +156,7 @@ TEST_F(ConfigFileTest, MalformedJsonYieldsDefaultsWithWarning) {
 
     EXPECT_TRUE(cfg.disabled_plugins.empty());
     EXPECT_EQ(cfg.log_level, "info");
-    EXPECT_NE(stderr_text.find("XTFSH: warning"), std::string::npos);
+    EXPECT_NE(stderr_text.find("XTFSH: 警告"), std::string::npos);
     EXPECT_NE(stderr_text.find("config.json"), std::string::npos);
 }
 

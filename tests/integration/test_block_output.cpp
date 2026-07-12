@@ -49,7 +49,7 @@ TEST(BlockOutputIntegration, CommandLabelPreservedVerbatim) {
 // Missing arg: usage message, non-zero exit-ish behaviour.
 TEST(BlockOutputIntegration, MissingArgPrintsUsage) {
     auto r = run_shell("block\nexit\n");
-    EXPECT_NE(r.output.find("usage"), std::string::npos);
+    EXPECT_NE(r.output.find("用法"), std::string::npos);
 }
 
 // The command label in the header is bold (ANSI \e[1m). Verify the

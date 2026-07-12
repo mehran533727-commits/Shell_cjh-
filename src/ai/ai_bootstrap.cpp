@@ -46,7 +46,7 @@ void offer_setup_wizard() {
     if (key || provider == "ollama") return;
 
     write_stdout(AI_LABEL + "XTFSH ai" CAT_RESET + AI_SEPARATOR + " ─ " CAT_RESET
-                 "AI features available! Set up now? [y/n] ");
+                 "AI 功能可用。现在配置？ [y/n] ");
     char setup_ch = 0;
     struct termios old_t, new_t;
     tcgetattr(STDIN_FILENO, &old_t);
@@ -61,10 +61,9 @@ void offer_setup_wizard() {
     if (setup_ch == 'y' || setup_ch == 'Y') {
         ai_run_setup_wizard();
     } else {
-        write_stdout(CAT_DIM "  Tip: run @ai config anytime to set up.\n" CAT_RESET);
+        write_stdout(CAT_DIM "  提示：可随时运行 @ai config 进行配置。\n" CAT_RESET);
     }
     write_stdout("\n");
 }
 
 } // namespace XTFSH::ai
-

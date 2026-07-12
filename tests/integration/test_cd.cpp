@@ -53,5 +53,5 @@ TEST(Cd, CdDashReturnsToPreviousDirectory) {
 TEST(Cd, CdDashNoOldpwd) {
     // On a fresh shell with no previous cd, cd - should print an error
     auto r = run_shell("cd -\nexit\n");
-    EXPECT_NE(r.output.find("OLDPWD not set"), std::string::npos);
+    EXPECT_NE(r.output.find("OLDPWD 未设置"), std::string::npos);
 }

@@ -25,16 +25,16 @@ pid_t get_background_job_pid(
 
 int parse_job_number(const vector<string> &argv, const string &cmd_name) {
     if (argv.size() < 2) {
-        write_stderr(cmd_name + ": missing process number\n");
+        write_stderr(cmd_name + ": 缺少任务编号\n");
         return -1;
     }
     try {
         return stoi(argv[1]);
     } catch (const invalid_argument&) {
-        write_stderr(cmd_name + ": invalid process number\n");
+        write_stderr(cmd_name + ": 任务编号无效\n");
         return -1;
     } catch (const out_of_range&) {
-        write_stderr(cmd_name + ": process number out of range\n");
+        write_stderr(cmd_name + ": 任务编号超出范围\n");
         return -1;
     }
 }
@@ -55,16 +55,16 @@ int builtin_bglist(const vector<string> &, ShellState &state) {
     for (const auto &job : jobs) {
         if (job.running) ++running;
         stringstream ss;
-        ss << "[JOB " << job.job_id << "] "
-           << (job.running ? "running" : "stopped")
-           << " | pid=" << job.pid
-           << " | cmd=\"" << job.command << "\"\n";
+        ss << "[任务 " << job.job_id << "] "
+           << (job.running ? "运行中" : "已停止")
+           << " | 进程号=" << job.pid
+           << " | 命令=\"" << job.command << "\"\n";
         write_stdout(ss.str());
     }
 
     stringstream ss;
-    ss << "Total Background Jobs: " << jobs.size()
-       << " (" << running << " running)" << endl;
+    ss << "后台任务总数：" << jobs.size()
+       << "（运行中：" << running << "）" << endl;
     write_stdout(ss.str());
     return 0;
 }
@@ -73,7 +73,7 @@ int builtin_bgkill(const vector<string> &argv, ShellState &state) {
     int n = parse_job_number(argv, "bgkill");
     if (n < 0) return 1;
     pid_t pid = get_background_job_pid(state.core.background_processes, n);
-    if (pid == -1) { write_stderr("bgkill: invalid job number\n"); return 1; }
+    if (pid == -1) { write_stderr("bgkill: 任务编号无效\n"); return 1; }
     if (kill(pid, SIGTERM) == -1) { write_stderr(string(strerror(errno)) + "\n"); return 1; }
     return 0;
 }
@@ -82,7 +82,7 @@ int builtin_bgstop(const vector<string> &argv, ShellState &state) {
     int n = parse_job_number(argv, "bgstop");
     if (n < 0) return 1;
     pid_t pid = get_background_job_pid(state.core.background_processes, n);
-    if (pid == -1) { write_stderr("bgstop: invalid job number\n"); return 1; }
+    if (pid == -1) { write_stderr("bgstop: 任务编号无效\n"); return 1; }
     if (kill(pid, SIGSTOP) == -1) { write_stderr(string(strerror(errno)) + "\n"); return 1; }
     return 0;
 }
@@ -91,14 +91,14 @@ int builtin_bgstart(const vector<string> &argv, ShellState &state) {
     int n = parse_job_number(argv, "bgstart");
     if (n < 0) return 1;
     pid_t pid = get_background_job_pid(state.core.background_processes, n);
-    if (pid == -1) { write_stderr("bgstart: invalid job number\n"); return 1; }
+    if (pid == -1) { write_stderr("bgstart: 任务编号无效\n"); return 1; }
     if (kill(pid, SIGCONT) == -1) { write_stderr(string(strerror(errno)) + "\n"); return 1; }
     return 0;
 }
 
 int builtin_fg(const vector<string> &argv, ShellState &state) {
     if (state.core.background_processes.empty()) {
-        write_stderr("fg: no background jobs\n");
+        write_stderr("fg: 没有后台任务\n");
         return 1;
     }
     pid_t pid;
@@ -114,10 +114,10 @@ int builtin_fg(const vector<string> &argv, ShellState &state) {
     } else {
         int n;
         try { n = stoi(argv[1]); }
-        catch (const invalid_argument&) { write_stderr("fg: invalid job number\n"); return 1; }
-        catch (const out_of_range&) { write_stderr("fg: job number out of range\n"); return 1; }
+        catch (const invalid_argument&) { write_stderr("fg: 任务编号无效\n"); return 1; }
+        catch (const out_of_range&) { write_stderr("fg: 任务编号超出范围\n"); return 1; }
         pid = get_background_job_pid(state.core.background_processes, n);
-        if (pid == -1) { write_stderr("fg: invalid job number\n"); return 1; }
+        if (pid == -1) { write_stderr("fg: 任务编号无效\n"); return 1; }
     }
     kill(pid, SIGCONT);
     fg_child_pid.store(pid, std::memory_order_release);

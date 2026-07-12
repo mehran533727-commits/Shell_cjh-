@@ -77,7 +77,7 @@ TEST(Subshell, UnmatchedParenReportsError) {
         "(echo never_runs\n"
         "echo after_error\n"
         "exit\n");
-    EXPECT_NE(r.output.find("unmatched"), std::string::npos);
+    EXPECT_NE(r.output.find("未匹配"), std::string::npos);
     EXPECT_NE(r.output.find("after_error"), std::string::npos);
 }
 

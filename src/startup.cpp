@@ -92,18 +92,18 @@ void register_default_plugins() {
     if (!plugin_disabled("XTFSH_DISABLE_SAFETY_HOOK") &&
         gate.enabled("safety")) {
         reg.register_hook_provider(std::make_unique<SafetyHookProvider>());
-        XTFSH::io::debug("plugin: registered safety");
+        XTFSH::io::debug("插件：已注册 safety");
     }
     if (!plugin_disabled("XTFSH_DISABLE_ALIAS_SUGGEST") &&
         gate.enabled("alias-suggest")) {
         reg.register_hook_provider(std::make_unique<AliasSuggestProvider>());
-        XTFSH::io::debug("plugin: registered alias-suggest");
+        XTFSH::io::debug("插件：已注册 alias-suggest");
     }
     if (!plugin_disabled("XTFSH_DISABLE_AI_ERROR_HOOK") &&
         gate.enabled("ai-error-recovery")) {
         reg.register_hook_provider(std::make_unique<AiErrorHookProvider>(
             []() -> std::unique_ptr<LLMClient> { return ai_create_client(); }));
-        XTFSH::io::debug("plugin: registered ai-error-recovery");
+        XTFSH::io::debug("插件：已注册 ai-error-recovery");
     }
 
     // Completion providers -----------------------------------------
@@ -111,19 +111,19 @@ void register_default_plugins() {
         gate.enabled("manpage")) {
         reg.register_completion_provider(
             std::make_unique<ManpageCompletionProvider>());
-        XTFSH::io::debug("plugin: registered manpage");
+        XTFSH::io::debug("插件：已注册 manpage");
     }
     if (!plugin_disabled("XTFSH_DISABLE_FISH_COMPLETION") &&
         gate.enabled("fish")) {
         reg.register_completion_provider(
             std::make_unique<FishCompletionProvider>());
-        XTFSH::io::debug("plugin: registered fish");
+        XTFSH::io::debug("插件：已注册 fish");
     }
     if (!plugin_disabled("XTFSH_DISABLE_FIG_COMPLETION") &&
         gate.enabled("fig")) {
         reg.register_completion_provider(
             std::make_unique<FigCompletionProvider>());
-        XTFSH::io::debug("plugin: registered fig");
+        XTFSH::io::debug("插件：已注册 fig");
     }
 
     // Prompt providers ---------------------------------------------
@@ -131,7 +131,7 @@ void register_default_plugins() {
         gate.enabled("starship")) {
         reg.register_prompt_provider(
             std::make_unique<StarshipPromptProvider>());
-        XTFSH::io::debug("plugin: registered starship");
+        XTFSH::io::debug("插件：已注册 starship");
     }
 
     // History providers --------------------------------------------
@@ -141,9 +141,9 @@ void register_default_plugins() {
         try {
             reg.register_history_provider(
                 std::make_unique<SqliteHistoryProvider>());
-            XTFSH::io::debug("plugin: registered sqlite-history");
+        XTFSH::io::debug("插件：已注册 sqlite-history");
         } catch (const std::exception &e) {
-            write_stderr(string("XTFSH: sqlite history disabled: ") +
+            write_stderr(string("XTFSH: SQLite 历史记录已禁用：") +
                          e.what() + "\n");
         }
     }
@@ -154,9 +154,9 @@ void register_default_plugins() {
     // removed) and silently ignoring it hides typos.
     for (const auto &name : gate.disabled) {
         if (!gate.matched.count(name)) {
-            std::cerr << "XTFSH: warning: config.json `plugins.disabled` "
-                         "contains unknown plugin \"" << name
-                      << "\" (ignored)\n";
+            std::cerr << "XTFSH：警告：config.json 的 `plugins.disabled` "
+                         "包含未知插件 \"" << name
+                      << "\"（已忽略）\n";
         }
     }
 

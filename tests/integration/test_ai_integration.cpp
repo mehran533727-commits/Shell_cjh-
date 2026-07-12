@@ -21,8 +21,8 @@ TEST(AiIntegration, AiNoArgsShowsMessage) {
 TEST(AiIntegration, AiToggleOnOff) {
     if (!ai_is_available()) { GTEST_SKIP() << "AI not compiled in"; }
     auto r = run_shell("@ai off\n@ai on\nexit\n");
-    EXPECT_NE(r.output.find("disabled"), std::string::npos);
-    EXPECT_NE(r.output.find("enabled"), std::string::npos);
+    EXPECT_NE(r.output.find("已禁用"), std::string::npos);
+    EXPECT_NE(r.output.find("已启用"), std::string::npos);
 }
 
 // Test that @ai setup shows config/status info (non-tty falls back to status)
@@ -30,7 +30,7 @@ TEST(AiIntegration, AiSetupDoesNotCrash) {
     if (!ai_is_available()) { GTEST_SKIP() << "AI not compiled in"; }
     auto r = run_shell("@ai setup\nexit\n");
     EXPECT_NE(r.exit_code, 139); // no segfault
-    EXPECT_NE(r.output.find("Provider"), std::string::npos);
+    EXPECT_NE(r.output.find("提供商"), std::string::npos);
 }
 
 // Test that @ai explain with no previous error handles gracefully
@@ -49,7 +49,7 @@ TEST(AiIntegration, AiUnknownSubcommandDoesNotCrash) {
 TEST(AiIntegration, AiStatusShowsInfo) {
     if (!ai_is_available()) { GTEST_SKIP() << "AI not compiled in"; }
     auto r = run_shell("@ai status\nexit\n");
-    EXPECT_NE(r.output.find("Status"), std::string::npos);
+    EXPECT_NE(r.output.find("状态"), std::string::npos);
 }
 
 // Test that @ai clear does not crash
@@ -57,7 +57,7 @@ TEST(AiIntegration, AiClearDoesNotCrash) {
     if (!ai_is_available()) { GTEST_SKIP() << "AI not compiled in"; }
     auto r = run_shell("@ai clear\nexit\n");
     EXPECT_NE(r.exit_code, 139);
-    EXPECT_NE(r.output.find("clear"), std::string::npos);
+    EXPECT_NE(r.output.find("已清除"), std::string::npos);
 }
 
 // Test that @ai test without key does not crash
@@ -72,14 +72,14 @@ TEST(AiIntegration, AiHelpTextShowsNewCommands) {
     auto r = run_shell("@ai\nexit\n");
     EXPECT_NE(r.output.find("config"), std::string::npos);
     EXPECT_NE(r.output.find("clear"), std::string::npos);
-    EXPECT_NE(r.output.find("explain"), std::string::npos);
+    EXPECT_NE(r.output.find("状态"), std::string::npos);
 }
 
 // Test that @ai status still works (alias for config in non-tty)
 TEST(AiIntegration, AiStatusShowsProvider) {
     if (!ai_is_available()) { GTEST_SKIP() << "AI not compiled in"; }
     auto r = run_shell("@ai status\nexit\n");
-    EXPECT_NE(r.output.find("Provider"), std::string::npos);
+    EXPECT_NE(r.output.find("提供商"), std::string::npos);
 }
 
 // Test that @ai setup still works (alias for config)
@@ -100,7 +100,7 @@ TEST(AiIntegration, AiProviderSwitchDoesNotCrash) {
 TEST(AiIntegration, AiProviderInvalidShowsError) {
     if (!ai_is_available()) { GTEST_SKIP() << "AI not compiled in"; }
     auto r = run_shell("@ai provider foobar\nexit\n");
-    EXPECT_NE(r.output.find("unknown"), std::string::npos);
+    EXPECT_NE(r.output.find("未知"), std::string::npos);
 }
 
 // Test that @ai model sets model without crash

@@ -38,8 +38,8 @@ static void emit(Level lvl, std::string_view msg) {
     const char *color = nullptr;
     const char *tag = nullptr;
     switch (lvl) {
-        case Level::Error:   color = ANSI_RED;    tag = "error";   break;
-        case Level::Warning: color = ANSI_YELLOW; tag = "warning"; break;
+        case Level::Error:   color = ANSI_RED;    tag = "错误";   break;
+        case Level::Warning: color = ANSI_YELLOW; tag = "警告"; break;
         case Level::Debug:   color = ANSI_DIM;    tag = nullptr;   break;
         case Level::Info:    color = nullptr;     tag = nullptr;   break;
     }

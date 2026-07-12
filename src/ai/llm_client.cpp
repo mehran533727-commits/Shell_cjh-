@@ -579,8 +579,8 @@ static bool configure_common_curl_opts(CURL *curl,
                                        bool allow_plain_http) {
     auto check = [&](const char *name, CURLcode rc) -> bool {
         if (rc != CURLE_OK) {
-            XTFSH::io::error(std::string("curl_easy_setopt(") + name
-                            + ") failed: " + curl_easy_strerror(rc));
+            XTFSH::io::error(std::string("设置 curl 选项 ") + name
+                            + " 失败：" + curl_easy_strerror(rc));
             return false;
         }
         return true;
@@ -634,29 +634,29 @@ static void classify_curl_error(CURLcode res, bool overflowed,
     out.curl_message = curl_easy_strerror(res);
     if (overflowed) {
         out.error_kind = TransportError::Overflow;
-        out.error_message = "response exceeded XTFSH_AI_MAX_RESPONSE_BYTES ("
+        out.error_message = "响应超过 XTFSH_AI_MAX_RESPONSE_BYTES 限制（"
                           + std::to_string(XTFSH_max_response_bytes())
-                          + " bytes); aborted";
+                          + " 字节），已中止";
         return;
     }
     switch (res) {
         case CURLE_ABORTED_BY_CALLBACK:
             out.error_kind = TransportError::Aborted;
-            out.error_message = "cancelled";
+            out.error_message = "已取消";
             return;
         case CURLE_OPERATION_TIMEDOUT:
             out.error_kind = TransportError::Timeout;
-            out.error_message = "timed out after the configured read timeout";
+            out.error_message = "超过配置的读取超时时间";
             return;
         case CURLE_COULDNT_RESOLVE_HOST:
         case CURLE_COULDNT_RESOLVE_PROXY:
             out.error_kind = TransportError::DnsFailure;
-            out.error_message = "could not resolve host (no DNS or bad URL)";
+            out.error_message = "无法解析主机名（DNS 不可用或 URL 有误）";
             return;
         case CURLE_COULDNT_CONNECT:
         case CURLE_INTERFACE_FAILED:
             out.error_kind = TransportError::ConnectFailed;
-            out.error_message = "connection refused or network unreachable";
+            out.error_message = "连接被拒绝或网络不可达";
             return;
         case CURLE_SSL_CONNECT_ERROR:
         case CURLE_PEER_FAILED_VERIFICATION:
@@ -665,11 +665,11 @@ static void classify_curl_error(CURLcode res, bool overflowed,
         case CURLE_SSL_CACERT_BADFILE:
         case CURLE_USE_SSL_FAILED:
             out.error_kind = TransportError::TlsFailure;
-            out.error_message = "TLS error: " + out.curl_message;
+            out.error_message = "TLS 错误：" + out.curl_message;
             return;
         default:
             out.error_kind = TransportError::Other;
-            out.error_message = "connection failed: " + out.curl_message;
+            out.error_message = "连接失败：" + out.curl_message;
             return;
     }
 }
@@ -689,7 +689,7 @@ static CurlPostResult curl_post(
     CURL *curl = curl_easy_init();
     if (!curl) {
         out.error_kind = TransportError::CurlInit;
-        out.error_message = "failed to initialize curl.";
+        out.error_message = "无法初始化 curl。";
         return out;
     }
 
@@ -705,7 +705,7 @@ static CurlPostResult curl_post(
                                     static_cast<long>(read_timeout),
                                     allow_plain_http)) {
         out.error_kind = TransportError::TlsFailure;
-        out.error_message = "tls configuration failed";
+        out.error_message = "TLS 配置失败";
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
         return out;
@@ -767,7 +767,7 @@ static LLMResponse curl_streaming_post(
     CURL *curl = curl_easy_init();
     if (!curl) {
         resp.transport = TransportStatus::Other;
-        resp.error_message = "failed to initialize curl.";
+        resp.error_message = "无法初始化 curl。";
         return resp;
     }
 
@@ -786,7 +786,7 @@ static LLMResponse curl_streaming_post(
                                     static_cast<long>(read_timeout),
                                     allow_plain_http)) {
         resp.transport = TransportStatus::TlsFailure;
-        resp.error_message = "tls configuration failed";
+        resp.error_message = "TLS 配置失败";
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
         return resp;
@@ -817,10 +817,10 @@ static LLMResponse curl_streaming_post(
         resp.text = ctx.accumulated;
         resp.success = !resp.text.empty();
         if (!resp.success) {
-            resp.error_message = "unexpected response. Try again.";
+            resp.error_message = "响应格式异常，请重试。";
         }
     } else {
-        resp.error_message = "API error (HTTP " + to_string(http_code) + "). Try again.";
+        resp.error_message = "API 错误（HTTP " + to_string(http_code) + "），请重试。";
     }
 
     return resp;
@@ -838,38 +838,37 @@ static string map_gemini_error(int status, const string &body) {
                 api_msg.find("is not supported") != string::npos) {
                 return "model_not_found";
             }
-            return "Gemini rejected the request: "
-                 + (api_msg.empty() ? "bad request" : api_msg);
+            return "Gemini 拒绝了请求："
+                 + (api_msg.empty() ? "请求无效" : api_msg);
         }
         case 401:
-            return "invalid Gemini API key. Run @ai config to update.";
+            return "Gemini API 密钥无效。请运行 @ai config 更新。";
         case 403:
             // Could be quota OR an API-level permission problem. Use the
             // error body to pick the better message when available.
             {
                 string api_msg = extract_gemini_error(body);
                 if (api_msg.find("quota") != string::npos) {
-                    return "Gemini daily quota reached. Try again tomorrow or "
-                           "switch provider with @ai config.";
+                    return "Gemini 已达到每日配额上限。请明天重试，或通过 @ai config 切换提供商。";
                 }
                 if (!api_msg.empty()) return "Gemini: " + api_msg;
-                return "Gemini quota exhausted or request forbidden.";
+                return "Gemini 配额已用尽或请求被禁止。";
             }
         case 404:
             return "model_not_found";
         case 408:
-            return "Gemini timed out. Retry the request.";
+            return "Gemini 请求超时，请重试。";
         case 413:
-            return "Gemini: request too large — try a shorter prompt.";
+            return "Gemini：请求过大，请尝试更短的提示词。";
         case 429:
-            return "Gemini rate limit hit — please wait a few seconds and retry.";
+            return "Gemini 请求频率受限，请稍候几秒后重试。";
         case 500: case 502: case 503: case 504:
-            return "Gemini is having trouble (HTTP " + to_string(status)
-                 + "). Retrying usually works.";
+            return "Gemini 服务异常（HTTP " + to_string(status)
+                 + "），通常重试即可恢复。";
         default: {
             string api_msg = extract_gemini_error(body);
             if (!api_msg.empty()) return "Gemini: " + api_msg;
-            return "Gemini returned HTTP " + to_string(status) + ".";
+            return "Gemini 返回了 HTTP " + to_string(status) + "。";
         }
     }
 }
@@ -885,23 +884,22 @@ static string format_transport_error(const string &provider,
                                      const string &raw_message) {
     switch (kind) {
         case TransportStatus::Aborted:
-            return provider + " request cancelled.";
+            return provider + " 请求已取消。";
         case TransportStatus::Timeout:
-            return provider + " timed out. Check your connection or retry.";
+            return provider + " 请求超时。请检查网络连接后重试。";
         case TransportStatus::DnsFailure:
-            return "couldn't resolve " + provider + " hostname. Check your DNS/network.";
+            return "无法解析 " + provider + " 的主机名。请检查 DNS 或网络。";
         case TransportStatus::ConnectFailed:
-            return "couldn't connect to " + provider
-                 + ". The service may be down or blocked.";
+            return "无法连接到 " + provider
+                 + "。服务可能未运行或被拦截。";
         case TransportStatus::TlsFailure:
-            return provider + " TLS handshake failed: "
+            return provider + " TLS 握手失败："
                  + (curl_message.empty() ? raw_message : curl_message);
         case TransportStatus::Overflow:
-            return provider + " response too large. "
-                   "Adjust XTFSH_AI_MAX_RESPONSE_BYTES if you trust the server.";
+            return provider + " 响应过大。若你信任该服务器，可调整 XTFSH_AI_MAX_RESPONSE_BYTES。";
         case TransportStatus::Ok:
         default:
-            return "couldn't reach " + provider + ": "
+            return "无法连接到 " + provider + "："
                  + (curl_message.empty() ? raw_message : curl_message);
     }
 }
@@ -1004,10 +1002,10 @@ static LLMResponse invoke_once_buffered(const ProviderAdapter &a,
         if (!resp.text.empty()) {
             resp.success = true;
         } else {
-            resp.error_message = "unexpected response. Try again.";
+            resp.error_message = "响应格式异常，请重试。";
             XTFSH::io::error(std::string(a.display_name)
-                            + ": HTTP 200 but response body was not parsable");
-            XTFSH::io::debug(std::string(a.display_name) + ": response body: "
+                            + "：HTTP 200，但无法解析响应内容");
+            XTFSH::io::debug(std::string(a.display_name) + "：响应内容："
                             + truncate_for_debug(result.body));
         }
         return resp;
@@ -1175,7 +1173,7 @@ static LLMResponse gemini_buffered_chain(const ProviderAdapter &a,
     }
     resp.success = false;
     resp.http_status = 404;
-    resp.error_message = "AI model unavailable.";
+    resp.error_message = "AI 模型不可用。";
     return resp;
 }
 
@@ -1197,7 +1195,7 @@ static LLMResponse gemini_streaming_chain(const ProviderAdapter &a,
     }
     resp.success = false;
     resp.http_status = 404;
-    resp.error_message = "AI model unavailable.";
+    resp.error_message = "AI 模型不可用。";
     return resp;
 }
 
@@ -1247,33 +1245,33 @@ static string map_openai_error(int status, const string &body) {
     string api_msg = extract_openai_error(body);
     switch (status) {
         case 400:
-            return "OpenAI rejected the request: "
-                 + (api_msg.empty() ? "bad request" : api_msg);
+            return "OpenAI 拒绝了请求："
+                 + (api_msg.empty() ? "请求无效" : api_msg);
         case 401:
-            return "invalid OpenAI API key. Run @ai config to update.";
+            return "OpenAI API 密钥无效。请运行 @ai config 更新。";
         case 403:
-            return "OpenAI: this key doesn't have access to that model or region.";
+            return "OpenAI：此密钥无权访问该模型或区域。";
         case 404:
-            return "OpenAI model not found. Check your model name with @ai config.";
+            return "未找到 OpenAI 模型。请通过 @ai config 检查模型名称。";
         case 408:
-            return "OpenAI timed out. Retry the request.";
+            return "OpenAI 请求超时，请重试。";
         case 413:
-            return "OpenAI: request too large — try a shorter prompt.";
+            return "OpenAI：请求过大，请尝试更短的提示词。";
         case 429:
             // OpenAI collapses rate-limit and quota-exhausted into 429;
             // the body's "code" disambiguates.
             if (api_msg.find("quota") != string::npos ||
                 api_msg.find("insufficient") != string::npos ||
                 body.find("insufficient_quota") != string::npos) {
-                return "OpenAI quota exhausted. Check your billing dashboard.";
+                return "OpenAI 配额已用尽。请检查计费面板。";
             }
-            return "OpenAI rate limit — wait a few seconds and retry.";
+            return "OpenAI 请求频率受限，请稍候几秒后重试。";
         case 500: case 502: case 503: case 504:
-            return "OpenAI is having trouble (HTTP " + to_string(status)
-                 + "). Retrying usually works.";
+            return "OpenAI 服务异常（HTTP " + to_string(status)
+                 + "），通常重试即可恢复。";
         default:
             if (!api_msg.empty()) return "OpenAI: " + api_msg;
-            return "OpenAI returned HTTP " + to_string(status) + ".";
+            return "OpenAI 返回了 HTTP " + to_string(status) + "。";
     }
 }
 
@@ -1286,22 +1284,22 @@ static string map_openai_error(int status, const string &body) {
 static string map_ollama_error(int status, const string &body) {
     switch (status) {
         case 400:
-            return "Ollama rejected the request: "
-                 + (body.empty() ? "bad request" : body);
+            return "Ollama 拒绝了请求："
+                 + (body.empty() ? "请求无效" : body);
         case 404:
             // Most common: the model hasn't been pulled yet. Point the
             // user at the exact command they need instead of a generic
             // "not found" message.
-            return "Ollama: model not found. Pull it with `ollama pull <model>`.";
+            return "Ollama：未找到模型。请执行 `ollama pull <model>` 下载。";
         case 413:
-            return "Ollama: prompt too large for this model's context.";
+            return "Ollama：提示词超出此模型的上下文长度。";
         case 500:
-            return "Ollama hit an internal error — check `ollama logs` for details.";
+            return "Ollama 遇到内部错误，请使用 `ollama logs` 查看详情。";
         case 503:
-            return "Ollama server not ready — is `ollama serve` still starting?";
+            return "Ollama 服务尚未就绪，`ollama serve` 是否仍在启动？";
         default:
             if (!body.empty()) return "Ollama: " + body;
-            return "Ollama returned HTTP " + to_string(status) + ".";
+            return "Ollama 返回了 HTTP " + to_string(status) + "。";
     }
 }
 
@@ -1754,4 +1752,3 @@ LLMResponse OllamaClient::generate_structured_stream_with_context(
     return invoke_streaming(a, client_url + "/api/chat", body, model_, on_chunk,
                               /*max_attempts=*/2);
 }
-

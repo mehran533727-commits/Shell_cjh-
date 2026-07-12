@@ -51,12 +51,12 @@ TEST(Source, SourceSetsAliasesInCurrentSession) {
 TEST(Source, SourceMissingFileReportsError) {
     auto r = run_shell("source /tmp/nonexistent_src_xyz_888\nexit\n");
     // Shell must not crash; must reach the `exit` goodbye.
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 TEST(Source, SourceNoArgReportsError) {
     auto r = run_shell("source\nexit\n");
-    EXPECT_NE(r.output.find("missing file"), std::string::npos);
+    EXPECT_NE(r.output.find("缺少文件参数"), std::string::npos);
 }
 
 TEST(Source, NestedSourceExecutesAllCommands) {

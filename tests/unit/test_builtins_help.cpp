@@ -122,8 +122,21 @@ TEST(BuiltinHelp, ShowsUsageForNamedBuiltin) {
         EXPECT_EQ(rc, 0);
         out = cap.read_all();
     }
-    EXPECT_NE(out.find("usage: exit"), std::string::npos);
-    EXPECT_NE(out.find("Exit the shell"), std::string::npos);
+    EXPECT_NE(out.find("用法：exit"), std::string::npos);
+    EXPECT_NE(out.find("退出 Shell"), std::string::npos);
+}
+
+TEST(BuiltinHelp, PresentsChineseUsageAndDescription) {
+    ShellState state;
+    std::string out;
+    {
+        FdCapture cap(STDOUT_FILENO);
+        int rc = builtin_help({"help", "cd"}, state);
+        EXPECT_EQ(rc, 0);
+        out = cap.read_all();
+    }
+    EXPECT_NE(out.find("用法：cd"), std::string::npos);
+    EXPECT_NE(out.find("切换当前工作目录"), std::string::npos);
 }
 
 TEST(BuiltinHelp, NonexistentBuiltinReturnsErrorOnStderr) {
@@ -136,6 +149,20 @@ TEST(BuiltinHelp, NonexistentBuiltinReturnsErrorOnStderr) {
         err = cap.read_all();
     }
     EXPECT_NE(rc, 0);
-    EXPECT_NE(err.find("no such builtin"), std::string::npos);
+    EXPECT_NE(err.find("没有此内建命令"), std::string::npos);
+    EXPECT_NE(err.find("totally_not_a_builtin"), std::string::npos);
+}
+
+TEST(BuiltinHelp, ReportsUnknownBuiltinInChinese) {
+    ShellState state;
+    std::string err;
+    int rc;
+    {
+        FdCapture cap(STDERR_FILENO);
+        rc = builtin_help({"help", "totally_not_a_builtin"}, state);
+        err = cap.read_all();
+    }
+    EXPECT_NE(rc, 0);
+    EXPECT_NE(err.find("没有此内建命令"), std::string::npos);
     EXPECT_NE(err.find("totally_not_a_builtin"), std::string::npos);
 }

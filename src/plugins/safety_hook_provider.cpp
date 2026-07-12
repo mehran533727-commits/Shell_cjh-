@@ -196,7 +196,7 @@ void SafetyHookProvider::on_before_command(const std::string &command,
     std::string warning;
 
     if (level == BLOCKED) {
-        warning = "BLOCKED: This will delete your entire filesystem. Blocked.";
+        warning = "已拦截：该操作会删除整个文件系统。";
         write_stderr(CAT_RED + warning + CAT_RESET + "\n");
         state.exec.skip_execution = true;
         return;
@@ -219,9 +219,9 @@ void SafetyHookProvider::on_before_command(const std::string &command,
             }
         }
         if (has_r && has_f) {
-            warning = "Recursive delete of " + path_arg + ". Proceed? [y/N]";
+            warning = "将递归删除 " + path_arg + "。继续？ [y/N]";
         } else if (has_r) {
-            warning = "Recursive delete. Proceed? [y/N]";
+            warning = "将递归删除内容。继续？ [y/N]";
         }
     } else if (tokens[0] == "chmod") {
         bool has_R = false;
@@ -231,22 +231,22 @@ void SafetyHookProvider::on_before_command(const std::string &command,
             if (tokens[i] == "777") has_777 = true;
         }
         if (has_R && has_777) {
-            warning = "Grants full permissions recursively. Proceed? [y/N]";
+            warning = "将递归授予完全权限。继续？ [y/N]";
         } else if (has_R) {
-            warning = "Recursive permission change. Proceed? [y/N]";
+            warning = "将递归修改权限。继续？ [y/N]";
         }
     } else if (tokens[0] == "git" && tokens.size() >= 2) {
         if (tokens[1] == "push") {
-            warning = "Force push overwrites remote history. Proceed? [y/N]";
+            warning = "强制推送会覆盖远程历史。继续？ [y/N]";
         } else if (tokens[1] == "reset") {
-            warning = "Discards all uncommitted changes. Proceed? [y/N]";
+            warning = "将丢弃所有未提交的修改。继续？ [y/N]";
         }
     } else if (tokens[0] == "dd") {
-        warning = "dd writes directly to device. Verify target. Proceed? [y/N]";
+        warning = "dd 会直接写入设备。请确认目标。继续？ [y/N]";
     } else if (starts_with(tokens[0], "mkfs")) {
-        warning = "Formats a filesystem. All data lost. Proceed? [y/N]";
+        warning = "将格式化文件系统，所有数据都会丢失。继续？ [y/N]";
     } else if (tokens[0] == ">" || starts_with(trimmed, ">")) {
-        warning = "Output truncation may overwrite file contents. Proceed? [y/N]";
+        warning = "输出截断可能覆盖文件内容。继续？ [y/N]";
     }
 
     if (warning.empty()) {
@@ -256,7 +256,7 @@ void SafetyHookProvider::on_before_command(const std::string &command,
     // Print warning and prompt for confirmation. Use theme-aware colors
     // so palette swaps propagate. HIGH → red, MEDIUM → yellow.
     const std::string &color = (level == HIGH) ? CAT_RED : CAT_YELLOW;
-    write_stderr(color + "WARNING: " + warning + CAT_RESET + "\n");
+    write_stderr(color + "警告：" + warning + CAT_RESET + "\n");
 
     // Read single char from /dev/tty (terminal, not stdin which may be piped)
     FILE *tty = fopen("/dev/tty", "r");

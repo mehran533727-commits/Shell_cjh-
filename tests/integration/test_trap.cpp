@@ -11,7 +11,7 @@ TEST(Trap, ExitTrapFiresOnExit) {
     EXPECT_NE(r.output.find("goodbye_from_trap"), std::string::npos);
     // Trap fires *before* the exit greeting.
     size_t trap_pos = r.output.find("goodbye_from_trap");
-    size_t exit_pos = r.output.find("GoodBye");
+    size_t exit_pos = r.output.find("再见");
     ASSERT_NE(trap_pos, std::string::npos);
     ASSERT_NE(exit_pos, std::string::npos);
     EXPECT_LT(trap_pos, exit_pos);
@@ -67,7 +67,7 @@ TEST(Trap, InvalidSignalReportsError) {
         "trap 'echo x' NOTASIGNAL\n"
         "echo marker_after\n"
         "exit\n");
-    EXPECT_NE(r.output.find("invalid signal"), std::string::npos);
+    EXPECT_NE(r.output.find("信号无效"), std::string::npos);
     EXPECT_NE(r.output.find("marker_after"),    std::string::npos);
 }
 
@@ -85,6 +85,6 @@ TEST(Trap, TrapMissingArgsReportsUsage) {
         "trap 'echo x'\n"
         "echo marker_after\n"
         "exit\n");
-    EXPECT_NE(r.output.find("trap: usage"), std::string::npos);
+    EXPECT_NE(r.output.find("trap: 用法"), std::string::npos);
     EXPECT_NE(r.output.find("marker_after"), std::string::npos);
 }

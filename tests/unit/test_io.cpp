@@ -152,7 +152,7 @@ TEST(IoConsumer, DebugLevelStillEmitsWarnings) {
         XTFSH::io::warning("still shown");
     });
     set_log_level(saved);
-    EXPECT_NE(out.find("warning"), std::string::npos);
+    EXPECT_NE(out.find("警告"), std::string::npos);
     EXPECT_NE(out.find("still shown"), std::string::npos);
 }
 
@@ -164,7 +164,7 @@ TEST(IoConsumer, ErrorLevelStillEmitsErrors) {
         XTFSH::io::info("silent");
     });
     set_log_level(saved);
-    EXPECT_NE(out.find("error"), std::string::npos);
+    EXPECT_NE(out.find("错误"), std::string::npos);
     EXPECT_NE(out.find("fatal"), std::string::npos);
     EXPECT_EQ(out.find("silent"), std::string::npos);
 }
@@ -211,6 +211,6 @@ TEST(IoConsumerIntegration, BgLifecycleEmitsSpawnAndReap) {
     std::array<char, 4096> buf{};
     while (::fgets(buf.data(), buf.size(), p)) out.append(buf.data());
     ::pclose(p);
-    EXPECT_NE(out.find("XTFSH: bg: spawned"), std::string::npos)
+    EXPECT_NE(out.find("XTFSH: 后台任务：已创建进程"), std::string::npos)
         << "captured: " << out;
 }

@@ -9,21 +9,21 @@
 // ═══════════════════════════════════════════════════════════════
 
 TEST(FormatDurationTest, SubSecond) {
-    EXPECT_EQ(format_duration(0.02), "0.02s");
+    EXPECT_EQ(format_duration(0.02), "0.02秒");
 }
 
 TEST(FormatDurationTest, Seconds) {
-    EXPECT_EQ(format_duration(3.41), "3.41s");
+    EXPECT_EQ(format_duration(3.41), "3.41秒");
 }
 
 TEST(FormatDurationTest, Minutes) {
     // 135.0s = 2m 15s
-    EXPECT_EQ(format_duration(135.0), "2m 15s");
+    EXPECT_EQ(format_duration(135.0), "2分 15秒");
 }
 
 TEST(FormatDurationTest, Hours) {
     // 3900.0s = 1h 5m
-    EXPECT_EQ(format_duration(3900.0), "1h 5m");
+    EXPECT_EQ(format_duration(3900.0), "1时 5分");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -65,7 +65,7 @@ TEST(BlockHeaderTest, ContainsDuration) {
     b.exit_code = 0;
     b.duration_seconds = 3.41;
     std::string header = render_block_header(b);
-    EXPECT_NE(header.find("3.41s"), std::string::npos);
+    EXPECT_NE(header.find("3.41秒"), std::string::npos);
 }
 
 // ═══════════════════════════════════════════════════════════════

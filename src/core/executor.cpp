@@ -170,7 +170,7 @@ HookedCaptureResult run_command_with_hooks_capture(const string &raw_cmd,
 
     int pfd[2];
     if (::pipe(pfd) < 0) {
-        XTFSH::io::error("run_command_with_hooks_capture: pipe failed");
+        XTFSH::io::error("执行命令并捕获输出时创建管道失败");
         result.exit_code = 1;
         return result;
     }
@@ -179,7 +179,7 @@ HookedCaptureResult run_command_with_hooks_capture(const string &raw_cmd,
     if (pid < 0) {
         ::close(pfd[0]);
         ::close(pfd[1]);
-        XTFSH::io::error("run_command_with_hooks_capture: fork failed");
+        XTFSH::io::error("执行命令并捕获输出时创建进程失败");
         result.exit_code = 1;
         return result;
     }
@@ -307,7 +307,7 @@ int execute_single_command(string command, ShellState &state,
                 size_t ln = 1, col = 1;
                 XTFSH::parse::offset_to_line_col(command, first, ln, col);
                 XTFSH::parse::emit_parse_error(
-                    {"unmatched '(' in subshell", ln, col});
+                    {"子 Shell 中存在未匹配的 '('", ln, col});
                 return 1;
             }
             // If `|` appears after `)`, let the pipeline branch below
@@ -333,7 +333,7 @@ int execute_single_command(string command, ShellState &state,
 
                 pid_t pid = fork();
                 if (pid < 0) {
-                    XTFSH::io::error("fork failed for subshell");
+                    XTFSH::io::error("创建子 Shell 进程失败");
                     return 1;
                 }
                 if (pid == 0) {
@@ -353,13 +353,13 @@ int execute_single_command(string command, ShellState &state,
                 }
                 // Parent-only trace. Don't debug() in the child branch —
                 // post-fork children must not touch the shared registry.
-                XTFSH::io::debug("subshell: fork pid=" + std::to_string(pid) +
-                                " body='" + inner + "'");
+                XTFSH::io::debug("子 Shell：已创建进程，进程号=" + std::to_string(pid) +
+                                "，内容='" + inner + "'");
                 int status;
                 waitpid(pid, &status, 0);
                 int rc = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
-                XTFSH::io::debug("subshell: exited pid=" + std::to_string(pid) +
-                                " status=" + std::to_string(rc));
+                XTFSH::io::debug("子 Shell：进程已退出，进程号=" + std::to_string(pid) +
+                                "，状态=" + std::to_string(rc));
                 return rc;
             }
             // has_pipe: fall through to the pipeline branch below.
@@ -454,7 +454,7 @@ int execute_single_command(string command, ShellState &state,
                     size_t ln = 1, col = 1;
                     XTFSH::parse::offset_to_line_col(trimmed, lead, ln, col);
                     XTFSH::parse::emit_parse_error(
-                        {"unmatched '(' in pipeline subshell", ln, col});
+                        {"管道子 Shell 中存在未匹配的 '('", ln, col});
                     return 1;
                 }
                 PipelineSegment ps;
@@ -504,13 +504,13 @@ int execute_single_command(string command, ShellState &state,
         if (run_in_background) {
             if ((int)state.core.background_processes.size() >=
                 state.core.max_background_processes) {
-                XTFSH::io::error("Maximum number of background processes");
+                XTFSH::io::error("后台进程数量已达到上限");
                 return 0;
             }
 
             pid_t pid = fork();
             if (pid < 0) {
-                XTFSH::io::error("fork failed for background pipeline");
+                XTFSH::io::error("后台管道创建进程失败");
                 return 1;
             }
             if (pid == 0) {
@@ -563,7 +563,7 @@ int execute_single_command(string command, ShellState &state,
     if (result == 127) {
         auto suggestion = suggest_command(cmd.argv[0]);
         if (suggestion) {
-            write_stderr(SUGGEST_TEXT + "XTFSH: did you mean '" CAT_RESET + SUGGEST_CMD +
+            write_stderr(SUGGEST_TEXT + "XTFSH: 你是否想输入 '" CAT_RESET + SUGGEST_CMD +
                         *suggestion + CAT_RESET + SUGGEST_TEXT + "'?" CAT_RESET "\n");
         }
     }
@@ -625,7 +625,7 @@ void execute_command_line(const vector<CommandSegment> &segments, ShellState &st
 int execute_script_file(const string &path, ShellState &state) {
     ifstream file(path);
     if (!file.is_open()) {
-        XTFSH::io::error("cannot open script: " + path);
+        XTFSH::io::error("无法打开脚本：" + path);
         return 1;
     }
     string line;

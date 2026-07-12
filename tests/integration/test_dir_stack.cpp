@@ -83,7 +83,7 @@ TEST(DirStack, MultiplePushdPopd) {
 
 TEST(DirStack, PopdOnEmptyStackErrors) {
     auto r = run_shell("popd\nexit\n");
-    EXPECT_NE(r.output.find("directory stack empty"),
+    EXPECT_NE(r.output.find("目录栈为空"),
               std::string::npos);
 }
 
@@ -97,6 +97,6 @@ TEST(DirStack, PushdNonexistentReportsError) {
 
 TEST(DirStack, PushdNoArgReportsError) {
     auto r = run_shell("pushd\nexit\n");
-    EXPECT_NE(r.output.find("no directory specified"),
+    EXPECT_NE(r.output.find("未指定目录"),
               std::string::npos);
 }

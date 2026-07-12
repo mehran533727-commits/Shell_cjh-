@@ -31,7 +31,7 @@ struct HomeGuard {
 TEST(ConfigSync, MissingSubcommandShowsUsage) {
     HomeGuard home;
     auto r = run_shell("config\nexit\n");
-    EXPECT_NE(r.output.find("usage"), std::string::npos);
+    EXPECT_NE(r.output.find("用法"), std::string::npos);
     EXPECT_NE(r.output.find("config sync init"),   std::string::npos);
     EXPECT_NE(r.output.find("config sync remote"), std::string::npos);
     EXPECT_NE(r.output.find("config sync push"),   std::string::npos);
@@ -41,7 +41,7 @@ TEST(ConfigSync, MissingSubcommandShowsUsage) {
 TEST(ConfigSync, StatusBeforeInit) {
     HomeGuard home;
     auto r = run_shell("config sync status\nexit\n");
-    EXPECT_NE(r.output.find("not initialized"), std::string::npos);
+    EXPECT_NE(r.output.find("尚未初始化"), std::string::npos);
 }
 
 TEST(ConfigSync, InitThenStatusReports) {
@@ -50,19 +50,19 @@ TEST(ConfigSync, InitThenStatusReports) {
         "config sync init\n"
         "config sync status\n"
         "exit\n");
-    EXPECT_NE(r.output.find("config: initialized"), std::string::npos);
+    EXPECT_NE(r.output.find("config: 已初始化"), std::string::npos);
     // After init, status should no longer say "not initialized".
-    size_t first = r.output.find("config: initialized");
+    size_t first = r.output.find("config: 已初始化");
     ASSERT_NE(first, std::string::npos);
     // Find status line AFTER the init line.
-    size_t second = r.output.find("config: initialized at", first + 1);
+    size_t second = r.output.find("config: 已在", first + 1);
     EXPECT_NE(second, std::string::npos);
 }
 
 TEST(ConfigSync, UnknownSyncActionErrors) {
     HomeGuard home;
     auto r = run_shell("config sync nonsense\nexit\n");
-    EXPECT_NE(r.output.find("unknown sync action"), std::string::npos);
+    EXPECT_NE(r.output.find("未知 sync 操作"), std::string::npos);
 }
 
 TEST(ConfigSync, RemoteRequiresUrl) {
@@ -71,7 +71,7 @@ TEST(ConfigSync, RemoteRequiresUrl) {
         "config sync init\n"
         "config sync remote\n"
         "exit\n");
-    EXPECT_NE(r.output.find("remote requires a URL"), std::string::npos);
+    EXPECT_NE(r.output.find("remote 需要 URL"), std::string::npos);
 }
 
 TEST(ConfigSync, InitCreatesGitRepo) {

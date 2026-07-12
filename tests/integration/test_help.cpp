@@ -12,10 +12,10 @@ TEST(Help, ListsKnownBuiltins) {
 
 TEST(Help, ShowsUsageForNamedBuiltin) {
     auto r = run_shell("help cd\nexit\n");
-    EXPECT_NE(r.output.find("usage: cd"), std::string::npos);
+    EXPECT_NE(r.output.find("用法：cd"), std::string::npos);
 }
 
 TEST(Help, UnknownBuiltinReportsError) {
     auto r = run_shell("help totally_not_a_builtin\nexit\n");
-    EXPECT_NE(r.output.find("no such builtin"), std::string::npos);
+    EXPECT_NE(r.output.find("没有此内建命令"), std::string::npos);
 }

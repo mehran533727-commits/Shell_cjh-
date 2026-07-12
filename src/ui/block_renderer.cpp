@@ -61,7 +61,7 @@ std::string format_duration(double seconds) {
     if (seconds < 60.0) {
         // Sub-minute: show with 2 decimal places
         char buf[32];
-        std::snprintf(buf, sizeof(buf), "%.2fs", seconds);
+        std::snprintf(buf, sizeof(buf), "%.2f秒", seconds);
         return std::string(buf);
     }
 
@@ -71,7 +71,7 @@ std::string format_duration(double seconds) {
         int mins = total_sec / 60;
         int secs = total_sec % 60;
         std::ostringstream oss;
-        oss << mins << "m " << secs << "s";
+        oss << mins << "分 " << secs << "秒";
         return oss.str();
     }
 
@@ -80,7 +80,7 @@ std::string format_duration(double seconds) {
     int hours = total_sec / 3600;
     int mins = (total_sec % 3600) / 60;
     std::ostringstream oss;
-    oss << hours << "h " << mins << "m";
+    oss << hours << "时 " << mins << "分";
     return oss.str();
 }
 

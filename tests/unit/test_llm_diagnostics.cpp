@@ -82,12 +82,12 @@ TEST(LlmDiagnostics, Http429FinalContainsProviderAndStatus) {
                                      /*response_body=*/"");
     std::string out = cap.read_all();
 
-    EXPECT_NE(out.find("gemini:"), std::string::npos) << out;
+    EXPECT_NE(out.find("gemini："), std::string::npos) << out;
     EXPECT_NE(out.find("HTTP 429"), std::string::npos) << out;
-    EXPECT_NE(out.find("Too Many Requests"), std::string::npos) << out;
-    EXPECT_NE(out.find("attempt 3/3"), std::string::npos) << out;
-    EXPECT_NE(out.find("giving up"), std::string::npos) << out;
-    EXPECT_NE(out.find("error"), std::string::npos)
+    EXPECT_NE(out.find("请求过于频繁"), std::string::npos) << out;
+    EXPECT_NE(out.find("第 3/3 次尝试"), std::string::npos) << out;
+    EXPECT_NE(out.find("已停止重试"), std::string::npos) << out;
+    EXPECT_NE(out.find("错误"), std::string::npos)
         << "final failures should be emitted at error severity: " << out;
 }
 
@@ -99,12 +99,12 @@ TEST(LlmDiagnostics, Http429RetryableIsWarningNotError) {
                                      /*response_body=*/"");
     std::string out = cap.read_all();
 
-    EXPECT_NE(out.find("openai:"), std::string::npos) << out;
+    EXPECT_NE(out.find("openai："), std::string::npos) << out;
     EXPECT_NE(out.find("HTTP 429"), std::string::npos) << out;
-    EXPECT_NE(out.find("attempt 1/3"), std::string::npos) << out;
-    EXPECT_EQ(out.find("giving up"), std::string::npos)
+    EXPECT_NE(out.find("第 1/3 次尝试"), std::string::npos) << out;
+    EXPECT_EQ(out.find("已停止重试"), std::string::npos)
         << "non-final attempts must not say 'giving up': " << out;
-    EXPECT_NE(out.find("warning"), std::string::npos)
+    EXPECT_NE(out.find("警告"), std::string::npos)
         << "transient retries should be warning severity: " << out;
 }
 
@@ -131,7 +131,7 @@ TEST(LlmDiagnostics, ResponseBodyDumpGatedByDebugLevel) {
         std::string out = cap.read_all();
         EXPECT_NE(out.find("quota exceeded"), std::string::npos)
             << "response body must be visible at Debug level: " << out;
-        EXPECT_NE(out.find("gemini: response body:"), std::string::npos)
+        EXPECT_NE(out.find("gemini：响应内容："), std::string::npos)
             << out;
     }
 }
@@ -146,10 +146,10 @@ TEST(LlmDiagnostics, CurlFailureIncludesProviderAndUpstreamMessage) {
                                      2, 3, /*final=*/false);
     std::string out = cap.read_all();
 
-    EXPECT_NE(out.find("ollama:"), std::string::npos) << out;
-    EXPECT_NE(out.find("curl error"), std::string::npos) << out;
+    EXPECT_NE(out.find("ollama："), std::string::npos) << out;
+    EXPECT_NE(out.find("curl 错误"), std::string::npos) << out;
     EXPECT_NE(out.find("Could not resolve host"), std::string::npos) << out;
-    EXPECT_NE(out.find("attempt 2/3"), std::string::npos) << out;
+    EXPECT_NE(out.find("第 2/3 次尝试"), std::string::npos) << out;
 }
 
 // ── debug traces ──────────────────────────────────────────────────
@@ -172,12 +172,12 @@ TEST(LlmDiagnostics, RequestDebugEmittedAtDebugLevel) {
     XTFSH::ai::diag::log_response_debug("gemini", 200, 5678, 42);
     std::string out = cap.read_all();
 
-    EXPECT_NE(out.find("gemini: POST gemini-3-flash-preview"), std::string::npos)
+    EXPECT_NE(out.find("gemini：POST gemini-3-flash-preview"), std::string::npos)
         << out;
-    EXPECT_NE(out.find("body 1234 bytes"), std::string::npos) << out;
+    EXPECT_NE(out.find("请求体 1234 字节"), std::string::npos) << out;
     EXPECT_NE(out.find("HTTP 200"), std::string::npos) << out;
-    EXPECT_NE(out.find("5678 bytes"), std::string::npos) << out;
-    EXPECT_NE(out.find("42ms"), std::string::npos) << out;
+    EXPECT_NE(out.find("5678 字节"), std::string::npos) << out;
+    EXPECT_NE(out.find("42 毫秒"), std::string::npos) << out;
 }
 
 // ── truncate_for_debug ────────────────────────────────────────────
@@ -189,16 +189,16 @@ TEST(LlmDiagnostics, TruncateForDebugLeavesShortBodiesUntouched) {
 TEST(LlmDiagnostics, TruncateForDebugClipsLongBodies) {
     std::string body(800, 'x');
     std::string out = XTFSH::ai::diag::truncate_for_debug(body, 500);
-    EXPECT_EQ(out.size(), 500u + std::string("... [truncated]").size());
-    EXPECT_NE(out.find("... [truncated]"), std::string::npos);
+    EXPECT_EQ(out.size(), 500u + std::string("… [已截断]").size());
+    EXPECT_NE(out.find("… [已截断]"), std::string::npos);
 }
 
 // ── http_reason_phrase ────────────────────────────────────────────
 
 TEST(LlmDiagnostics, HttpReasonPhraseCoversCommonLlmStatuses) {
-    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(429), "Too Many Requests");
-    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(401), "Unauthorized");
-    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(500), "Server Error");
-    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(999), "HTTP error")
+    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(429), "请求过于频繁");
+    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(401), "未授权");
+    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(500), "服务器错误");
+    EXPECT_STREQ(XTFSH::ai::diag::http_reason_phrase(999), "HTTP 错误")
         << "unknown statuses should fall back to the generic phrase";
 }

@@ -22,7 +22,7 @@ TEST(JobControl, BglistShowsBackgroundJob) {
     // preserved in the current implementation, so "sleep" — not
     // "sleep 2" — is what lands in the bglist output).
     EXPECT_NE(r.output.find("sleep"), std::string::npos);
-    EXPECT_NE(r.output.find("[JOB 1] running"), std::string::npos);
+    EXPECT_NE(r.output.find("[任务 1] 运行中"), std::string::npos);
 }
 
 TEST(JobControl, BgkillTerminatesBackgroundJob) {
@@ -32,13 +32,13 @@ TEST(JobControl, BgkillTerminatesBackgroundJob) {
         "bgkill 1\n"
         "exit\n");
     // Successful kill doesn't emit "not a valid job" or similar error.
-    EXPECT_EQ(r.output.find("bgkill: invalid"), std::string::npos);
+    EXPECT_EQ(r.output.find("bgkill: 任务编号无效"), std::string::npos);
 }
 
 TEST(JobControl, BgkillInvalidJobNumberReportsError) {
     auto r = run_shell("bgkill 999\nexit\n");
     // Should not crash; should reach exit goodbye.
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 TEST(JobControl, BgstopPausesJob) {
@@ -50,22 +50,22 @@ TEST(JobControl, BgstopPausesJob) {
         "bgstop 1\n"
         "bgstart 1\n"
         "exit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
-    EXPECT_EQ(r.output.find("bgstop: invalid"),  std::string::npos);
-    EXPECT_EQ(r.output.find("bgstart: invalid"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
+    EXPECT_EQ(r.output.find("bgstop: 任务编号无效"),  std::string::npos);
+    EXPECT_EQ(r.output.find("bgstart: 任务编号无效"), std::string::npos);
 }
 
 TEST(JobControl, BglistEmptyWhenNoJobs) {
     auto r = run_shell("bglist\nexit\n");
     // bglist with no jobs either prints nothing for jobs or a
     // "no background processes" line — either way it doesn't crash.
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 TEST(JobControl, BgWithEmptyCommandReportsError) {
     // `bg` with no argument should not silently accept.
     auto r = run_shell("bg\nexit\n");
-    EXPECT_NE(r.output.find("GoodBye"), std::string::npos);
+    EXPECT_NE(r.output.find("再见"), std::string::npos);
 }
 
 TEST(JobControl, MultipleBackgroundJobs) {
@@ -77,10 +77,10 @@ TEST(JobControl, MultipleBackgroundJobs) {
         "bgkill 2\n"
         "exit\n");
     // Two structured start lines prove both jobs started.
-    size_t first  = r.output.find("] started");
+    size_t first  = r.output.find("] 已启动");
     size_t second = first == std::string::npos
                       ? std::string::npos
-                      : r.output.find("] started", first + 1);
+                      : r.output.find("] 已启动", first + 1);
     EXPECT_NE(first,  std::string::npos);
     EXPECT_NE(second, std::string::npos);
 }

@@ -81,16 +81,16 @@ static string format_duration(double seconds) {
         stringstream ss;
         ss << fixed;
         ss.precision(1);
-        ss << seconds << "s";
+        ss << seconds << "秒";
         return ss.str();
     } else if (seconds < 3600) {
         int mins = (int)(seconds / 60);
         int secs = (int)seconds % 60;
-        return to_string(mins) + "m" + to_string(secs) + "s";
+        return to_string(mins) + "分" + to_string(secs) + "秒";
     } else {
         int hrs = (int)(seconds / 3600);
         int mins = ((int)seconds % 3600) / 60;
-        return to_string(hrs) + "h" + to_string(mins) + "m";
+        return to_string(hrs) + "时" + to_string(mins) + "分";
     }
 }
 
@@ -126,17 +126,17 @@ string write_shell_prefix(const ShellState &state) {
     size_t running_jobs = running_background_jobs(state);
     string branch = get_git_branch();
 
-    set_terminal_title("XTF'SH Shell: " + cwd);
+    set_terminal_title("XTF'SH 命令行：" + cwd);
 
     if (isatty(STDOUT_FILENO)) {
         // Catppuccin Mocha colored prompt — first line written to stdout
         string prefix;
         prefix += PROMPT_SEPARATOR + "\u250c\u2500" CAT_RESET;
-        prefix += PROMPT_TEXT + "[XTF'SH Shell] " CAT_RESET;
+        prefix += PROMPT_TEXT + "[XTF'SH 命令行] " CAT_RESET;
         prefix += PROMPT_USER + user + "@" + host + CAT_RESET;
         if (!branch.empty()) {
             string git_indicators = get_git_status_indicators();
-            prefix += PROMPT_TEXT + " git:" CAT_RESET;
+            prefix += PROMPT_TEXT + " Git：" CAT_RESET;
             prefix += PROMPT_BRANCH + branch + CAT_RESET;
             if (!git_indicators.empty()) {
                 prefix += PROMPT_GIT_DIRTY + "[" + git_indicators + "]" CAT_RESET;
@@ -144,17 +144,17 @@ string write_shell_prefix(const ShellState &state) {
         }
 
         if (state.core.last_cmd_duration >= 0.5) {
-            prefix += PROMPT_DURATION + " took " +
+            prefix += PROMPT_DURATION + " 耗时 " +
                       format_duration(state.core.last_cmd_duration) + CAT_RESET;
         }
 
         prefix += "\n";
         prefix += PROMPT_SEPARATOR + "\u251c\u2500 " CAT_RESET +
-                  PROMPT_TEXT + "cwd: " CAT_RESET +
+                  PROMPT_TEXT + "当前目录：" CAT_RESET +
                   PROMPT_PATH + cwd + CAT_RESET + "\n";
         prefix += PROMPT_SEPARATOR + "\u251c\u2500 " CAT_RESET +
-                  PROMPT_TEXT + "jobs: " CAT_RESET +
-                  to_string(running_jobs) + " running | last: exit " +
+                  PROMPT_TEXT + "任务：" CAT_RESET +
+                  to_string(running_jobs) + " 个运行中 | 上次退出码：" +
                   to_string(state.core.last_exit_status) + "\n";
         write_stdout(prefix);
 
@@ -166,10 +166,10 @@ string write_shell_prefix(const ShellState &state) {
                + arrow_color + "\u27a4 " CAT_RESET;
     } else {
         stringstream ss;
-        ss << "\u250c\u2500[XTF'SH Shell] " << user << "@" << host << "\n";
-        ss << "\u251c\u2500 cwd: " << cwd << "\n";
-        ss << "\u251c\u2500 jobs: " << running_jobs
-           << " running | last: exit " << state.core.last_exit_status << "\n";
+        ss << "\u250c\u2500[XTF'SH 命令行] " << user << "@" << host << "\n";
+        ss << "\u251c\u2500 当前目录：" << cwd << "\n";
+        ss << "\u251c\u2500 任务：" << running_jobs
+           << " 个运行中 | 上次退出码：" << state.core.last_exit_status << "\n";
         ss << "\u2514\u2500\u27a4 ";
         return ss.str();
     }

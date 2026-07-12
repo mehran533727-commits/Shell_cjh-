@@ -24,15 +24,15 @@ TEST(InlineDocs, ExplainTarFlags) {
 
     auto *x = find_flag(result, "-x");
     ASSERT_NE(x, nullptr);
-    EXPECT_EQ(x->description, "Extract files from archive");
+    EXPECT_EQ(x->description, "解压归档文件");
 
     auto *z = find_flag(result, "-z");
     ASSERT_NE(z, nullptr);
-    EXPECT_EQ(z->description, "Filter through gzip");
+    EXPECT_EQ(z->description, "通过 gzip 过滤");
 
     auto *f = find_flag(result, "-f");
     ASSERT_NE(f, nullptr);
-    EXPECT_EQ(f->description, "Use archive file (next argument)");
+    EXPECT_EQ(f->description, "使用归档文件（下一个参数）");
 }
 
 // ── ExplainGrepFlags ─────────────────────────────────────────
@@ -44,11 +44,11 @@ TEST(InlineDocs, ExplainGrepFlags) {
 
     auto *i = find_flag(result, "-i");
     ASSERT_NE(i, nullptr);
-    EXPECT_EQ(i->description, "Ignore case distinctions");
+    EXPECT_EQ(i->description, "忽略大小写");
 
     auto *r = find_flag(result, "-r");
     ASSERT_NE(r, nullptr);
-    EXPECT_EQ(r->description, "Search recursively");
+    EXPECT_EQ(r->description, "递归搜索");
 }
 
 // ── ExplainUnknownFlag ───────────────────────────────────────
@@ -71,7 +71,7 @@ TEST(InlineDocs, ExplainUnknownCommand) {
 
 TEST(InlineDocs, HintKnownCommand) {
     EXPECT_EQ(get_command_hint("tar"),
-              "Create or extract compressed archives");
+              "创建或解压压缩归档");
 }
 
 // ── HintUnknownCommand ──────────────────────────────────────
@@ -84,7 +84,7 @@ TEST(InlineDocs, HintUnknownCommand) {
 
 TEST(InlineDocs, HintGit) {
     EXPECT_EQ(get_command_hint("git"),
-              "Distributed version control system");
+              "分布式版本控制系统");
 }
 
 // ── ExplainGitSubcommands ───────────────────────────────────
@@ -93,7 +93,7 @@ TEST(InlineDocs, ExplainGitSubcommands) {
     auto result = explain_command("git", {"push"});
     ASSERT_EQ(result.size(), 1u);
     EXPECT_EQ(result[0].flag, "push");
-    EXPECT_EQ(result[0].description, "Upload local commits to remote");
+    EXPECT_EQ(result[0].description, "将本地提交上传到远程仓库");
 }
 
 // ── ExplainMixedFlags ───────────────────────────────────────
@@ -105,11 +105,11 @@ TEST(InlineDocs, ExplainMixedFlags) {
 
     auto *l = find_flag(result, "-l");
     ASSERT_NE(l, nullptr);
-    EXPECT_EQ(l->description, "Long listing format");
+    EXPECT_EQ(l->description, "长格式列表");
 
     auto *a = find_flag(result, "-a");
     ASSERT_NE(a, nullptr);
-    EXPECT_EQ(a->description, "Include hidden files");
+    EXPECT_EQ(a->description, "显示隐藏文件");
 }
 
 // ── EmptyArgs ───────────────────────────────────────────────
@@ -132,5 +132,5 @@ TEST(InlineDocs, LongOptionWithEquals) {
     auto result = explain_command("grep", {"--color=auto"});
     ASSERT_EQ(result.size(), 1u);
     EXPECT_EQ(result[0].flag, "--color=auto");
-    EXPECT_EQ(result[0].description, "Colorize matches");
+    EXPECT_EQ(result[0].description, "为匹配项着色");
 }

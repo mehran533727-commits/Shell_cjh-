@@ -43,7 +43,7 @@ UserConfig load() {
     std::ifstream in(path);
     if (!in.is_open()) {
         // Missing file is expected: silent defaults.
-        XTFSH::io::debug("config: no file at " + path + ", using defaults");
+        XTFSH::io::debug("配置：未找到 " + path + "，将使用默认值");
         apply_env_overrides(cfg);
         return cfg;
     }
@@ -55,8 +55,8 @@ UserConfig load() {
         // Malformed JSON: warn, keep defaults, don't abort. We use
         // std::cerr directly because there's no shared `io::warning`
         // helper yet — that'll come in a later PR.
-        std::cerr << "XTFSH: warning: failed to parse " << path << ": "
-                  << e.what() << " (using defaults)\n";
+        XTFSH::io::warning("无法解析 " + path + "：" + e.what() +
+                           "（将使用默认值）");
         apply_env_overrides(cfg);
         return cfg;
     }
@@ -73,9 +73,8 @@ UserConfig load() {
             }
         }
     } catch (const std::exception &e) {
-        std::cerr << "XTFSH: warning: " << path
-                  << ": invalid `plugins.disabled` (" << e.what()
-                  << "), ignoring\n";
+        XTFSH::io::warning(path + "：`plugins.disabled` 无效（" + e.what() +
+                           "），已忽略");
         cfg.disabled_plugins.clear();
     }
 
@@ -85,9 +84,8 @@ UserConfig load() {
             cfg.log_level = j["log_level"].get<std::string>();
         }
     } catch (const std::exception &e) {
-        std::cerr << "XTFSH: warning: " << path
-                  << ": invalid `log_level` (" << e.what()
-                  << "), using default\n";
+        XTFSH::io::warning(path + "：`log_level` 无效（" + e.what() +
+                           "），将使用默认值");
         cfg.log_level = "info";
     }
 
@@ -99,9 +97,9 @@ UserConfig load() {
         if (i) disabled_csv += ",";
         disabled_csv += cfg.disabled_plugins[i];
     }
-    XTFSH::io::debug("config: loaded " + path +
-                    " (plugins.disabled=[" + disabled_csv +
-                    "], log_level=" + cfg.log_level + ")");
+    XTFSH::io::debug("配置：已加载 " + path +
+                    "（plugins.disabled=[" + disabled_csv +
+                    "]，log_level=" + cfg.log_level + "）");
     return cfg;
 }
 
